@@ -17,7 +17,7 @@ const emptyServiceEntry = {
 
 function ServiceRecordsInner() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
@@ -99,8 +99,8 @@ function ServiceRecordsInner() {
     };
 
     const handleSaveService = async () => {
-        if (!formData.datum) { await alert(bs ? 'Datum servisa je obavezan!' : 'Service date is required!'); return; }
-        if (!formData.equipmentId) { await alert(bs ? 'Odaberite radnu opremu!' : 'Select equipment!'); return; }
+        if (!formData.datum) { await alert(t('datumServisaJeObavezan')); return; }
+        if (!formData.equipmentId) { await alert(t('selectEquipment')); return; }
 
         let uploadedUrl = formData.docData;
         if (formData.fileObj) {
@@ -136,7 +136,7 @@ function ServiceRecordsInner() {
 
     const handleDeleteService = async (id) => {
         setActionMenuId(null);
-        if (await confirm(bs ? 'Obrisati servisni zapis?' : 'Delete service record?')) {
+        if (await confirm(t('obrisatiServisniZapis'))) {
             remove(COLLECTIONS.SERVICE_LOG, id);
             loadData();
         }
@@ -146,7 +146,7 @@ function ServiceRecordsInner() {
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size> 15 * 1024 * 1024) {
-            await alert(bs ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
+            await alert(t('dokumentMoraBitiManjiOd'));
             return;
         }
         setFormData(prev => ({ ...prev, fileObj: file, docName: file.name }));
@@ -182,31 +182,31 @@ function ServiceRecordsInner() {
     const fEq = equipmentList.filter(e => !eqSearch || e.naziv.toLowerCase().includes(eqSearch.toLowerCase()) || (e.invBroj || '').toLowerCase().includes(eqSearch.toLowerCase()));
 
     const tipLabel = (tip) => ({
-        pregled: bs ? '🔍 Pregled' : '🔍 Inspection',
-        servis: bs ? '🔧 Servis' : '🔧 Service',
-        popravak: bs ? '🛠️ Popravak' : '🛠️ Repair',
-        kalibracija: bs ? '📏 Kalibracija' : '📏 Calibration',
-        zamjena: bs ? '🔄 Zamjena dijela' : '🔄 Part replacement',
+        pregled: t('pregled'),
+        servis: t('servis'),
+        popravak: t('popravak'),
+        kalibracija: t('kalibracija'),
+        zamjena: t('zamjenaDijela'),
     }[tip] || tip);
 
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <PageHeader icon="🔧" title={bs ? 'Servisni Zapisnici' : 'Service Records'} />
+            <PageHeader icon="🔧" title={t('serviceRecords')} />
 
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 560, zIndex: 1100 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>🔧 {editingId ? (bs ? 'Uredi servisni zapis' : 'Edit service record') : (bs ? 'Novi servisni zapis' : 'New service record')}</h2>
+                            <h2>🔧 {editingId ? (t('urediServisniZapis')) : (t('noviServisniZapis'))}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-grid-2">
                                 
                                 <div className="form-group" ref={eqRef} style={{ gridColumn: '1 / -1', position: 'relative' }}>
-                                    <label className="form-label">{bs ? 'Radna oprema / Objekt' : 'Equipment'} <span style={{color: 'var(--danger)'}}>*</span></label>
-                                    <input className="form-input" placeholder={bs ? '🔍 Pretraži opremu...' : '🔍 Search equipment...'} value={eqSearch} 
+                                    <label className="form-label">{t('radnaOpremaObjekt')} <span style={{color: 'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" placeholder={t('searchEquipment')} value={eqSearch} 
                                         onChange={e => { setEqSearch(e.target.value); setShowEqSearch(true); setFormData(f => ({...f, equipmentId: ''})); }} 
                                         onFocus={() => setShowEqSearch(true)} />
                                     {showEqSearch && (
@@ -223,37 +223,37 @@ function ServiceRecordsInner() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label" style={{ fontWeight: 700 }}>📅 {bs ? 'Datum servisa' : 'Service date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <label className="form-label" style={{ fontWeight: 700 }}>📅 {t('datumServisa')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <DateInput value={formData.datum} onChange={v => setFormData(p => ({ ...p, datum: v }))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Tip servisa' : 'Service type'}</label>
+                                    <label className="form-label">{t('tipServisa')}</label>
                                     <select className="form-select" value={formData.tip} onChange={e => setFormData(p => ({ ...p, tip: e.target.value }))}>
-                                        <option value="pregled">{bs ? '🔍 Pregled' : '🔍 Inspection'}</option>
-                                        <option value="servis">{bs ? '🔧 Servis' : '🔧 Service'}</option>
-                                        <option value="popravak">{bs ? '🛠️ Popravak' : '🛠️ Repair'}</option>
-                                        <option value="kalibracija">{bs ? '📏 Kalibracija' : '📏 Calibration'}</option>
-                                        <option value="zamjena">{bs ? '🔄 Zamjena dijela' : '🔄 Part replacement'}</option>
+                                        <option value="pregled">{t('pregled')}</option>
+                                        <option value="servis">{t('servis')}</option>
+                                        <option value="popravak">{t('popravak')}</option>
+                                        <option value="kalibracija">{t('kalibracija')}</option>
+                                        <option value="zamjena">{t('zamjenaDijela')}</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">👤 {bs ? 'Servisirao / Ovlaštena firma' : 'Serviced by'}</label>
-                                    <input className="form-input" value={formData.servisirao} onChange={e => setFormData(p => ({ ...p, servisirao: e.target.value }))} placeholder={bs ? 'Ime ili naziv firme...' : 'Name or company...'} />
+                                    <label className="form-label">👤 {t('servisiraoOvlastenaFirma')}</label>
+                                    <input className="form-input" value={formData.servisirao} onChange={e => setFormData(p => ({ ...p, servisirao: e.target.value }))} placeholder={t('imeIliNazivFirme')} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">📅 {bs ? 'Idući servis' : 'Next service date'}</label>
+                                    <label className="form-label">📅 {t('iduciServis')}</label>
                                     <DateInput value={formData.iduciServis} onChange={v => setFormData(p => ({ ...p, iduciServis: v }))} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">📝 {bs ? 'Napomena / Opis radova' : 'Notes / Description'}</label>
-                                    <textarea className="form-textarea" rows={3} value={formData.napomena} onChange={e => setFormData(p => ({ ...p, napomena: e.target.value }))} placeholder={bs ? 'Opis obavljenih radova, zamijenjeni dijelovi...' : 'Describe work done, replaced parts...'} />
+                                    <label className="form-label">📝 {t('napomenaOpisRadova')}</label>
+                                    <textarea className="form-textarea" rows={3} value={formData.napomena} onChange={e => setFormData(p => ({ ...p, napomena: e.target.value }))} placeholder={t('opisObavljenihRadovaZamijenjeniDijelovi')} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">📎 {bs ? 'Prilog (dokaz servisa, maks. 2MB)' : 'Attachment (proof of service, max 2MB)'}</label>
+                                    <label className="form-label">📎 {t('prilogDokazServisaMaks2mb')}</label>
                                     {formData.docName ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
                                             <span style={{ fontSize: '0.85rem', color: 'var(--info)' }}>📎 {formData.docName}</span>
-                                            <button className="btn btn-ghost btn-sm" onClick={() => setFormData(p => ({ ...p, docName: '', docData: '' }))} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>✕ {bs ? 'Ukloni' : 'Remove'}</button>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setFormData(p => ({ ...p, docName: '', docData: '' }))} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>✕ {t('ukloni')}</button>
                                         </div>
                                     ) : (
                                         <div onClick={() => serviceDocRef.current?.click()} style={{
@@ -263,14 +263,14 @@ function ServiceRecordsInner() {
                                         }}
                                             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
                                             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                                            📂 {bs ? 'Kliknite za upload dokumenta (PDF, slike)' : 'Click to upload document (PDF, images)'}
+                                            📂 {t('klikniteZaUploadDokumentaPdf')}
                                         </div>
                                     )}
                                     <input ref={serviceDocRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
                                 </div>
                             </div>
                             <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.04)', borderRadius: 6, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                💡 {bs ? 'Datum posljednjeg i idućeg pregleda na opremi biće automatski ažurirani.' : "Equipment's last/next examination dates will be updated automatically."}
+                                💡 {t('datumPosljednjegIIducegPregleda')}
                             </div>
                         </div>
                         <div className="modal-footer">
@@ -283,21 +283,21 @@ function ServiceRecordsInner() {
 
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}><div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNewService}>+ {bs ? 'Novi servisni zapis' : 'New Service Record'}</button>
+                        <button className="btn btn-primary btn-sm" onClick={handleNewService}>+ {t('noviServisniZapis')}</button>
                         <SavedFlash />
-                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži zapise...' : '🔍 Search records...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={t('pretraziZapisnike')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
-                                    <th onClick={() => toggleSort('equipmentName')} style={thStyle('equipmentName')}>{bs ? 'Radna oprema' : 'Equipment'}{sortIcon('equipmentName')}</th>
-                                    <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{bs ? 'Tip servisa' : 'Service Type'}{sortIcon('tip')}</th>
-                                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{bs ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                                    <th onClick={() => toggleSort('servisirao')} style={thStyle('servisirao')}>{bs ? 'Servisirao' : 'Serviced By'}{sortIcon('servisirao')}</th>
-                                    <th onClick={() => toggleSort('iduciServis')} style={thStyle('iduciServis')}>{bs ? 'Idući servis' : 'Next Service'}{sortIcon('iduciServis')}</th>
-                                    <th>{bs ? 'Prilog' : 'Attachment'}</th>
+                                    <th onClick={() => toggleSort('equipmentName')} style={thStyle('equipmentName')}>{t('workEquipment')}{sortIcon('equipmentName')}</th>
+                                    <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{t('tipServisa')}{sortIcon('tip')}</th>
+                                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('datum')}{sortIcon('datum')}</th>
+                                    <th onClick={() => toggleSort('servisirao')} style={thStyle('servisirao')}>{t('servisiraoOvlastenaFirma')}{sortIcon('servisirao')}</th>
+                                    <th onClick={() => toggleSort('iduciServis')} style={thStyle('iduciServis')}>{t('iduciServis')}{sortIcon('iduciServis')}</th>
+                                    <th>{t('prilog')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -317,14 +317,14 @@ function ServiceRecordsInner() {
                                                         ? { bottom: window.innerHeight - rect.top + 4, left: rect.left }
                                                         : { top: rect.bottom + 4, left: rect.left });
                                                     setActionMenuId(d.id);
-                                                }}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                }}>{t('akcije')} ▼</button>
                                                 {actionMenuId === d.id && (<>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                     <div style={{ position: 'fixed', ...menuPos, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, overflowY: 'auto' }}>
-                                                        <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEditService(d); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
-                                                        {d.docData && <button onClick={(e) => { e.stopPropagation(); openDocInTab(d); }} className="dropdown-item">📎 {bs ? 'Otvori prilog' : 'Open Attachment'}</button>}
+                                                        <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEditService(d); }} className="dropdown-item">✏️ {t('uredi')}</button>
+                                                        {d.docData && <button onClick={(e) => { e.stopPropagation(); openDocInTab(d); }} className="dropdown-item">📎 {t('openAttachment')}</button>}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteService(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteService(d.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                     </div>
                                                 </>)}
                                             </div>

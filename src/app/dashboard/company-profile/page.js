@@ -10,7 +10,7 @@ import Icon3D from '@/components/Icon3D';
 
 export default function CompanyProfileHub() {
     const { lang, t } = useLanguage();
-    const bs = lang !== 'en';
+    
     const [tab, setTab] = useState('org');
     
     return (
@@ -34,7 +34,7 @@ export default function CompanyProfileHub() {
                       transition: 'all 0.2s'
                   }}>
                     <Icon3D name="🏢" size={18} />
-                    {bs ? 'Organizacijske jedinice' : 'Organizational Units'}
+                    {t('organizacijskeJedinice')}
                 </button>
                 <button 
                   onClick={() => setTab('work')} 
@@ -50,7 +50,7 @@ export default function CompanyProfileHub() {
                       transition: 'all 0.2s'
                   }}>
                     <Icon3D name="🔧" size={18} />
-                    {bs ? 'Radna mjesta' : 'Workplaces'}
+                    {t('radnaMjesta')}
                 </button>
                 <button 
                   onClick={() => setTab('sist')} 
@@ -66,7 +66,7 @@ export default function CompanyProfileHub() {
                       transition: 'all 0.2s'
                   }}>
                     <Icon3D name="📑" size={18} />
-                    {bs ? 'Sistematizacija' : 'Systematization'}
+                    {t('systematization')}
                 </button>
             </div>
             

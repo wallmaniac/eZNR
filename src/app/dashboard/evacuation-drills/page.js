@@ -136,8 +136,8 @@ function EvacuationDrillsInner() {
     const [uploadProgress, setUploadProgress] = useState(0);
 
     const handleSave = async () => {
-        if (!formData.planId) { await alert(bs ? 'Plan evakuacije je obavezan!' : 'Evacuation Plan is required!'); return; }
-        if (!formData.datumVjezbe) { await alert(bs ? 'Datum vježbe je obavezan!' : 'Drill Date is required!'); return; }
+        if (!formData.planId) { await alert(t('planEvakuacijeJeObavezan')); return; }
+        if (!formData.datumVjezbe) { await alert(t('drillDateIsRequired')); return; }
         if (editingId) { update(COLLECTIONS.EVACUATION_DRILLS, editingId, formData); }
         else { create(COLLECTIONS.EVACUATION_DRILLS, formData); }
         loadData(); markClean(); setShowForm(false); showFlash();
@@ -145,7 +145,7 @@ function EvacuationDrillsInner() {
     };
 
     const handleDelete = async (id) => {
-        if (await confirm(bs ? 'Obrisati ovu vježbu?' : 'Delete this drill?')) {
+        if (await confirm(t('deleteThisDrill'))) {
             remove(COLLECTIONS.EVACUATION_DRILLS, id); setActionMenuId(null); loadData();
         }
     };
@@ -154,7 +154,7 @@ function EvacuationDrillsInner() {
     const toggleOne = (id) => { const n = new Set(selectedIds); if (n.has(id)) n.delete(id); else n.add(id); setSelectedIds(n); };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} vježbi?` : `Delete ${selectedIds.size} drills?`)) {
+        if (await confirm(t('deleteDrills').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) remove(COLLECTIONS.EVACUATION_DRILLS, id);
             setSelectedIds(new Set()); loadData();
         }
@@ -179,15 +179,15 @@ function EvacuationDrillsInner() {
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 {/* Header */}
-                <PageHeader icon="🏃" title={hr ? 'Vježbe evakuacije' : bs ? 'Vježbe evakuacije' : 'Evacuation Drills'} />
+                <PageHeader icon="🏃" title={hr ? 'Vježbe evakuacije' : t('evacuationDrills')} />
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20, marginTop: 16 }}>
                     {[
-                        { label: bs ? 'Ukupno vježbi' : 'Total Drills', val: stats.total, icon: '🏃', color: 'var(--primary)' },
-                        { label: hr ? 'Uspješno provedene' : bs ? 'Uspješno provedene' : 'Successfully Completed', val: stats.successful, icon: '✅', color: '#22C55E' },
-                        { label: hr ? 'Neuspješne vježbe' : bs ? 'Neuspješne vježbe' : 'Failed Drills', val: stats.failed, icon: '🔴', color: '#EF4444' },
-                        { label: hr ? 'Uz sudjelovanje hitnih službi' : bs ? 'Uz učešće hitnih službi' : 'With Emergency Svc.', val: stats.withEmergencyServices, icon: '🚒', color: '#6366F1' },
+                        { label: t('totalDrills1'), val: stats.total, icon: '🏃', color: 'var(--primary)' },
+                        { label: hr ? 'Uspješno provedene' : t('successfullyCompleted'), val: stats.successful, icon: '✅', color: '#22C55E' },
+                        { label: hr ? 'Neuspješne vježbe' : t('failedDrills'), val: stats.failed, icon: '🔴', color: '#EF4444' },
+                        { label: hr ? 'Uz sudjelovanje hitnih službi' : t('withEmergencySvc'), val: stats.withEmergencyServices, icon: '🚒', color: '#6366F1' },
                     ].map((s, i) => (
                         <div key={i} className="card" style={{ padding: '16px 20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -206,46 +206,46 @@ function EvacuationDrillsInner() {
                     <div className="modal-overlay" onClick={handleCloseForm}>
                         <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h2>{editingId ? '✏️' : '+'} {bs ? 'Vježba evakuacije' : 'Evacuation Drill'}</h2>
+                                <h2>{editingId ? '✏️' : '+'} {t('vjezbaEvakuacije1')}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={handleCloseForm}>✕</button>
                             </div>
                             <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
                                 <div className="form-grid-2">
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Plan evakuacije (Lokacija)' : 'Evacuation Plan (Location)'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{t('evacuationPlanLocation')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <select className="form-select" value={formData.planId} onChange={e => set('planId', e.target.value)}>
                                             <option value="">—</option>
                                             {plans.map(p => <option key={p.id} value={p.id}>{p.lokacija}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Datum vježbe' : 'Drill Date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{t('drillDate')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <DateInput value={formData.datumVjezbe} onChange={v => set('datumVjezbe', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Vrijeme početka' : 'Start Time'}</label>
+                                        <label className="form-label">{t('startTime')}</label>
                                         <TimeInput value={formData.vrijemePocetka} onChange={v => set('vrijemePocetka', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Trajanje (minute)' : 'Duration (minutes)'}</label>
+                                        <label className="form-label">{t('durationMinutes')}</label>
                                         <input className="form-input" type="number" value={formData.trajanjeMinuta} onChange={e => set('trajanjeMinuta', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Broj evakuiranih osoba' : 'No. of evacuated persons'}</label>
+                                        <label className="form-label">{t('noOfEvacuatedPersons')}</label>
                                         <input className="form-input" type="number" value={formData.brojEvakuisanihOsoba} onChange={e => set('brojEvakuisanihOsoba', e.target.value)} />
                                     </div>
 
                                     {/* Responsible person */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
-                                        <label className="form-label">{hr ? 'Voditelj vježbe' : bs ? 'Rukovodilac vježbe' : 'Drill Supervisor'}</label>
+                                        <label className="form-label">{hr ? 'Voditelj vježbe' : t('drillSupervisor')}</label>
                                         <div style={{ position: 'relative' }}>
-                                            <input className="form-input" placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={workerSearch}
+                                            <input className="form-input" placeholder={t('pretrazi')} value={workerSearch}
                                                 onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('odgovornaOsobaId', ''); set('odgovornaOsobaIme', ''); }}
                                                 onFocus={() => setShowWorkerDropdown(true)} autoComplete="off" />
                                             {showWorkerDropdown && (
                                                 <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 100, maxHeight: 200, overflowY: 'auto' }}>
                                                     {filteredWorkers.length === 0 ? (
-                                                        <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{bs ? 'Nema radnika' : 'No workers'}</div>
+                                                        <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('nemaRadnika')}</div>
                                                     ) : filteredWorkers.slice(0, 15).map(w => (
                                                         <button key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
                                                             
@@ -264,34 +264,34 @@ function EvacuationDrillsInner() {
                                     {/* Additional Services */}
                                     <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', marginTop: 4, paddingTop: 12 }}>
                                         <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 12 }}>
-                                            🚨 {hr ? 'Sudjelovanje hitnih službi' : bs ? 'Učešće hitnih službi' : 'Emergency Services Participation'}
+                                            🚨 {hr ? 'Sudjelovanje hitnih službi' : t('emergencyServicesParticipation')}
                                         </div>
                                     </div>
                                     <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <input type="checkbox" checked={formData.sudjelovaliVatrogasci} onChange={e => set('sudjelovaliVatrogasci', e.target.checked)} style={{ cursor: 'pointer' }} id="chk-fire" />
-                                        <label htmlFor="chk-fire" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{hr ? 'Vatrogasci' : bs ? 'Vatrogasci' : 'Fire Department'}</label>
+                                        <label htmlFor="chk-fire" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{hr ? 'Vatrogasci' : t('fireDepartment')}</label>
                                     </div>
                                     <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <input type="checkbox" checked={formData.sudjelovalaHitna} onChange={e => set('sudjelovalaHitna', e.target.checked)} style={{ cursor: 'pointer' }} id="chk-med" />
-                                        <label htmlFor="chk-med" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{hr ? 'Hitna medicinska pomoć' : bs ? 'Hitna medicinska pomoć' : 'Ambulance'}</label>
+                                        <label htmlFor="chk-med" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{hr ? 'Hitna medicinska pomoć' : t('ambulance')}</label>
                                     </div>
 
                                     {/* Textareas */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', paddingTop: 12, marginTop: 4 }}>
-                                        <label className="form-label">{bs ? 'Opis toka vježbe' : 'Drill Sequence Description'}</label>
+                                        <label className="form-label">{t('drillSequenceDescription')}</label>
                                         <textarea className="form-input" rows={3} value={formData.opisTokaVjezbe} onChange={e => set('opisTokaVjezbe', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Uočeni nedostaci' : 'Observed Deficiencies'}</label>
+                                        <label className="form-label">{t('observedDeficiencies')}</label>
                                         <textarea className="form-input" rows={3} value={formData.uoceniNedostaci} onChange={e => set('uoceniNedostaci', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Predložene korektivne mjere' : 'Proposed Corrective Measures'}</label>
+                                        <label className="form-label">{t('proposedCorrectiveMeasures')}</label>
                                         <textarea className="form-input" rows={3} value={formData.korektivneMjere} onChange={e => set('korektivneMjere', e.target.value)} />
                                     </div>
 
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Status' : 'Status'}</label>
+                                        <label className="form-label">{t('status')}</label>
                                         <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
                                             {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
                                         </select>
@@ -304,7 +304,7 @@ function EvacuationDrillsInner() {
 
                                     {/* Document Upload */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', paddingTop: 12, marginTop: 4 }}>
-                                        <label className="form-label" style={{ fontWeight: 700 }}>{bs ? '📎 Dokument (izvještaj vježbe)' : '📎 Document (drill report)'}</label>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{t('documentDrillReport')}</label>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                                             {formData.attachedFile && (
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
@@ -334,7 +334,7 @@ function EvacuationDrillsInner() {
                                                 for (let i = 0; i < files.length; i++) {
                                                     const file = files[i];
                                                     if (file.size > 15 * 1024 * 1024) { 
-                                                        alert(hr ? `Fajl ${file.name} je prevelik (max 15MB)!` : bs ? `Fajl ${file.name} je prevelik (max 15MB)!` : `File ${file.name} is too large (max 15MB)!`); 
+                                                        alert(hr ? `Fajl ${file.name} je prevelik (max 15MB)!` : t('fileIsTooLargeMax1').replace('{0}', file.name)); 
                                                         continue; 
                                                     }
                                                     
@@ -347,10 +347,10 @@ function EvacuationDrillsInner() {
                                             } catch (err) {
                                                 console.error("Upload error", err);
                                                 const errMsg = err?.code === 'storage/unauthorized' 
-                                                    ? (bs ? 'Nemate dozvolu za upload. Provjerite Firebase Storage pravila.' : 'Upload unauthorized. Check Firebase Storage rules.')
+                                                    ? (t('uploadUnauthorizedCheckFirebaseStorage1'))
                                                     : err?.code === 'storage/canceled'
-                                                    ? (bs ? 'Upload je otkazan.' : 'Upload was cancelled.')
-                                                    : (bs ? `Greška prilikom uploada: ${err?.message || err?.code || 'Nepoznata greška'}` : `Upload error: ${err?.message || err?.code || 'Unknown error'}`);
+                                                    ? (t('uploadWasCancelled1'))
+                                                    : (t('uploadError1').replace('{0}', err?.message || err?.code || 'Nepoznata greška').replace('{1}', err?.message || err?.code || 'Unknown error'));
                                                 await alert(errMsg);
                                             } finally {
                                                 setUploadingDoc(false);
@@ -359,7 +359,7 @@ function EvacuationDrillsInner() {
                                         }} style={{ fontSize: '0.85rem' }} disabled={uploadingDoc} />
                                         {uploadingDoc && (
                                             <div style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--primary)' }}>
-                                                {bs ? 'Učitavanje dokumenata...' : 'Uploading documents...'} {uploadProgress}%
+                                                {t('uploadingDocuments1')} {uploadProgress}%
                                             </div>
                                         )}
                                     </div>
@@ -377,7 +377,7 @@ function EvacuationDrillsInner() {
                 <div className="card">
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew}>+ {bs ? 'Nova vježba' : 'New Drill'}</button>
+                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew}>+ {t('newDrill')}</button>
                             <div className="search-bar" style={{ width: 250 }}>
                                 <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
@@ -385,10 +385,10 @@ function EvacuationDrillsInner() {
                             <SavedFlash />
                             {selectedIds.size> 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span>
+                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                                 </div>
-                            ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {bs ? 'vježbi' : 'drills'}</span>}
+                            ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('drills')}</span>}
                         </div>
                         <div className="data-table-wrapper">
                             <table className="data-table">
@@ -396,14 +396,14 @@ function EvacuationDrillsInner() {
                                     <tr>
                                         <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                         <th style={{ width: 90 }}>{t('actions')}</th>
-                                        <th onClick={() => toggleSort('datumVjezbe')} style={thStyle('datumVjezbe')}>{bs ? 'Datum' : 'Date'}{sortIcon('datumVjezbe')}</th>
-                                        <th>{bs ? 'Plan evakuacije (Lokacija)' : 'Evacuation Plan'}</th>
-                                        <th>{hr ? 'Voditelj' : bs ? 'Rukovodilac' : 'Supervisor'}</th>
-                                        <th onClick={() => toggleSort('trajanjeMinuta')} style={thStyle('trajanjeMinuta')}>{bs ? 'Trajanje' : 'Duration'}{sortIcon('trajanjeMinuta')}</th>
-                                        <th onClick={() => toggleSort('brojEvakuisanihOsoba')} style={thStyle('brojEvakuisanihOsoba')}>{hr ? 'Evakuirano' : bs ? 'Evakuisano' : 'Evacuated'}{sortIcon('brojEvakuisanihOsoba')}</th>
-                                        <th>{bs ? 'Dokument' : 'Document'}</th>
-                                        <th>{hr ? 'Hitne službe' : bs ? 'Hitne službe' : 'Emergency Svc.'}</th>
-                                        <th>{bs ? 'Status' : 'Status'}</th>
+                                        <th onClick={() => toggleSort('datumVjezbe')} style={thStyle('datumVjezbe')}>{t('datum')}{sortIcon('datumVjezbe')}</th>
+                                        <th>{t('evacuationPlan1')}</th>
+                                        <th>{hr ? 'Voditelj' : t('supervisor')}</th>
+                                        <th onClick={() => toggleSort('trajanjeMinuta')} style={thStyle('trajanjeMinuta')}>{t('trajanje')}{sortIcon('trajanjeMinuta')}</th>
+                                        <th onClick={() => toggleSort('brojEvakuisanihOsoba')} style={thStyle('brojEvakuisanihOsoba')}>{hr ? 'Evakuirano' : t('evacuated')}{sortIcon('brojEvakuisanihOsoba')}</th>
+                                        <th>{t('dokument')}</th>
+                                        <th>{hr ? 'Hitne službe' : t('emergencySvc')}</th>
+                                        <th>{t('status')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -418,17 +418,17 @@ function EvacuationDrillsInner() {
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ position: 'relative' }}>
-                                                        <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
+                                                        <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={e => openMenu(d.id, e)}>{t('akcije')} ▾</button>
                                                         {actionMenuId === d.id && (
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                                    <button onClick={() => { setActionMenuId(null); openEdit(d); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); if (d.attachedFile) { const a = document.createElement('a'); a.href = d.attachedFile; a.download = d.attachedFileName || 'document'; a.click(); } if (d.documents) { d.documents.forEach(d => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.click(); }); } }} className="dropdown-item">⬇️ {hr ? 'Preuzmi dokumente' : bs ? 'Preuzmi dokumente' : 'Download documents'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...d }; delete copy.id; copy.datumVjezbe = new Date().toISOString().split('T')[0]; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.EVACUATION_DRILLS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); openEdit(d); }} className="dropdown-item">✏️ {t('otvori')}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); if (d.attachedFile) { const a = document.createElement('a'); a.href = d.attachedFile; a.download = d.attachedFileName || 'document'; a.click(); } if (d.documents) { d.documents.forEach(d => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.click(); }); } }} className="dropdown-item">⬇️ {hr ? 'Preuzmi dokumente' : t('downloadDocuments1')}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...d }; delete copy.id; copy.datumVjezbe = new Date().toISOString().split('T')[0]; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (t('copy1')); create(COLLECTIONS.EVACUATION_DRILLS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {t('kopiraj')}</button>
                                                                     
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                                 </div>
                                                             </>
                                                         )}

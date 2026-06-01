@@ -22,40 +22,40 @@ function buildBulkPrintHtml(selectedRows, workers, lang) {
       <div class="cert-page" style="${isLast ? '' : 'page-break-after: always'}">
         <div class="cert-header">
           <div class="cert-logo">eZNR</div>
-          <div class="cert-title">${bs ? 'UVJERENJE' : 'CERTIFICATE'}</div>
-          <div class="cert-subtitle">${bs ? 'o osposobljenosti za bezbijedan rad' : 'of occupational safety training'}</div>
+          <div class="cert-title">${t('uvjerenje')}</div>
+          <div class="cert-subtitle">${t('ofOccupationalSafetyTraining')}</div>
         </div>
         <table class="cert-table">
-          <tr><td class="lbl">${bs ? 'Radnik' : 'Worker'}</td><td class="val"><strong>${w.ime || ''} ${w.prezime || ''}</strong></td></tr>
-          <tr><td class="lbl">${bs ? 'JMBG' : 'ID No.'}</td><td class="val">${w.jmbg || '—'}</td></tr>
-          <tr><td class="lbl">${bs ? 'Radno mjesto' : 'Workplace'}</td><td class="val">${w.radnoMjesto || '—'}</td></tr>
-          <tr><td class="lbl">${bs ? 'Vrsta uvjerenja' : 'Cert. type'}</td><td class="val">${r.tipUvjerenjaIme || r.tipUvjerenja || '—'}</td></tr>
-          <tr><td class="lbl">${bs ? 'Naziv uvjerenja' : 'Certificate name'}</td><td class="val">${r.naziv || r.ime || '—'}</td></tr>
-          <tr><td class="lbl">${bs ? 'Oznaka' : 'Code'}</td><td class="val">${r.oznaka || '—'}</td></tr>
-          <tr><td class="lbl">${bs ? 'Datum izdavanja' : 'Issue date'}</td><td class="val">${r.datum ? r.datum.split('T')[0].split('-').reverse().join('.') : '—'}</td></tr>
-          <tr><td class="lbl">${bs ? 'Važi do' : 'Valid until'}</td><td class="val">${r.vrijediDo ? r.vrijediDo.split('T')[0].split('-').reverse().join('.') : (bs ? 'Trajno' : 'Permanent')}</td></tr>
-          ${r.ispitivac ? `<tr><td class="lbl">${bs ? 'Ispitivač' : 'Examiner'}</td><td class="val">${r.ispitivac}</td></tr>` : ''}
-          ${r.ovlastenaFirma ? `<tr><td class="lbl">${bs ? 'Ovlaštena firma' : 'Auth. company'}</td><td class="val">${r.ovlastenaFirma}</td></tr>` : ''}
+          <tr><td class="lbl">${t('radnik1')}</td><td class="val"><strong>${w.ime || ''} ${w.prezime || ''}</strong></td></tr>
+          <tr><td class="lbl">${t('jmbg')}</td><td class="val">${w.jmbg || '—'}</td></tr>
+          <tr><td class="lbl">${t('radnoMjesto')}</td><td class="val">${w.radnoMjesto || '—'}</td></tr>
+          <tr><td class="lbl">${t('certType')}</td><td class="val">${r.tipUvjerenjaIme || r.tipUvjerenja || '—'}</td></tr>
+          <tr><td class="lbl">${t('nazivUvjerenja1')}</td><td class="val">${r.naziv || r.ime || '—'}</td></tr>
+          <tr><td class="lbl">${t('oznaka')}</td><td class="val">${r.oznaka || '—'}</td></tr>
+          <tr><td class="lbl">${t('datumIzdavanja')}</td><td class="val">${r.datum ? r.datum.split('T')[0].split('-').reverse().join('.') : '—'}</td></tr>
+          <tr><td class="lbl">${t('vrijediDo')}</td><td class="val">${r.vrijediDo ? r.vrijediDo.split('T')[0].split('-').reverse().join('.') : (t('permanent'))}</td></tr>
+          ${r.ispitivac ? `<tr><td class="lbl">${t('ispitivac')}</td><td class="val">${r.ispitivac}</td></tr>` : ''}
+          ${r.ovlastenaFirma ? `<tr><td class="lbl">${t('ovlastenaTvrtka')}</td><td class="val">${r.ovlastenaFirma}</td></tr>` : ''}
         </table>
         <div class="cert-footer">
           <div class="sig-block">
             <div class="sig-line"></div>
-            <div class="sig-label">${bs ? 'Odgovorno lice' : 'Authorised person'}</div>
+            <div class="sig-label">${t('authorisedPerson')}</div>
           </div>
           <div class="sig-block">
             <div class="sig-line"></div>
-            <div class="sig-label">${bs ? 'Radnik (potpis)' : 'Worker (signature)'}</div>
+            <div class="sig-label">${t('workerSignature')}</div>
           </div>
         </div>
-        <div class="cert-meta">${bs ? 'Generisano putem' : 'Generated via'} eZNR · zastitanaradu.ba · ${new Date().toLocaleDateString('bs-BA')}</div>
+        <div class="cert-meta">${t('generatedVia')} eZNR · zastitanaradu.ba · ${new Date().toLocaleDateString('bs-BA')}</div>
       </div>`;
   }).join('\n');
 
   return `<!DOCTYPE html>
-<html lang="${bs ? 'bs' : 'en'}">
+<html lang="${t('en')}">
 <head>
   <meta charset="UTF-8"/>
-  <title>${bs ? 'Uvjerenja' : 'Certificates'} — eZNR</title>
+  <title>${t('uvjerenja')} — eZNR</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #111; background: white; }
@@ -239,20 +239,20 @@ function WorkerCertificatesInner() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <PageHeader icon="📜" title={t('workerCertificates')} subtitle={`${rows.length} ${t('records')}${selectedIds.size> 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}`} />
+        <PageHeader icon="📜" title={t('workerCertificates')} subtitle={`${rows.length} ${t('records')}${selectedIds.size> 0 ? ` · ${selectedIds.size} ${t('odabrano1')}` : ''}`} />
 
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')} title={t('dodajNovoUvjerenje')}>
-                + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
+                + {t('addCertificate')}
               </button>
 
               <div className="search-bar" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                 <input
-                  placeholder={bs ? 'Pretraži uvjerenja...' : 'Search...'}
+                  placeholder={t('pretrazi1')}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
@@ -266,7 +266,7 @@ function WorkerCertificatesInner() {
                 title={t('filtrirajPoOdjelu')}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}>
-                <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
+                <option value="">{t('sviOdjeli')}</option>
                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
               </select>
 
@@ -277,7 +277,7 @@ function WorkerCertificatesInner() {
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1 }}>
                   <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)', width: 14, height: 14 }} />
-                  {bs ? 'Ističe u' : 'Expiring in'}
+                  {t('isticeU')}
                   <select
                     value={expiringSoonDays}
                     onChange={e => setExpiringSoonDays(Number(e.target.value))}
@@ -295,8 +295,8 @@ function WorkerCertificatesInner() {
                 title={t('prikaziPdfIzvjestaje')}
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
-                { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
-                ...(selectedIds.size> 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
+                { label: t('svaUvjerenja'), icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
+                ...(selectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
               <div style={{ position: 'relative' }}>
@@ -305,14 +305,14 @@ function WorkerCertificatesInner() {
                      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
                      setZapisniciOpen(prev => !prev);
                  }} title={t('prikaziZapisnikeIUvjerenja')}>
-                    🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
+                    🖨️ {t('zapisniciAlat')} ▾
                  </button>
                  {zapisniciOpen && typeof document !== 'undefined' && createPortal(
                    <>
                      <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
                      <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
-                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
-                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {t('zapisnikZos')}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</div>
                      </div>
                    </>, document.body
                  )}
@@ -327,19 +327,19 @@ function WorkerCertificatesInner() {
                 flexWrap: 'wrap',
               }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  ✓ {selectedIds.size} {bs ? 'odabrano' : 'selected'} — {bs ? 'Grupne akcije:' : 'Bulk actions:'}
+                  ✓ {selectedIds.size} {t('odabrano1')} — {t('bulkActions')}
                 </span>
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={handleBulkPrint}
-                  title={bs ? 'Generiši i isprintaj sva odabrana uvjerenja u jednom PDF dokumentu' : 'Generate and print all selected certificates as one PDF'}>
-                  🖨️ {bs ? `Generiši PDF (${selectedIds.size} uvjerenja)` : `Generate PDF (${selectedIds.size} certs)`}
+                  title={t('generateAndPrintAllSelected')}>
+                  🖨️ {t('generatePdfCerts').replace('{0}', selectedIds.size)}
                 </button>
                 <button
                   className="btn btn-ghost btn-sm"
                   onClick={() => setSelectedIds(new Set())}
-                  title={bs ? 'Poništi odabir' : 'Clear selection'}>
-                  ✕ {bs ? 'Poništi odabir' : 'Clear selection'}
+                  title={t('ponistiOdabir')}>
+                  ✕ {t('ponistiOdabir')}
                 </button>
               </div>
             )}
@@ -356,11 +356,11 @@ function WorkerCertificatesInner() {
                         checked={allSelected}
                         ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
                         onChange={toggleAll}
-                        title={bs ? 'Odaberi sve / Poništi' : 'Select all / Clear'}
+                        title={t('selectAllClear')}
                         style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--primary)' }}
                       />
                     </th>
-                    <th style={{ width: 110, textAlign: 'center' }}>{bs ? 'Akcije' : 'Actions'}</th>
+                    <th style={{ width: 110, textAlign: 'center' }}>{t('akcije')}</th>
                     <th style={tsS('workerName')} onClick={() => tS('workerName')}>{t('worker')}{siS('workerName')}</th>
                     <th style={tsS('naziv')} onClick={() => tS('naziv')}>{t('name')}{siS('naziv')}</th>
                     <th style={tsS('oznaka')} onClick={() => tS('oznaka')}>{t('certCode')}{siS('oznaka')}</th>
@@ -372,7 +372,7 @@ function WorkerCertificatesInner() {
                 <tbody>
                   {pagedRows.length === 0 ? (
                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                      {searchTerm ? (bs ? `Nema rezultata za "${searchTerm}"` : `No results for "${searchTerm}"`) : t('noRecords')}
+                      {searchTerm ? (t('noResultsFor').replace('{0}', searchTerm)) : t('noRecords')}
                     </td></tr>
                   ) : pagedRows.map((r, idx) => {
                     const diff = r.vrijediDo ? (new Date(r.vrijediDo) - new Date()) / (1000 * 60 * 60 * 24) : 999;
@@ -420,7 +420,7 @@ function WorkerCertificatesInner() {
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }} onClick={e => e.stopPropagation()}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                             <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                onClick={() => handleEdit(r.id)} title={bs ? 'Uredi' : 'Edit'}>▶</button>
+                                onClick={() => handleEdit(r.id)} title={t('uredi')}>▶</button>
                             <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 const spaceBelow = window.innerHeight - rect.bottom;
@@ -431,8 +431,8 @@ function WorkerCertificatesInner() {
                                     : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                 );
                                 setActionMenuId(actionMenuId === r.id ? null : r.id);
-                            }} title={bs ? 'Akcije' : 'Actions'}>
-                                {bs ? 'Akcije' : 'Actions'} ▼
+                            }} title={t('akcije')}>
+                                {t('akcije')} ▼
                             </button>
                           </div>
                           {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
@@ -449,28 +449,28 @@ function WorkerCertificatesInner() {
                                         const _miSt = { width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontFamily: 'inherit' };
                                         return (<>
                                             <button style={_miSt} className="action-menu-item"
-                                                onClick={() => { setActionMenuId(null); handleEdit(r.id); }}>📂 {bs ? 'Otvori' : 'Open'}</button>
+                                                onClick={() => { setActionMenuId(null); handleEdit(r.id); }}>📂 {t('otvori')}</button>
                                             <button style={_miSt} className="action-menu-item"
                                                 onClick={() => {
                                                     setActionMenuId(null);
                                                     const html = buildBulkPrintHtml([r], workers, lang);
                                                     const win = window.open('', '_blank', 'width=900,height=700');
                                                     if (win) { win.document.write(html); win.document.close(); }
-                                                }}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
+                                                }}>🖨️ {t('isprintaj')}</button>
                                             <button style={_miSt} className="action-menu-item"
-                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/edit/${r.id}?tab=dokumenti`); }}>📁 {bs ? 'Dokumenti' : 'Documents'}</button>
+                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/edit/${r.id}?tab=dokumenti`); }}>📁 {t('dokumenti1')}</button>
                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                             <button style={_miSt} className="action-menu-item"
-                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>📋 {t('kopiraj')}</button>
                                             <button style={_miSt} className="action-menu-item"
-                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>🔄 {bs ? 'Produži' : 'Renew'}</button>
+                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>🔄 {t('renew')}</button>
                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                             <button style={{..._miSt, color: 'var(--danger)'}} className="action-menu-item-danger"
                                                 onClick={async () => {
                                                     setActionMenuId(null);
-                                                    const ok = await confirm(bs ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.');
+                                                    const ok = await confirm(t('obrisatiUvjerenjeOvaRadnjaJe'));
                                                     if (ok) { remove(COLLECTIONS.CERTIFICATES, r.id); setCerts(getAll(COLLECTIONS.CERTIFICATES)); }
-                                                }}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                }}>🗑️ {t('izbrisi')}</button>
                                         </>);
                                     })()}
                                 </div>
@@ -482,21 +482,21 @@ function WorkerCertificatesInner() {
                           <button
                             onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
                             style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                            title={r.workerId ? (bs ? 'Klikni za pregled profila' : 'Click to view profile') : ''}>{r.workerName}</button>
+                            title={r.workerId ? (t('klikniZaPregledProfila')) : ''}>{r.workerName}</button>
                         </td>
                         <td>
                           <button
                             onClick={() => handleEdit(r.id)}
                             disabled={isNavigating}
                             style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
-                            title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}>{r.naziv || r.ime || '—'}</button>
+                            title={t('urediUvjerenje')}>{r.naziv || r.ime || '—'}</button>
                         </td>
                         <td><span className="badge badge-info">{r.oznaka}</span></td>
                         <td>{formatDate(r.datum)}</td>
                         <td style={{ color: r.isExpired ? 'var(--danger)' : diff <= 60 ? '#FF9800' : undefined, fontWeight: r.isExpired || diff <= 60 ? 700 : undefined }}>
                           {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
                         </td>
-                        <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
+                        <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (t('isteklo')) : (t('vrijedi'))}</span></td>
 
                       </tr>
                     );
@@ -532,7 +532,7 @@ function WorkerCertificatesInner() {
             {selectedIds.size === 0 && rows.length> 0 && (
               <div style={{ padding: '10px 16px', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span>💡</span>
-                <span>{bs ? 'Odaberite uvjerenja kvačicama da biste ih grupno ispisali u jedan PDF.' : 'Check the checkboxes to bulk-print selected certificates as one PDF.'}</span>
+                <span>{t('checkTheCheckboxesToBulkprint')}</span>
               </div>
             )}
           </div>

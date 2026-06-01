@@ -755,9 +755,7 @@ export default function DashboardPage() {
     };
 
     const handleDeleteWorker = async (worker) => {
-        const ok = await confirm(lang !== 'en'
-            ? `Obrisati radnika ${worker.ime} ${worker.prezime}? Svi povezani podaci (uvjerenja, OZO, događaji) će biti obrisani.`
-            : `Delete worker ${worker.ime} ${worker.prezime}? All associated data (certs, PPE, events) will be deleted.`);
+        const ok = await confirm(t('deleteWorkerAllAssociatedData').replace('{0}', worker.ime).replace('{1}', worker.prezime));
         if (ok) {
             removeWorkerCascade(worker.id);
             setWorkers(getAll(COLLECTIONS.WORKERS));
@@ -808,7 +806,7 @@ export default function DashboardPage() {
     if (ds.companyId !== activeCompanyId || !isDataReady()) {
         return (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                {lang !== 'en' ? 'Učitavanje...' : 'Loading...'}
+                {t('ucitavanje')}
             </div>
         );
     }
@@ -843,7 +841,7 @@ export default function DashboardPage() {
             />
 
             {/* Stats Cards — now clickable */}
-            <CollapsibleWidget id="stats" title={lang !== 'en' ? 'Pregled' : 'Overview'} icon="📊" isMobile={isMobile}>
+            <CollapsibleWidget id="stats" title={t('pregled1')} icon="📊" isMobile={isMobile}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : `repeat(${stats.totalExpired > 0 ? 5 : 4}, 1fr)`, gap: 10, marginBottom: 24 }}>
                     <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} trend={!isMobile ? stats.recentWorkers : undefined} />
                     <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} trend={!isMobile ? stats.recentCerts : undefined} />
@@ -1166,7 +1164,7 @@ export default function DashboardPage() {
                     <div className="modal-overlay" onClick={() => setShowEventForm(false)}>
                         <div className="modal" style={{ maxWidth: 540 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h2>📅 {lang !== 'en' ? 'Novi događaj' : 'New Event'} — {formatDate(eventFormDate)}</h2>
+                                <h2>📅 {t('noviDogaaj')} — {formatDate(eventFormDate)}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={() => setShowEventForm(false)}>✕</button>
                             </div>
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1370,7 +1368,7 @@ export default function DashboardPage() {
                                 {eventFormData.tip === 'ppe' && (
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: 12 }}>
                                         <div className="form-group">
-                                            <label className="form-label">{lang !== 'en' ? 'Naziv OZO *' : 'PPE name *'}</label>
+                                            <label className="form-label">{t('nazivOzo1')}</label>
                                             <select className="form-select" value={eventFormData.ppeNaziv}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, ppeNaziv: e.target.value }))}>
                                                 <option value="">{t('odaberi1')}</option>
@@ -1492,16 +1490,12 @@ export default function DashboardPage() {
                                 {/* Info banner for connected events */}
                                 {eventFormData.workerId && (eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
-                                        ✅ {lang !== 'en'
-                                            ? `Zapis će biti dodan i u ${eventFormData.tip === 'cert' ? 'Popis uvjerenja' : 'Zaštitnu opremu'} radnika.`
-                                            : `Record will also be added to worker's ${eventFormData.tip === 'cert' ? 'certificates list' : 'PPE list'}.`}
+                                        ✅ {t('recordWillAlsoBeAdded').replace('{0}', eventFormData.tip === 'cert' ? 'Popis uvjerenja' : 'Zaštitnu opremu').replace('{1}', eventFormData.tip === 'cert' ? 'certificates list' : 'PPE list')}
                                     </div>
                                 )}
                                 {(eventFormData.tip === 'fleet_inspection' || eventFormData.tip === 'fleet_registration') && eventFormData.vehicleId && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
-                                        ✅ {lang !== 'en'
-                                            ? `Datum ${eventFormData.tip === 'fleet_inspection' ? 'tehničkog pregleda' : 'registracije'} vozila će biti automatski ažuriran, a istek produžen za 1 godinu.`
-                                            : `Vehicle's ${eventFormData.tip === 'fleet_inspection' ? 'inspection' : 'registration'} date will be updated automatically, expiry extended by 1 year.`}
+                                        ✅ {t('vehiclesDateWillBeUpdated').replace('{0}', eventFormData.tip === 'fleet_inspection' ? 'tehničkog pregleda' : 'registracije').replace('{1}', eventFormData.tip === 'fleet_inspection' ? 'inspection' : 'registration')}
                                     </div>
                                 )}
                                 {eventFormData.tip === 'fire_service' && eventFormData.extinguisherId && (
@@ -1931,7 +1925,7 @@ export default function DashboardPage() {
                                             return (
                                                 <tr key={p.id || idx}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === `ppe-${p.id}` ? actionRef : null}>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)} title={lang !== 'en' ? 'Prikaži akcije za opremu' : 'Show PPE actions'}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)} title={t('prikaziAkcijeZaOpremu')}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === `ppe-${p.id}` && (

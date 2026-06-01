@@ -12,7 +12,7 @@ import PageHeader from '@/components/PageHeader';
 
 function FleetAssignmentsInner() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
@@ -99,7 +99,7 @@ function FleetAssignmentsInner() {
     };
 
     const handleDelete = async (id) => {
-        if (await confirm(bs ? 'Obrisati ovo zaduženje?' : 'Delete this assignment?')) {
+        if (await confirm(t('deleteThisAssignment'))) {
             remove(COLLECTIONS.VEHICLE_ASSIGNMENTS, id);
             setActionMenuId(null);
             loadData();
@@ -123,7 +123,7 @@ function FleetAssignmentsInner() {
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`)) {
+        if (await confirm(t('deleteRecords1').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) remove(COLLECTIONS.VEHICLE_ASSIGNMENTS, id);
             setSelectedIds(new Set());
             loadData();
@@ -141,8 +141,8 @@ function FleetAssignmentsInner() {
     };
 
     const handleSave = async () => {
-        if (!formData.vehicleId) { await alert(bs ? 'Odaberite vozilo!' : 'Select vehicle!'); return; }
-        if (!formData.workerId) { await alert(bs ? 'Odaberite vozača!' : 'Select driver!'); return; }
+        if (!formData.vehicleId) { await alert(t('selectVehicle')); return; }
+        if (!formData.workerId) { await alert(t('selectDriver')); return; }
         
         create(COLLECTIONS.VEHICLE_ASSIGNMENTS, {
             ...formData,
@@ -162,21 +162,21 @@ function FleetAssignmentsInner() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <PageHeader icon="🔄" title={bs ? 'Zaduženja vozila' : 'Vehicle Assignments'} />
+            <PageHeader icon="🔄" title={t('fleetAssignments')} />
 
             {/* Modal */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>+ {bs ? 'Novo zaduženje vozila' : 'New Vehicle Assignment'}</h2>
+                            <h2>+ {t('newVehicleAssignment')}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                                 
                                 <div className="form-group" ref={vRef} style={{ position: 'relative' }}>
-                                    <label className="form-label">{bs ? 'Vozilo' : 'Vehicle'}</label>
+                                    <label className="form-label">{t('vozilo1')}</label>
                                     <input className="form-input" placeholder="🔍 Pretraži vozila..." value={vehicleSearch} 
                                         onChange={e => { setVehicleSearch(e.target.value); setShowVSearch(true); setFormData(f => ({...f, vehicleId: ''})); }} 
                                         onFocus={() => setShowVSearch(true)} />
@@ -194,7 +194,7 @@ function FleetAssignmentsInner() {
                                 </div>
 
                                 <div className="form-group" ref={wRef} style={{ position: 'relative' }}>
-                                    <label className="form-label">{bs ? 'Vozač' : 'Driver'}</label>
+                                    <label className="form-label">{t('driver5')}</label>
                                     <input className="form-input" placeholder="🔍 Pretraži vozače..." value={workerSearch} 
                                         onChange={e => { setWorkerSearch(e.target.value); setShowWSearch(true); setFormData(f => ({...f, workerId: '', workerIme: ''})); }} 
                                         onFocus={() => setShowWSearch(true)} />
@@ -213,11 +213,11 @@ function FleetAssignmentsInner() {
 
                                 <div className="form-grid-2">
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum zaduženja' : 'Date Given'}</label>
+                                        <label className="form-label">{t('datumZaduzenja')}</label>
                                         <DateInput value={formData.datumZaduzenja} onChange={v => setFormData(f => ({...f, datumZaduzenja: v}))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Početna kilometraža' : 'Starting Mileage'}</label>
+                                        <label className="form-label">{t('startingMileage1')}</label>
                                         <input className="form-input" type="number" value={formData.pocetnaKilometraza} onChange={e => setFormData(f => ({...f, pocetnaKilometraza: e.target.value}))} />
                                     </div>
                                 </div>
@@ -236,15 +236,15 @@ function FleetAssignmentsInner() {
                         <button className="btn btn-primary btn-sm" onClick={() => { 
                             setFormData({ vehicleId: '', workerId: '', workerIme: '', datumZaduzenja: new Date().toISOString().split('T')[0], pocetnaKilometraza: '' }); 
                             setVehicleSearch(''); setWorkerSearch(''); setShowForm(true); 
-                        }}>+ {bs ? 'Novo zaduženje' : 'New Assignment'}</button>
+                        }}>+ {t('novoZaduzenje')}</button>
                         <SavedFlash />
-                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži zaduženja...' : '🔍 Search assignments...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={t('searchAssignments')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                         {selectedIds.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}</span>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                             </div>
-                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'zabilješki' : 'records'}</span>}
+                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {t('zapisnika')}</span>}
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
@@ -252,12 +252,12 @@ function FleetAssignmentsInner() {
                                 <tr>
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
-                                    <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{bs ? 'Vozilo' : 'Vehicle'}{sortIcon('vehicleReg')}</th>
-                                    <th onClick={() => toggleSort('workerName')} style={thStyle('workerName')}>{bs ? 'Vozač' : 'Driver'}{sortIcon('workerName')}</th>
-                                    <th onClick={() => toggleSort('datumZaduzenja')} style={thStyle('datumZaduzenja')}>{bs ? 'Datum Zaduženja' : 'Date Assigned'}{sortIcon('datumZaduzenja')}</th>
-                                    <th onClick={() => toggleSort('pocetnaKilometraza')} style={thStyle('pocetnaKilometraza')}>{bs ? 'Km Zaduženja' : 'Km Assigned'}{sortIcon('pocetnaKilometraza')}</th>
-                                    <th onClick={() => toggleSort('datumRazduzenja')} style={thStyle('datumRazduzenja')}>{bs ? 'Datum Razduženja' : 'Date Returned'}{sortIcon('datumRazduzenja')}</th>
-                                    <th onClick={() => toggleSort('zavrsnaKilometraza')} style={thStyle('zavrsnaKilometraza')}>{bs ? 'Km Razduženja' : 'Km Returned'}{sortIcon('zavrsnaKilometraza')}</th>
+                                    <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{t('vozilo1')}{sortIcon('vehicleReg')}</th>
+                                    <th onClick={() => toggleSort('workerName')} style={thStyle('workerName')}>{t('driver6')}{sortIcon('workerName')}</th>
+                                    <th onClick={() => toggleSort('datumZaduzenja')} style={thStyle('datumZaduzenja')}>{t('datumZaduzenja')}{sortIcon('datumZaduzenja')}</th>
+                                    <th onClick={() => toggleSort('pocetnaKilometraza')} style={thStyle('pocetnaKilometraza')}>{t('kmAssigned')}{sortIcon('pocetnaKilometraza')}</th>
+                                    <th onClick={() => toggleSort('datumRazduzenja')} style={thStyle('datumRazduzenja')}>{t('datumRazduzenja')}{sortIcon('datumRazduzenja')}</th>
+                                    <th onClick={() => toggleSort('zavrsnaKilometraza')} style={thStyle('zavrsnaKilometraza')}>{t('kmReturned')}{sortIcon('zavrsnaKilometraza')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -270,14 +270,14 @@ function FleetAssignmentsInner() {
                                         </td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(a.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(a.id, e)}>{t('akcije')} ▼</button>
                                                 {actionMenuId === a.id && (<>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                     <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => { setActionMenuId(null); openInFleet(a.vehicleId); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                        <button onClick={() => { setActionMenuId(null); handleCopy(a); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); openInFleet(a.vehicleId); }} className="dropdown-item">✏️ {t('otvori')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleCopy(a); }} className="dropdown-item">📋 {t('kopiraj')}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => { setActionMenuId(null); handleDelete(a.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(a.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                     </div>
                                                 </>)}
                                             </div>
@@ -291,7 +291,7 @@ function FleetAssignmentsInner() {
                                         </td>
                                         <td>{formatDate(a.datumZaduzenja)}</td>
                                         <td>{a.pocetnaKilometraza || '—'}</td>
-                                        <td>{formatDate(a.datumRazduzenja) || <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{bs ? 'Zaduženo' : 'Assigned'}</span>}</td>
+                                        <td>{formatDate(a.datumRazduzenja) || <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{t('zaduz')}</span>}</td>
                                         <td>{a.zavrsnaKilometraza || '—'}</td>
                                     </tr>
                                 ))}

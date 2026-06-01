@@ -1,4 +1,5 @@
 'use client';
+import { t } from '@/i18n/translations';
 import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getQuestionnaireResponse } from '@/lib/firebaseSync';
@@ -142,7 +143,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                             }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                {lang !== 'en' ? 'Učitavanje...' : 'Loading...'}
+                                {t('ucitavanje')}
                             </p>
                         </div>
                     ) : error ? (
@@ -270,7 +271,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                             {loadingResponse ? (
                                 <div style={{ textAlign: 'center', padding: 40 }}>
                                     <p style={{ color: 'var(--text-muted)' }}>
-                                        {lang !== 'en' ? 'Učitavanje...' : 'Loading...'}
+                                        {t('ucitavanje')}
                                     </p>
                                 </div>
                             ) : !responseData ? (

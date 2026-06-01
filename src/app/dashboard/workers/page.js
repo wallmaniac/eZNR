@@ -148,10 +148,10 @@ function WorkersPageInner() {
                 }]
             });
             loadData();
-            alert(lang !== 'en' ? `Zapisnik uspješno dodan za radnika ${w?.ime} ${w?.prezime}!` : `Document successfully added for ${w?.ime} ${w?.prezime}!`);
+            alert(t('documentSuccessfullyAddedFor').replace('{0}', w?.ime).replace('{1}', w?.prezime));
         } catch (err) {
             console.error(err);
-            alert(lang !== 'en' ? 'Greška pri učitavanju datoteke.' : 'Error reading file.');
+            alert(t('greskaPriUcitavanjuDatoteke'));
         } finally {
             setUploadingDocForWorker(null);
             if (zosUploadRef.current) zosUploadRef.current.value = '';
@@ -456,7 +456,7 @@ function WorkersPageInner() {
         isDirtyRef.current = false;
         // Toast feedback
         if (typeof window !== 'undefined' && window.eznrToast) {
-            window.eznrToast(lang !== 'en' ? `Radnik ${finalFormData.ime} ${finalFormData.prezime} spremljen ✅` : `Worker ${finalFormData.ime} ${finalFormData.prezime} saved ✅`, 'success');
+            window.eznrToast(t('workerSaved').replace('{0}', finalFormData.ime).replace('{1}', finalFormData.prezime), 'success');
         }
         // Clear refs BEFORE state changes so the openWorker watcher never re-fires
         openWorkerHandledRef.current = null;
@@ -531,7 +531,7 @@ function WorkersPageInner() {
                     <TabBar active={fullFormTab} onChange={setFullFormTab} 
                         tabs={[
                             { key: 'osnovno', icon: '👤', label: t('osnovno') },
-                            { key: 'uvjerenja', icon: '📜', label: `${lang !== 'en' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                            { key: 'uvjerenja', icon: '📜', label: `${t('uvjerenja')} (${certificates.length})` },
                             { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
                             { key: 'pregledi', icon: '👨‍⚕️', label: `${t('pregledi')} (${workerMedExams.length})` },
                             { key: 'dokumenti', icon: '📁', label: `${t('dokumenti1')} (${(formData.dokumenti || []).length})` },
@@ -600,9 +600,7 @@ function WorkersPageInner() {
                                     if (zosCerts.length> 0) {
                                         const oldWpName = getWorkplaceName(oldId);
                                         const newWpName = getWorkplaceName(v);
-                                        const ok = await confirm(lang !== 'en'
-                                            ? `Promjena radnog mjesta (${oldWpName} → ${newWpName}) zahtijeva novo osposobljavanje.\n\n${zosCerts.length} ZOS uvjerenje(a) će biti označeno kao "Nevažeće".\n\nNastaviti?`
-                                            : `Workplace change (${oldWpName} → ${newWpName}) requires new training.\n\n${zosCerts.length} ZOS certificate(s) will be marked as "Invalid".\n\nContinue?`);
+                                        const ok = await confirm(t('workplaceChangeRequiresNewTrainingnn').replace('{0}', oldWpName).replace('{1}', newWpName).replace('{2}', zosCerts.length));
                                         if (ok) {
                                             for (const cert of zosCerts) {
                                                 update(COLLECTIONS.CERTIFICATES, cert.id, {
@@ -612,9 +610,7 @@ function WorkersPageInner() {
                                                 });
                                             }
                                             setCertificates(getWorkerCertificates(editingWorker));
-                                            await alert(lang !== 'en'
-                                                ? `⚠️ ${zosCerts.length} ZOS uvjerenje(a) označeno kao "Nevažeće". Radnik mora proći novo osposobljavanje za novo radno mjesto.`
-                                                : `⚠️ ${zosCerts.length} ZOS certificate(s) marked as "Invalid". Worker must undergo new training.`);
+                                            await alert(t('zosCertificatesMarkedAsInvalid').replace('{0}', zosCerts.length));
                                         } else {
                                             updateField('radnoMjestoId', oldId); // revert
                                         }
@@ -693,7 +689,7 @@ function WorkersPageInner() {
                                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={e => e.currentTarget.style.filter = ''}>
                                     <span style={{ fontSize: '1.4rem' }}>📋</span>
                                     <div>
-                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang !== 'en' ? 'Uvjerenja' : 'Certs'}</div>
+                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{t('uvjerenja')}</div>
                                         <div style={{ fontWeight: 700, fontSize: '0.9rem', color: _expC> 0 ? 'var(--danger)' : 'var(--success)' }}>{_valC} ✓{_expC> 0 && <span style={{ color: 'var(--danger)', marginLeft: 6 }}> {_expC} ⚠</span>}</div>
                                     </div>
                                 </div>
@@ -702,7 +698,7 @@ function WorkersPageInner() {
                                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={e => e.currentTarget.style.filter = ''}>
                                     <span style={{ fontSize: '1.4rem' }}>👨‍⚕️</span>
                                     <div>
-                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang !== 'en' ? 'Pregled' : 'Med. Exam'}</div>
+                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{t('pregled1')}</div>
                                         <div style={{ fontWeight: 700, fontSize: '0.9rem', color: _mColor }}>{_lm ? (_mc === 'expired' ? 'Istekao!' : _mc === 'soon' ? `${_lmd}d` : 'Vrijedi') : 'Nema'}</div>
                                         {_lm && <div style={{ fontSize: '0.67rem', color: 'var(--text-muted)' }}>{formatDate(_lm.vrijediDo)}</div>}
                                     </div>
@@ -838,9 +834,9 @@ function WorkersPageInner() {
                                         <th>{t('date')}</th>
                                         <th>{t('vrijediDo')}</th>
                                         <th>{t('name')}</th>
-                                        <th>{lang !== 'en' ? 'Tip uvjerenja' : 'Cert. type'}</th>
+                                        <th>{t('tipUvjerenja')}</th>
                                         <th>{t('upisao')}</th>
-                                        <th>{lang !== 'en' ? 'Sposobnost' : 'Capability'}</th>
+                                        <th>{t('sposobnost')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -926,9 +922,7 @@ function WorkersPageInner() {
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
                                                             {!c.potpisanScan && (isZNR || isZOP) && (
                                                                 <div style={{ padding: '6px 14px', fontSize: '0.72rem', color: 'var(--warning)', background: 'rgba(245,158,11,0.05)', lineHeight: 1.4, borderBottom: '1px solid var(--border-light)' }}>
-                                                                    ⚠️ {lang !== 'en'
-                                                                        ? `Priložiti ispunjen i potpisan ${isZOP ? 'Test ZOP' : 'Test ZNR'}.`
-                                                                        : `Upload signed ${isZOP ? 'ZOP Test' : 'ZNR Test'}.`}
+                                                                    ⚠️ {t('uploadSigned').replace('{0}', isZOP ? 'Test ZOP' : 'Test ZNR').replace('{1}', isZOP ? 'ZOP Test' : 'ZNR Test')}
                                                                 </div>
                                                             )}
                                                             <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
@@ -1045,7 +1039,7 @@ function WorkersPageInner() {
                                 + {t('noviPregled')}
                             </button>
                             <button className="btn btn-ghost btn-sm" onClick={() => { if (showMedExamForm) { sessionStorage.setItem('eznr_draft_workers_medexam', JSON.stringify({ workerId: editingWorker, form: medExamForm, editId: medExamEditId })); } markClean(); router.push('/dashboard/referral-ra1?openNew=1'); }}>
-                                📋 {lang !== 'en' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
+                                📋 {t('novaUputnicaRa1')}
                             </button>
                             <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', color: 'var(--primary)' }} onClick={() => { markClean(); router.push('/dashboard/medical-exams'); }}>
                                 {t('sviPregledi')}
@@ -1103,7 +1097,7 @@ function WorkersPageInner() {
                 {fullFormTab === 'dokumenti' && (<>
                 {/* ── Dokumenti ── */}
                 <div ref={dokumentiRef}>
-                    <Accordion title={`📁 ${lang !== 'en' ? 'Dokumenti' : 'Documents'}`} open={true} onToggle={() => {}}>
+                    <Accordion title={`📁 ${t('dokumenti1')}`} open={true} onToggle={() => {}}>
                         {(() => {
                             // Collect all documents from this worker's certificates
                             const workerDocs = [];
@@ -1358,7 +1352,7 @@ function WorkersPageInner() {
                                         <input className="form-input" value={certFormData.oznaka} onChange={e => setCertFormData({ ...certFormData, oznaka: e.target.value })} placeholder="ZNR-001" />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang !== 'en' ? 'Tip uvjerenja' : 'Cert. type'}</label>
+                                        <label className="form-label">{t('tipUvjerenja')}</label>
                                         <select className="form-select" value={certFormData.tipUvjerenja} onChange={e => setCertFormData({ ...certFormData, tipUvjerenja: e.target.value })}>
                                             {certTypes.filter((ct, i, a) => a.findIndex(x => x.naziv === ct.naziv) === i).map(ct => <option key={ct.id} value={ct.oznaka}>{ct.naziv}</option>)}
                                         </select>
@@ -1376,10 +1370,10 @@ function WorkersPageInner() {
                                         <DateInput value={certFormData.vrijediDo} onChange={v => setCertFormData({ ...certFormData, vrijediDo: v })} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang !== 'en' ? 'Sposobnost' : 'Capability'}</label>
+                                        <label className="form-label">{t('sposobnost')}</label>
                                         <select className="form-select" value={certFormData.sposobnost} onChange={e => setCertFormData({ ...certFormData, sposobnost: e.target.value })}>
-                                            <option value="Sposoban">{lang !== 'en' ? 'Sposoban' : 'Capable'}</option>
-                                            <option value="Nesposoban">{lang !== 'en' ? 'Nesposoban' : 'Not capable'}</option>
+                                            <option value="Sposoban">{t('sposoban')}</option>
+                                            <option value="Nesposoban">{t('nesposoban')}</option>
                                         </select>
                                     </div>
                                     <div className="form-group">
@@ -1408,7 +1402,7 @@ function WorkersPageInner() {
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div className="form-group">
-                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Vrsta pregleda' : 'Exam Type'} <InfoTip text="Dali se radnik prvi put u firmi zapošljava (Prethodni) ili obnavlja sposobnost jer je prošla godina (Periodični)" /></label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{t('vrstaPregleda')} <InfoTip text="Dali se radnik prvi put u firmi zapošljava (Prethodni) ili obnavlja sposobnost jer je prošla godina (Periodični)" /></label>
                                         <select className="form-select" value={medExamForm.tipPregleda} onChange={e => setMedExamForm(p => ({ ...p, tipPregleda: e.target.value }))}>
                                             <option value="prethodni">{t('prethodniPregled')}</option>
                                             <option value="periodicni">{t('periodicniPregled')}</option>
@@ -1453,7 +1447,7 @@ function WorkersPageInner() {
                                         <input className="form-input" placeholder={t('domZdravlja')} value={medExamForm.zdravstvenaUstanova} onChange={e => setMedExamForm(p => ({ ...p, zdravstvenaUstanova: e.target.value }))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">👨‍⚕️ {lang !== 'en' ? 'Doktor medicine rada' : 'Doctor'}</label>
+                                        <label className="form-label">👨‍⚕️ {t('doktorMedicineRada')}</label>
                                         <input className="form-input" placeholder="Dr. Ime Prezime" value={medExamForm.doktorIme} onChange={e => setMedExamForm(p => ({ ...p, doktorIme: e.target.value }))} />
                                     </div>
                                 </div>
@@ -1558,9 +1552,7 @@ function WorkersPageInner() {
                             </div>
                             <div className="modal-body">
                                 <p style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--text-light)' }}>
-                                    {lang !== 'en'
-                                        ? `Odaberite koje podatke želite uključiti u Excel tablicu (${excelExportMode === 'selected' ? 'odabrano ' + selectedIds.size : 'SVIH ' + filteredWorkers.length} radnika):`
-                                        : `Select which data to include in the Excel table (${excelExportMode === 'selected' ? selectedIds.size + ' workers selected' : 'ALL ' + filteredWorkers.length + ' workers'}):`}
+                                    {t('selectWhichDataToInclude').replace('{0}', excelExportMode === 'selected' ? 'odabrano ' + selectedIds.size : 'SVIH ' + filteredWorkers.length).replace('{1}', excelExportMode === 'selected' ? selectedIds.size + ' workers selected' : 'ALL ' + filteredWorkers.length + ' workers')}
                                 </p>
                                 <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                                     <button className="btn btn-outline btn-sm" onClick={() => {
@@ -1674,7 +1666,7 @@ function WorkersPageInner() {
                         {/* Toolbar */}
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew} title={t('dodajNovogRadnika')}>
-                                + {lang !== 'en' ? 'Novi radnik' : 'New worker'}
+                                + {t('noviRadnik')}
                             </button>
 
                             <div className="search-bar" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
@@ -1694,7 +1686,7 @@ function WorkersPageInner() {
                                 value={filterOrgUnit}
                                 title={t('filtrirajPoOdjelu')}
                                 onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}>
-                                <option value="">{lang !== 'en' ? 'Svi odjeli' : 'All Departments'}</option>
+                                <option value="">{t('sviOdjeli')}</option>
                                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                             </select>
 
@@ -1703,7 +1695,7 @@ function WorkersPageInner() {
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
                                     { label: t('sviRadnici'), icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
-                                    ...(selectedIds.size> 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
+                                    ...(selectedIds.size> 0 ? [{ label: t('selected').replace('{0}', selectedIds.size), icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
                                 ]}
                             />
                             <PDFExportButton
@@ -1711,7 +1703,7 @@ function WorkersPageInner() {
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
                                 options={[
                                     { label: t('sviRadnici'), icon: '👷', onClick: () => setExcelExportMode('all') },
-                                    ...(selectedIds.size> 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
+                                    ...(selectedIds.size> 0 ? [{ label: t('selected1').replace('{0}', selectedIds.size), icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
                                 ]}
                             />
 
@@ -1738,7 +1730,7 @@ function WorkersPageInner() {
                                         ✉️ Email
                                     </button>
                                     <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={async () => {
-                                        const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
+                                        const ok = await confirm(t('deleteWorkersThisCannotBe').replace('{0}', selectedIds.size));
                                         if (ok) {
                                             removeManyWorkersCascade([...selectedIds]);
                                             setSelectedIds(new Set());
@@ -1747,7 +1739,7 @@ function WorkersPageInner() {
                                     }} title={t('obrisiOdabraneRadnike')}>
                                         🗑️ {t('obrisi')}
                                     </button>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={lang !== 'en' ? 'Poništi odabir' : 'Clear selection'}>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={t('ponistiOdabir')}>
                                         ✕
                                     </button>
                                 </div>
@@ -1794,7 +1786,7 @@ function WorkersPageInner() {
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                            onClick={() => handleEdit(w)} title={lang !== 'en' ? 'Uredi radnika' : 'Edit worker'}>▶</button>
+                                                            onClick={() => handleEdit(w)} title={t('urediRadnika')}>▶</button>
                                                         <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             const spaceBelow = window.innerHeight - rect.bottom;
@@ -1821,9 +1813,9 @@ function WorkersPageInner() {
                                                                 </div>
                                                                 <button style={_miSt} onClick={() => handleEdit(w)}>📂 {t('open')}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {lang !== 'en' ? 'Novo uvjerenje' : 'New cert'}</button>
-                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {lang !== 'en' ? 'Novi pregled' : 'New exam'}</button>
-                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {lang !== 'en' ? 'Nova povreda' : 'New injury'}</button>
+                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {t('novoUvjerenje')}</button>
+                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {t('noviPregled')}</button>
+                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {t('novaPovreda')}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={_miSt} onClick={() => router.push('/dashboard/form-ro1')}>📄 RO-1</button>
                                                                 <button style={_miSt} onClick={() => router.push('/dashboard/form-ro2')}>📄 RO-2</button>
@@ -1878,7 +1870,7 @@ function WorkersPageInner() {
                                                                     );
                                                                 })()}
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>📁 {lang !== 'en' ? 'Dokumenti' : 'Documents'}</button>
+                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>📁 {t('dokumenti1')}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={{ ..._miSt, color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                             </div>

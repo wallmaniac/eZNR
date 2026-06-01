@@ -78,7 +78,7 @@ export default function FormOIR1Page() {
 
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems12').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) await remove(COLLECTIONS.FORMS_OIR1, id);
       setSelectedIds(new Set());
       loadData();
@@ -471,7 +471,7 @@ export default function FormOIR1Page() {
                 <input className="form-input" value={formData.mjestoPrijave} onChange={e => set('mjestoPrijave', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Datum prijave' : 'Filing date'}</div>
+                <div style={labelSt}>{t('datumPrijave')}</div>
                 <DateInput value={formData.datumPrijave} onChange={v => set('datumPrijave', v)} />
               </div>
             </div>

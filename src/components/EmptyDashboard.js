@@ -85,7 +85,7 @@ const BRAND_COLORS = [
 
 export default function EmptyDashboard({ onComplete }) {
     const router = useRouter();
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const { activeCompanyId } = useAuth();
     const { alert, confirm, DialogRenderer } = useDialog();
     const bs = lang !== 'en';
@@ -204,7 +204,7 @@ export default function EmptyDashboard({ onComplete }) {
         } else if (activeStep === 1) {
             // Save company details & branding & user assignments
             if (!companyData.naziv.trim()) {
-                await alert(bs ? 'Naziv tvrtke je obavezan!' : 'Company name is required!');
+                await alert(t('nazivTvrtkeJeObavezan'));
                 return;
             }
 
@@ -285,9 +285,7 @@ export default function EmptyDashboard({ onComplete }) {
 
     const handleSkipAll = async () => {
         const ok = await confirm(
-            bs 
-                ? 'Jeste li sigurni da želite preskočiti čarobnjak? Uvijek možete ručno unijeti podatke kasnije.' 
-                : 'Are you sure you want to skip the wizard? You can always enter the data manually later.'
+            t('areYouSureYouWant1')
         );
         if (ok) {
             handleFinish();
@@ -299,7 +297,7 @@ export default function EmptyDashboard({ onComplete }) {
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 2 * 1024 * 1024) {
-            setLogoError(bs ? 'Logo mora biti manji od 2MB' : 'Logo must be under 2MB');
+            setLogoError(t('logoMoraBitiManjiOd1'));
             return;
         }
         setLogoError('');
@@ -308,7 +306,7 @@ export default function EmptyDashboard({ onComplete }) {
             setCompanyData(prev => ({ ...prev, logo: reader.result }));
         };
         reader.onerror = () => {
-            setLogoError(bs ? 'Greška pri čitanju datoteke' : 'Error reading file');
+            setLogoError(t('greskaPriCitanjuFajla'));
         };
         reader.readAsDataURL(file);
     };
@@ -323,7 +321,7 @@ export default function EmptyDashboard({ onComplete }) {
     // --- STEP 2: Add Worker Manually ---
     const handleAddWorkerManual = async () => {
         if (!manualWorker.ime || !manualWorker.prezime) {
-            await alert(bs ? 'Ime i prezime su obavezni!' : 'First name and last name are required!');
+            await alert(t('imeIPrezimeSuObavezna'));
             return;
         }
 
@@ -370,15 +368,15 @@ export default function EmptyDashboard({ onComplete }) {
     // --- STEP 2: Add Document Manually ---
     const handleAddDocManual = async () => {
         if (!manualDoc.workerId) {
-            await alert(bs ? 'Odaberite radnika!' : 'Select a worker!');
+            await alert(t('odaberiteRadnika'));
             return;
         }
         if (!manualDoc.naziv) {
-            await alert(bs ? 'Naziv uvjerenja / pregleda je obavezan!' : 'Name is required!');
+            await alert(t('nazivJeObavezan'));
             return;
         }
         if (!manualDoc.datum) {
-            await alert(bs ? 'Datum je obavezan!' : 'Date is required!');
+            await alert(t('datumJeObavezan'));
             return;
         }
 
@@ -581,9 +579,7 @@ export default function EmptyDashboard({ onComplete }) {
         if (newMedExams.length > 0) await createMass(COLLECTIONS.MEDICAL_EXAMS, newMedExams);
 
         setImportMsg(
-            bs 
-                ? `Uspješno uvezeno: ${newWList.length} radnika, ${newCerts.length} uvjerenja, ${newMedExams.length} pregleda!` 
-                : `Successfully imported: ${newWList.length} workers, ${newCerts.length} certificates, ${newMedExams.length} medical exams!`
+            t('successfullyImportedWorkersCertificatesMedical').replace('{0}', newWList.length).replace('{1}', newCerts.length).replace('{2}', newMedExams.length)
         );
 
         setExcelFile(null);
@@ -624,9 +620,9 @@ export default function EmptyDashboard({ onComplete }) {
                     }} />
 
                     {[
-                        { num: 1, label: bs ? 'Identitet i Firma' : 'Identity & Company', icon: '🏢' },
-                        { num: 2, label: bs ? 'Radnici i Uvjerenja' : 'Workers & Certs', icon: '👥' },
-                        { num: 3, label: bs ? 'Završi' : 'Finish', icon: '✨' }
+                        { num: 1, label: t('identityCompany'), icon: '🏢' },
+                        { num: 2, label: t('workersCerts'), icon: '👥' },
+                        { num: 3, label: t('finish'), icon: '✨' }
                     ].map((s) => {
                         const isCompleted = activeStep > s.num;
                         const isActive = activeStep === s.num;
@@ -682,25 +678,23 @@ export default function EmptyDashboard({ onComplete }) {
                                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                                 backgroundClip: 'text',
                             }}>
-                                {bs ? 'Dobrodošli u eZNR čarobnjak!' : 'Welcome to the eZNR Wizard!'}
+                                {t('welcomeToTheEznrWizard')}
                             </h1>
                             <p style={{
                                 margin: '0 auto 32px', fontSize: '0.95rem', color: 'var(--text-muted)',
                                 lineHeight: 1.6, maxWidth: 580
                             }}>
-                                {bs
-                                    ? 'Brzo i jednostavno konfigurirajte tvrtku, postavite vizualni brending, dodijelite ovlaštene korisnike te uvezite popis radnika i uvjerenja odjednom.'
-                                    : 'Quickly configure your company, establish visual branding, assign authorized users, and import workers/certificates all at once.'}
+                                {t('quicklyConfigureYourCompanyEstablish')}
                             </p>
 
                             <div style={{
                                 display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 320, margin: '0 auto'
                             }}>
                                 <button className="btn btn-primary" onClick={handleNext} style={{ width: '100%', padding: '12px 24px', fontSize: '0.95rem' }}>
-                                    🚀 {bs ? 'Započni postavljanje' : 'Start Setup'}
+                                    🚀 {t('startSetup')}
                                 </button>
                                 <button className="btn btn-ghost" onClick={handleSkipAll} style={{ width: '100%', padding: '10px 24px', fontSize: '0.85rem' }}>
-                                    {bs ? 'Preskoči čarobnjak' : 'Skip Wizard'}
+                                    {t('skipWizard')}
                                 </button>
                             </div>
                         </div>
@@ -713,17 +707,17 @@ export default function EmptyDashboard({ onComplete }) {
                                 <span style={{ fontSize: '1.8rem' }}>🏢</span>
                                 <div>
                                     <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-                                        {bs ? 'Korak 1: Podaci, Identitet i Korisnici' : 'Step 1: Details, Branding & Users'}
+                                        {t('step1DetailsBrandingUsers')}
                                     </h2>
                                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        {bs ? 'Postavite identitet firme, odaberite državu zakonodavstva te ovlaštene korisnike.' : 'Establish company identity, select jurisdiction, and authorized users.'}
+                                        {t('establishCompanyIdentitySelectJurisdiction')}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Section A: Područje djelovanja (BA / HR Law flag button selector) */}
                             <div style={{ marginBottom: 24 }}>
-                                <div style={labelStyle}>{bs ? 'Područje djelovanja (Zakonodavstvo)' : 'Area of Activity (Jurisdiction)'}</div>
+                                <div style={labelStyle}>{t('areaOfActivityJurisdiction')}</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                                     {[
                                         { code: 'BA', flag: '🇧🇦', title: 'Bosna i Hercegovina', law: 'Zakon o ZNR FBiH (79/20)' },
@@ -758,10 +752,10 @@ export default function EmptyDashboard({ onComplete }) {
 
                             {/* Section B: Company Basic Info */}
                             <div style={{ marginBottom: 24 }}>
-                                <div style={labelStyle}>{bs ? 'Osnovni podaci tvrtke' : 'Basic Company Info'}</div>
+                                <div style={labelStyle}>{t('basicCompanyInfo')}</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Naziv tvrtke *' : 'Company Name *'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('companyName1')}</label>
                                         <input 
                                             className="form-input" 
                                             value={companyData.naziv} 
@@ -770,7 +764,7 @@ export default function EmptyDashboard({ onComplete }) {
                                         />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'OIB / ID Broj (Opcionalno)' : 'Company ID (Optional)'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('companyIdOptional')}</label>
                                         <input 
                                             className="form-input" 
                                             value={companyData.oib} 
@@ -782,30 +776,30 @@ export default function EmptyDashboard({ onComplete }) {
 
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Adresa sjedišta' : 'Address'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('adresa')}</label>
                                         <input className="form-input" value={companyData.adresa} onChange={e => setCompanyData(prev => ({ ...prev, adresa: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Grad / Mjesto' : 'City'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('mjesto')}</label>
                                         <input className="form-input" value={companyData.mjesto} onChange={e => setCompanyData(prev => ({ ...prev, mjesto: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Poštanski broj' : 'Postal Code'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('postanskiBroj')}</label>
                                         <input className="form-input" value={companyData.postanskiBroj} onChange={e => setCompanyData(prev => ({ ...prev, postanskiBroj: e.target.value }))} />
                                     </div>
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Direktor / Zastupnik' : 'Director'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('direktor')}</label>
                                         <input className="form-input" value={companyData.direktor} onChange={e => setCompanyData(prev => ({ ...prev, direktor: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Stručno lice za ZNR' : 'Safety Officer'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('safetyOfficer1')}</label>
                                         <input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyData(prev => ({ ...prev, strucnoLice: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Telefon' : 'Phone'}</label>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{t('telefon')}</label>
                                         <input className="form-input" value={companyData.telefon} onChange={e => setCompanyData(prev => ({ ...prev, telefon: e.target.value }))} />
                                     </div>
                                 </div>
@@ -813,7 +807,7 @@ export default function EmptyDashboard({ onComplete }) {
 
                             {/* Section C: Branding & Identity (Logo upload & custom theme colors) */}
                             <div style={{ marginBottom: 24 }}>
-                                <div style={labelStyle}>{bs ? 'Identitet i Brendiranje (Opcionalno)' : 'Identity & Branding (Optional)'}</div>
+                                <div style={labelStyle}>{t('identityBrandingOptional')}</div>
                                 <div style={{ 
                                     display: 'flex', gap: 20, padding: 16, background: 'var(--bg-input)', 
                                     borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', flexWrap: 'wrap' 
@@ -834,11 +828,11 @@ export default function EmptyDashboard({ onComplete }) {
                                         </div>
                                         <div>
                                             <div style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: 6 }}>
-                                                {bs ? 'Logo tvrtke' : 'Company Logo'}
+                                                {t('logoFirme')}
                                             </div>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 <button className="btn btn-outline btn-sm" onClick={() => logoInputRef.current?.click()} style={{ position: 'relative' }}>
-                                                    📁 {bs ? 'Odaberi sliku' : 'Select image'}
+                                                    📁 {t('selectImage')}
                                                     <input 
                                                         type="file" 
                                                         ref={logoInputRef} 
@@ -860,7 +854,7 @@ export default function EmptyDashboard({ onComplete }) {
                                     {/* Color presets selector */}
                                     <div style={{ flex: '1 1 300px' }}>
                                         <div style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: 8 }}>
-                                            {bs ? 'Glavna boja aplikacije i PDF-a' : 'App Theme & PDF Accent Color'}
+                                            {t('appThemePdfAccentColor')}
                                         </div>
                                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                             {BRAND_COLORS.map(c => {
@@ -890,9 +884,9 @@ export default function EmptyDashboard({ onComplete }) {
                             {/* Section D: User Assignments */}
                             {potentialUsers.length > 0 && (
                                 <div style={{ marginBottom: 8 }}>
-                                    <div style={labelStyle}>{bs ? 'Dodijelite korisnike s pristupom tvrtki' : 'Assign Company Access to Users'}</div>
+                                    <div style={labelStyle}>{t('assignCompanyAccessToUsers')}</div>
                                     <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                        {bs ? 'Odaberite administratore i referente koji će moći pregledavati i uređivati podatke za ovu tvrtku.' : 'Select users who are allowed to view or edit this company.'}
+                                        {t('selectUsersWhoAreAllowed')}
                                     </p>
                                     <div style={{ 
                                         display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10,
@@ -943,10 +937,10 @@ export default function EmptyDashboard({ onComplete }) {
                                 <span style={{ fontSize: '1.8rem' }}>👥</span>
                                 <div>
                                     <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-                                        {bs ? 'Korak 2: Uvoz i Unos radnika te uvjerenja' : 'Step 2: Onboard Workers & Documents'}
+                                        {t('step2OnboardWorkersDocuments')}
                                     </h2>
                                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        {bs ? 'Učitajte cijelu bazu radnika i uvjerenja iz Excela odjednom ili ih unosite ručno.' : 'Upload workers and certificates from Excel all at once or add them manually.'}
+                                        {t('uploadWorkersAndCertificatesFrom')}
                                     </p>
                                 </div>
                             </div>
@@ -960,13 +954,13 @@ export default function EmptyDashboard({ onComplete }) {
                                     className={`btn btn-sm ${onboardTab === 'excel' ? 'btn-primary' : 'btn-ghost'}`}
                                     onClick={() => setOnboardTab('excel')}
                                 >
-                                    📥 {bs ? 'Uvoz iz Excela' : 'Excel Import'}
+                                    📥 {t('excelImport')}
                                 </button>
                                 <button 
                                     className={`btn btn-sm ${onboardTab === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
                                     onClick={() => setOnboardTab('manual')}
                                 >
-                                    ✍️ {bs ? 'Ručni unos' : 'Manual Entry'}
+                                    ✍️ {t('manualEntry')}
                                 </button>
                             </div>
 
@@ -998,10 +992,10 @@ export default function EmptyDashboard({ onComplete }) {
                                         />
                                         <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📥</div>
                                         <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: 4 }}>
-                                            {excelFile ? excelFile.name : (bs ? 'Dovucite Excel datoteku ili kliknite za odabir' : 'Drag & Drop Excel file here or click to browse')}
+                                            {excelFile ? excelFile.name : (t('dragDropExcelFileHere'))}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                            {bs ? 'Učitajte Excel tablicu s popunjenim listovima Radnici, Uvjerenja, Ljekarski i OZO.' : 'Upload an Excel template containing Workers, Certificates, Medical and PPE sheets.'}
+                                            {t('uploadAnExcelTemplateContaining')}
                                         </div>
                                     </div>
 
@@ -1013,7 +1007,7 @@ export default function EmptyDashboard({ onComplete }) {
                                             marginBottom: 16
                                         }}>
                                             <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 8, color: 'var(--text)' }}>
-                                                📊 {bs ? 'Pronađeni podaci za uvoz:' : 'Data found for import:'}
+                                                📊 {t('dataFoundForImport')}
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                                 <span>👥 Radnici: <strong>{excelPreview.workers?.length || 0}</strong></span>
@@ -1028,7 +1022,7 @@ export default function EmptyDashboard({ onComplete }) {
                                                 onClick={handleImportExcel} 
                                                 style={{ marginTop: 14 }}
                                             >
-                                                ⚡ {bs ? 'Potvrdi i uvezi sve podatke' : 'Confirm & Import All Data'}
+                                                ⚡ {t('confirmImportAllData')}
                                             </button>
                                         </div>
                                     )}
@@ -1045,20 +1039,20 @@ export default function EmptyDashboard({ onComplete }) {
                                         border: '1px solid var(--border)' 
                                     }}>
                                         <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12, borderBottom: '1px solid var(--border-light)', paddingBottom: 6 }}>
-                                            👥 {bs ? 'Dodaj novog radnika' : 'Add New Worker'}
+                                            👥 {t('dodajNovogRadnika')}
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                             <input 
                                                 className="form-input" 
                                                 value={manualWorker.ime} 
                                                 onChange={e => setManualWorker(prev => ({ ...prev, ime: e.target.value }))}
-                                                placeholder={bs ? 'Ime *' : 'First Name *'}
+                                                placeholder={t('ime1')}
                                             />
                                             <input 
                                                 className="form-input" 
                                                 value={manualWorker.prezime} 
                                                 onChange={e => setManualWorker(prev => ({ ...prev, prezime: e.target.value }))}
-                                                placeholder={bs ? 'Prezime *' : 'Last Name *'}
+                                                placeholder={t('lastName1')}
                                             />
                                             <input 
                                                 className="form-input" 
@@ -1070,10 +1064,10 @@ export default function EmptyDashboard({ onComplete }) {
                                                 className="form-input" 
                                                 value={manualWorker.radnoMjesto} 
                                                 onChange={e => setManualWorker(prev => ({ ...prev, radnoMjesto: e.target.value }))}
-                                                placeholder={bs ? 'Radno mjesto (npr. Vozač)' : 'Workplace (e.g. Driver)'}
+                                                placeholder={t('workplaceEgDriver')}
                                             />
                                             <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <label className="form-label" style={{ fontSize: '0.72rem' }}>{bs ? 'Datum rođenja' : 'Birth Date'}</label>
+                                                <label className="form-label" style={{ fontSize: '0.72rem' }}>{t('datumRoenja1')}</label>
                                                 <input 
                                                     className="form-input" 
                                                     type="date"
@@ -1082,7 +1076,7 @@ export default function EmptyDashboard({ onComplete }) {
                                                 />
                                             </div>
                                             <button className="btn btn-primary btn-sm" onClick={handleAddWorkerManual} style={{ marginTop: 6 }}>
-                                                ➕ {bs ? 'Dodaj radnika' : 'Add Worker'}
+                                                ➕ {t('addWorker')}
                                             </button>
                                         </div>
                                     </div>
@@ -1093,11 +1087,11 @@ export default function EmptyDashboard({ onComplete }) {
                                         border: '1px solid var(--border)' 
                                     }}>
                                         <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12, borderBottom: '1px solid var(--border-light)', paddingBottom: 6 }}>
-                                            📜 {bs ? 'Dodaj uvjerenje ili pregled' : 'Add Certificate / Exam'}
+                                            📜 {t('addCertificateExam')}
                                         </div>
                                         {addedWorkers.length === 0 ? (
                                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', padding: '30px 10px' }}>
-                                                {bs ? 'Prvo morate unijeti barem jednog radnika.' : 'Please add at least one worker first.'}
+                                                {t('pleaseAddAtLeastOne')}
                                             </div>
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1106,7 +1100,7 @@ export default function EmptyDashboard({ onComplete }) {
                                                     value={manualDoc.workerId}
                                                     onChange={e => setManualDoc(prev => ({ ...prev, workerId: e.target.value }))}
                                                 >
-                                                    <option value="">{bs ? '-- Odaberite radnika * --' : '-- Select Worker * --'}</option>
+                                                    <option value="">{t('selectWorker')}</option>
                                                     {addedWorkers.map(w => (
                                                         <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                                                     ))}
@@ -1116,22 +1110,22 @@ export default function EmptyDashboard({ onComplete }) {
                                                     value={manualDoc.docType}
                                                     onChange={e => setManualDoc(prev => ({ ...prev, docType: e.target.value }))}
                                                 >
-                                                    <option value="cert">📜 {bs ? 'Uvjerenje o osposobljenosti' : 'Safety Cert'}</option>
-                                                    <option value="exam">👨‍⚕️ {bs ? 'Ljekarski pregled' : 'Medical Exam'}</option>
+                                                    <option value="cert">📜 {t('safetyCert')}</option>
+                                                    <option value="exam">👨‍⚕️ {t('ljekarskiPregled1')}</option>
                                                 </select>
                                                 <input 
                                                     className="form-input"
                                                     value={manualDoc.naziv}
                                                     onChange={e => setManualDoc(prev => ({ ...prev, naziv: e.target.value }))}
-                                                    placeholder={manualDoc.docType === 'cert' ? (bs ? 'Naziv uvjerenja * (npr. ZOS)' : 'Cert Name *') : (bs ? 'Tip pregleda * (npr. Prethodni)' : 'Exam Type *')}
+                                                    placeholder={manualDoc.docType === 'cert' ? (t('certName')) : (t('examType1'))}
                                                 />
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                                        <label className="form-label" style={{ fontSize: '0.72rem' }}>{bs ? 'Datum *' : 'Date *'}</label>
+                                                        <label className="form-label" style={{ fontSize: '0.72rem' }}>{t('date2')}</label>
                                                         <input type="date" className="form-input" value={manualDoc.datum} onChange={e => setManualDoc(prev => ({ ...prev, datum: e.target.value }))} />
                                                     </div>
                                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                                        <label className="form-label" style={{ fontSize: '0.72rem' }}>{bs ? 'Vrijedi do' : 'Valid until'}</label>
+                                                        <label className="form-label" style={{ fontSize: '0.72rem' }}>{t('vrijediDo')}</label>
                                                         <input type="date" className="form-input" value={manualDoc.vrijediDo} onChange={e => setManualDoc(prev => ({ ...prev, vrijediDo: e.target.value }))} />
                                                     </div>
                                                 </div>
@@ -1140,12 +1134,12 @@ export default function EmptyDashboard({ onComplete }) {
                                                     value={manualDoc.sposobnost}
                                                     onChange={e => setManualDoc(prev => ({ ...prev, sposobnost: e.target.value }))}
                                                 >
-                                                    <option value="Sposoban">{bs ? 'Sposoban' : 'Fit'}</option>
-                                                    <option value="Uvjetno sposoban">{bs ? 'Uvjetno sposoban' : 'Conditionally Fit'}</option>
-                                                    <option value="Nesposoban">{bs ? 'Nesposoban' : 'Unfit'}</option>
+                                                    <option value="Sposoban">{t('sposoban')}</option>
+                                                    <option value="Uvjetno sposoban">{t('uvjetnoSposoban')}</option>
+                                                    <option value="Nesposoban">{t('nesposoban')}</option>
                                                 </select>
                                                 <button className="btn btn-primary btn-sm" onClick={handleAddDocManual} style={{ marginTop: 6 }}>
-                                                    ➕ {bs ? 'Dodaj dokument' : 'Add Document'}
+                                                    ➕ {t('addDocument')}
                                                 </button>
                                             </div>
                                         )}
@@ -1182,7 +1176,7 @@ export default function EmptyDashboard({ onComplete }) {
                                                 paddingBottom: 4
                                             }}
                                         >
-                                            👥 {bs ? `Uneseni radnici (${addedWorkers.length})` : `Workers (${addedWorkers.length})`}
+                                            👥 {t('workers1').replace('{0}', addedWorkers.length)}
                                         </button>
                                         <button 
                                             onClick={() => setListTab('docs')}
@@ -1195,7 +1189,7 @@ export default function EmptyDashboard({ onComplete }) {
                                                 paddingBottom: 4
                                             }}
                                         >
-                                            📜 {bs ? `Uneseni dokumenti (${addedDocs.length})` : `Documents (${addedDocs.length})`}
+                                            📜 {t('documents1').replace('{0}', addedDocs.length)}
                                         </button>
                                     </div>
 
@@ -1207,9 +1201,9 @@ export default function EmptyDashboard({ onComplete }) {
                                             <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', textAlign: 'left' }}>
-                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Ime i prezime' : 'Name'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{t('imeIPrezime1')}</th>
                                                         <th style={{ padding: '8px 12px' }}>{companyData.country === 'HR' ? 'OIB' : 'JMBG'}</th>
-                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Radno mjesto' : 'Workplace'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{t('radnoMjesto')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1226,10 +1220,10 @@ export default function EmptyDashboard({ onComplete }) {
                                             <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', textAlign: 'left' }}>
-                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Radnik' : 'Worker'}</th>
-                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Naziv dokumenta / pregleda' : 'Document Title'}</th>
-                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Datum' : 'Date'}</th>
-                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Vrijedi do' : 'Expiry'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{t('radnik1')}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{t('documentTitle1')}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{t('datum')}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{t('vrijediDo')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1259,19 +1253,17 @@ export default function EmptyDashboard({ onComplete }) {
                                 margin: '0 0 12px', fontSize: isMobile ? '1.4rem' : '1.8rem', fontWeight: 800,
                                 fontFamily: 'var(--font-heading)', color: 'var(--success)'
                             }}>
-                                {bs ? 'Postavljanje uspješno završeno!' : 'Setup Completed Successfully!'}
+                                {t('setupCompletedSuccessfully')}
                             </h2>
                             <p style={{
                                 margin: '0 auto 32px', fontSize: '0.92rem', color: 'var(--text-muted)',
                                 lineHeight: 1.6, maxWidth: 520
                             }}>
-                                {bs
-                                    ? 'Vaša tvrtka je spremna. Svi uneseni radnici i pripadajuća uvjerenja učitani su na vašu nadzornu ploču za praćenje.'
-                                    : 'Your company is ready. All entered workers and certificates have been loaded into your dashboard.'}
+                                {t('yourCompanyIsReadyAll')}
                             </p>
 
                             <button className="btn btn-primary" onClick={handleFinish} style={{ padding: '12px 32px', fontSize: '0.95rem' }}>
-                                📊 {bs ? 'Idi na nadzornu ploču' : 'Go to Dashboard'}
+                                📊 {t('goToDashboard')}
                             </button>
                         </div>
                     )}
@@ -1286,14 +1278,14 @@ export default function EmptyDashboard({ onComplete }) {
                         background: 'var(--bg-card)', borderBottomLeftRadius: 'var(--radius-lg)', borderBottomRightRadius: 'var(--radius-lg)'
                     }}>
                         <button className="btn btn-ghost" onClick={handleBack}>
-                            ← {bs ? 'Prethodno' : 'Previous'}
+                            ← {t('prethodni2')}
                         </button>
                         <div style={{ display: 'flex', gap: 10 }}>
                             <button className="btn btn-ghost btn-sm" onClick={handleSkipStep} style={{ color: 'var(--text-muted)' }}>
-                                {bs ? 'Preskoči korak' : 'Skip Step'}
+                                {t('skipStep')}
                             </button>
                             <button className="btn btn-primary" onClick={handleNext}>
-                                {activeStep === 2 ? (bs ? 'Završi' : 'Finish') : (bs ? 'Spremi i nastavi' : 'Save & Continue')} →
+                                {activeStep === 2 ? (t('finish1')) : (t('saveContinue'))} →
                             </button>
                         </div>
                     </div>
@@ -1310,7 +1302,7 @@ export default function EmptyDashboard({ onComplete }) {
                             fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' 
                         }}
                     >
-                        {bs ? 'Izađi i preskoči čarobnjak' : 'Exit and Skip Wizard'}
+                        {t('exitAndSkipWizard')}
                     </button>
                 </div>
             )}

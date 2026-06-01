@@ -11,7 +11,7 @@ import TestGenerator from './TestGenerator';
 import PageHeader from '@/components/PageHeader';
 export default function TestsZopZnrPage() {
     const { lang , t } = useLanguage();
-    const bs = lang !== 'en';
+    
     const country = useCountry();
     const { activeCompanyId } = useAuth();
     const [loading, setLoading] = useState(null);
@@ -19,16 +19,16 @@ export default function TestsZopZnrPage() {
 
     const tests = [
         {
-            title: bs ? 'Test ZOP' : 'ZOP Test',
-            desc: bs ? 'Test iz Zaštite od požara (Osposobljavanje ZOP)' : 'Fire Protection Test',
+            title: t('zopTest'),
+            desc: t('fireProtectionTest'),
             file: '/templates/Test ZOP.docx',
             bg: 'rgba(239, 68, 68, 0.05)',
             border: 'rgba(239, 68, 68, 0.2)',
             icon: '🔥'
         },
         {
-            title: bs ? 'Test ZNR' : 'ZNR Test',
-            desc: bs ? 'Test iz Zaštite na radu (Osposobljavanje ZNR)' : 'Occupational Safety Test',
+            title: t('znrTest'),
+            desc: t('occupationalSafetyTest'),
             file: '/templates/Test ZNR.docx',
             bg: 'rgba(34, 197, 94, 0.05)',
             border: 'rgba(34, 197, 94, 0.2)',
@@ -37,10 +37,8 @@ export default function TestsZopZnrPage() {
     ];
 
     const generateEmailObject = (test) => {
-        const subject = bs ? `Položite ${test.title} test` : `Complete your ${test.title} test`;
-        const body = bs 
-            ? `Poštovani,\n\nU prilogu Vam šaljemo zvanični dokument "${test.title}".\nMolimo Vas da test popunite i potpišete, te ga vratite referentu ZNR/ZOP ili predate zaduženoj osobi, kako bi Vam se izdalo važeće Uvjerenje.\n\nHvala!`
-            : `Dear worker,\n\nPlease find attached the official "${test.title}".\nKindly fill and sign the test, then return it to your OSH officer so your Certificate can be issued.\n\nThank you!`;
+        const subject = t('completeYourTest').replace('{0}', test.title);
+        const body = t('dearWorkernnpleaseFindAttachedThe').replace('{0}', test.title);
         return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
@@ -117,27 +115,27 @@ export default function TestsZopZnrPage() {
             
         } catch (error) {
             console.error("Error generating docx:", error);
-            alert(bs ? "Došlo je do greške prilikom preuzimanja." : "Error downloading document.");
+            alert(t('errorDownloadingDocument'));
             setLoading(null);
         }
     };
 
     return (
         <div className="animate-fadeIn">
-            <PageHeader icon="📝" title={bs ? 'Testovi ZOP i ZNR' : 'ZOP & ZNR Tests'} />
+            <PageHeader icon="📝" title={t('testoviZopZnr')} />
             
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setActiveTab('DOWNLOAD')}
                     className={`tab-btn ${activeTab === 'DOWNLOAD' ? 'active' : ''}`}>
-                    ⬇️ {bs ? 'Preuzimanje obrazaca' : 'Download Templates'}
+                    ⬇️ {t('downloadTemplates')}
                 </button>
                 <button onClick={() => setActiveTab('GENERATOR')}
                     className={`tab-btn ${activeTab === 'GENERATOR' ? 'active' : ''}`}>
-                    ⚙️ {bs ? 'Generator testova' : 'Test Generator'}
+                    ⚙️ {t('testGenerator')}
                 </button>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>🖨️ {t('zapisnikZos')}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
                 </div>
             </div>
 
@@ -146,9 +144,7 @@ export default function TestsZopZnrPage() {
                     <div className="card" style={{ marginBottom: 24 }}>
                         <div className="card-body">
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.5 }}>
-                                {bs 
-                                    ? 'Ovdje možete preuzeti zvanične obrasce testova za provjeru znanja radnika iz oblasti zaštite na radu (ZNR) i zaštite od požara (ZOP). Referent ZNR prepušta radniku blanko test. Nakon što radnik popuni i potpiše test, referent ga pohranjuje kao dokaz (prilog Uvjerenja).'
-                                    : 'Download official OSH test templates here. The OSH officer gives the blank test to the worker. Once the worker fills and signs the test, it must be uploaded as proof (Certificate attachment).'}
+                                {t('downloadOfficialOshTestTemplates')}
                             </p>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
@@ -171,9 +167,9 @@ export default function TestsZopZnrPage() {
                                         </div>
                                         <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
                                             <button onClick={() => handleDownload(t)} disabled={loading === t.title} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                                                {loading === t.title ? '🔄...' : `📥 ${bs ? 'Preuzmi DOCX' : 'Download DOCX'}`}
+                                                {loading === t.title ? '🔄...' : `📥 ${t('downloadDocx')}`}
                                             </button>
-                                            <a href={generateEmailObject(t)} className="btn btn-outline btn-sm btn-icon" title={bs ? 'Pošalji e-mailom' : 'Send via email'}>
+                                            <a href={generateEmailObject(t)} className="btn btn-outline btn-sm btn-icon" title={t('sendViaEmail')}>
                                                 ✉️
                                             </a>
                                         </div>
@@ -184,8 +180,8 @@ export default function TestsZopZnrPage() {
                     </div>
                     
                     <div style={{ padding: '12px 18px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.05)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                        <strong style={{ color: 'var(--text)' }}>⚖️ {bs ? 'Procedura izdavanja uvjerenja:' : 'Certificate Issuance Procedure:'}</strong><br/>
-                        {bs ? 'Kada dodjeljujete Uvjerenje o osposobljenosti za zaštitu na radu (ZNR) ili zaštitu od požara (ZOP) konkretnom radniku, potrebno je obavezno skenirati ovaj test (nakon što ga radnik ispuni i potpiše) te taj skenirani papir dodati kao prilog ("Upload potpisan scan") u kartonu tog Uvjerenja.' : 'When issuing an OSH or Fire Safety Certificate to a specific worker, you must scan this test (after the worker fills and signs it) and add the scanned paper as an attachment ("Upload signed scan") in the Certificate\'s record.'}
+                        <strong style={{ color: 'var(--text)' }}>⚖️ {t('certificateIssuanceProcedure')}</strong><br/>
+                        {t('whenIssuingAnOshOr')}
                     </div>
                 </>
             ) : (

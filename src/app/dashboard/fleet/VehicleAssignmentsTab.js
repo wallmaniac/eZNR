@@ -7,7 +7,7 @@ import TimeInput from '@/components/TimeInput';
 
 export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments, workers, reloadData }) {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const { confirm, prompt, DialogRenderer } = useDialog();
 
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
@@ -30,7 +30,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`)) {
+        if (await confirm(t('deleteRecords').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) remove(COLLECTIONS.VEHICLE_ASSIGNMENTS, id);
             setSelectedIds(new Set());
             reloadData();
@@ -103,7 +103,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
     };
 
     const handleDelete = async (assigId) => {
-        if (await confirm(bs ? 'Brisati ovu historiju?' : 'Delete history record?')) {
+        if (await confirm(t('deleteHistoryRecord'))) {
             remove(COLLECTIONS.VEHICLE_ASSIGNMENTS, assigId);
             reloadData();
         }
@@ -130,20 +130,20 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
             <DialogRenderer />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h3 style={{ margin: '0 0 4px 0' }}>{bs ? 'Historija zaduženja' : 'Assignment History'}</h3>
+                    <h3 style={{ margin: '0 0 4px 0' }}>{t('assignmentHistory')}</h3>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {bs ? 'Mjesto za kreiranje novog zaduženja i razduženja vozila.' : 'Space for assigning drivers and tracking mileage parameters.'}
+                        {t('spaceForAssigningDriversAnd')}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     {selectedIds.size> 0 && (
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                            <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}</span>
+                            <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                         </div>
                     )}
                     <button className="btn btn-primary btn-sm" onClick={() => { setEditingId(null); setShowForm(true); setForm({ workerId: '', workerIme: '', datumZaduzenja: new Date().toISOString().split('T')[0], vrijemeZaduzenja: new Date().toTimeString().slice(0, 5), pocetnaKilometraza: '', datumRazduzenja: '', vrijemeRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(''); }}>
-                        + {bs ? 'Novo zaduženje' : 'New Assignment'}
+                        + {t('novoZaduzenje')}
                     </button>
                 </div>
             </div>
@@ -152,14 +152,14 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                 <div className="modal-overlay" style={{ zIndex: 12000 }} onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? (bs ? 'Uredi zaduženje' : 'Edit Assignment') : (bs ? 'Novo zaduženje' : 'New Assignment')}</h2>
+                            <h2>{editingId ? (t('urediZaduzenje')) : (t('novoZaduzenje'))}</h2>
                             <button type="button" className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body" style={{ padding: '24px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                                 <div className="form-group" ref={workerRef} style={{ position: 'relative' }}>
-                                    <label className="form-label">{bs ? 'Dodijeli vozilo vozaču' : 'Assign to'} <span style={{color:'var(--danger)'}}>*</span></label>
-                                    <input className="form-input" placeholder={bs ? '🔍 Pretraži zaposlene...' : '🔍 Search workers...'} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId: '', workerIme: ''})); }} onFocus={() => setShowW(true)} />
+                                    <label className="form-label">{t('assignTo')} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" placeholder={t('searchWorkers')} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId: '', workerIme: ''})); }} onFocus={() => setShowW(true)} />
                                     {showW && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
                                             {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : filteredWorkers.slice(0, 10).map(w => (
@@ -172,27 +172,27 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                     {form.workerId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {form.workerIme}</div>}
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datum i vrijeme zaduženja' : 'Assigned Date & Time'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <label className="form-label">{t('assignedDateTime')} <span style={{color:'var(--danger)'}}>*</span></label>
                                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
                                         <DateInput value={form.datumZaduzenja} onChange={v => setForm(f => ({...f, datumZaduzenja: v}))} />
                                         <TimeInput value={form.vrijemeZaduzenja} onChange={v => setForm(f => ({...f, vrijemeZaduzenja: v}))} />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Početna kilometraža' : 'Starting Mileage'}</label>
+                                    <label className="form-label">{t('startingMileage')}</label>
                                     <input className="form-input" type="number" value={form.pocetnaKilometraza} onChange={e => setForm(f => ({...f, pocetnaKilometraza: e.target.value}))} />
                                 </div>
                                 {editingId && (
                                     <>
                                         <div className="form-group">
-                                            <label className="form-label">{bs ? 'Datum i vrijeme razduženja' : 'Return Date & Time'}</label>
+                                            <label className="form-label">{t('returnDateTime')}</label>
                                             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
                                                 <DateInput value={form.datumRazduzenja} onChange={v => setForm(f => ({...f, datumRazduzenja: v}))} />
                                                 <TimeInput value={form.vrijemeRazduzenja} onChange={v => setForm(f => ({...f, vrijemeRazduzenja: v}))} />
                                             </div>
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{bs ? 'Završna kilometraža' : 'Ending Mileage'}</label>
+                                            <label className="form-label">{t('endingMileage')}</label>
                                             <input className="form-input" type="number" value={form.zavrsnaKilometraza} onChange={e => setForm(f => ({...f, zavrsnaKilometraza: e.target.value}))} />
                                         </div>
                                     </>
@@ -212,17 +212,17 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                     <thead>
                         <tr>
                             <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === history.length && history.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
-                            <th>{bs ? 'Vozač' : 'Driver'}</th>
-                            <th>{bs ? 'Preuzeo' : 'Assigned On'}</th>
-                            <th>{bs ? 'Početna KM' : 'Start KM'}</th>
-                            <th>{bs ? 'Vratio' : 'Returned On'}</th>
-                            <th>{bs ? 'Završna KM' : 'End KM'}</th>
+                            <th>{t('driver2')}</th>
+                            <th>{t('assignedOn')}</th>
+                            <th>{t('startKm')}</th>
+                            <th>{t('returnedOn')}</th>
+                            <th>{t('endKm')}</th>
                             <th style={{ width: 100 }}>{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {history.length === 0 ? (
-                            <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{bs ? 'Nema zaduženja' : 'No history found'}</td></tr>
+                            <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{t('noHistoryFound')}</td></tr>
                         ) : history.map((h, i) => (
                             <tr key={h.id} style={{ opacity: (!h.datumRazduzenja || i===0) ? 1 : 0.75, cursor: 'pointer' }}
                                 onClick={() => handleEdit(h)}>
@@ -248,17 +248,17 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                                 ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 60, maxH: Math.max(120, rect.top - 8) }
                                                 : { top: rect.bottom + 4, left: rect.left - 60, maxH: Math.max(120, spaceBelow - 15) });
                                             setActionMenuId(h.id);
-                                        }}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                        }}>{t('akcije')} ▼</button>
 
                                         {actionMenuId === h.id && (
                                             <>
                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(h); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
-                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); setEditingId(null); setForm({ workerId: h.workerId, workerIme: h.workerIme, datumZaduzenja: new Date().toISOString().split('T')[0], vrijemeZaduzenja: new Date().toTimeString().slice(0, 5), pocetnaKilometraza: h.zavrsnaKilometraza || '', datumRazduzenja: '', vrijemeRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(h.workerIme); setShowForm(true); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                    {!h.datumRazduzenja && <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleUnassign(h); }} className="dropdown-item">↩️ {bs ? 'Razduži' : 'Unassign'}</button>}
+                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(h); }} className="dropdown-item">✏️ {t('uredi')}</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); setEditingId(null); setForm({ workerId: h.workerId, workerIme: h.workerIme, datumZaduzenja: new Date().toISOString().split('T')[0], vrijemeZaduzenja: new Date().toTimeString().slice(0, 5), pocetnaKilometraza: h.zavrsnaKilometraza || '', datumRazduzenja: '', vrijemeRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(h.workerIme); setShowForm(true); }} className="dropdown-item">📋 {t('kopiraj')}</button>
+                                                    {!h.datumRazduzenja && <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleUnassign(h); }} className="dropdown-item">↩️ {t('unassign')}</button>}
                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(h.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(h.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                 </div>
                                             </>
                                         )}

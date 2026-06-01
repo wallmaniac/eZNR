@@ -12,7 +12,7 @@ import PageHeader from '@/components/PageHeader';
 
 function FleetOrdersInner() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
@@ -106,7 +106,7 @@ function FleetOrdersInner() {
     };
 
     const handleDelete = async (id) => {
-        if (await confirm(bs ? 'Obrisati ovaj nalog?' : 'Delete this order?')) {
+        if (await confirm(t('deleteThisOrder'))) {
             remove(COLLECTIONS.TRAVEL_ORDERS, id);
             setActionMenuId(null);
             loadData();
@@ -139,7 +139,7 @@ function FleetOrdersInner() {
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} naloga?` : `Delete ${selectedIds.size} orders?`)) {
+        if (await confirm(t('deleteOrders1').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) remove(COLLECTIONS.TRAVEL_ORDERS, id);
             setSelectedIds(new Set());
             loadData();
@@ -157,8 +157,8 @@ function FleetOrdersInner() {
     };
 
     const handleSave = async () => {
-        if (!formData.vehicleId) { await alert(bs ? 'Odaberite vozilo!' : 'Select vehicle!'); return; }
-        if (!formData.brojNaloga) { await alert(bs ? 'Unesite broj naloga!' : 'Enter order number!'); return; }
+        if (!formData.vehicleId) { await alert(t('selectVehicle2')); return; }
+        if (!formData.brojNaloga) { await alert(t('enterOrderNumber')); return; }
         
         create(COLLECTIONS.TRAVEL_ORDERS, { ...formData });
         
@@ -173,14 +173,14 @@ function FleetOrdersInner() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <PageHeader icon="📝" title={bs ? 'Putni Nalozi' : 'Travel Orders'} />
+            <PageHeader icon="📝" title={t('fleetOrders')} />
 
             {/* Modal */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>+ {bs ? 'Novi putni nalog' : 'New Travel Order'}</h2>
+                            <h2>+ {t('newTravelOrder1')}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
@@ -188,7 +188,7 @@ function FleetOrdersInner() {
                                 
                                 <div className="form-grid-2">
                                     <div className="form-group" ref={vRef} style={{ position: 'relative' }}>
-                                        <label className="form-label">{bs ? 'Vozilo' : 'Vehicle'}</label>
+                                        <label className="form-label">{t('vozilo1')}</label>
                                         <input className="form-input" placeholder="🔍 Pretraži..." value={vehicleSearch} 
                                             onChange={e => { setVehicleSearch(e.target.value); setShowVSearch(true); setFormData(f => ({...f, vehicleId: ''})); }} 
                                             onFocus={() => setShowVSearch(true)} />
@@ -206,7 +206,7 @@ function FleetOrdersInner() {
                                     </div>
 
                                     <div className="form-group" ref={wRef} style={{ position: 'relative' }}>
-                                        <label className="form-label">{bs ? 'Vozač' : 'Driver'}</label>
+                                        <label className="form-label">{t('driver7')}</label>
                                         <input className="form-input" placeholder="🔍 Pretraži..." value={workerSearch} 
                                             onChange={e => { setWorkerSearch(e.target.value); setShowWSearch(true); setFormData(f => ({...f, vozacId: '', vozacIme: ''})); }} 
                                             onFocus={() => setShowWSearch(true)} />
@@ -225,28 +225,28 @@ function FleetOrdersInner() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Broj naloga' : 'Order No.'} <span style={{color: 'var(--danger)'}}>*</span></label>
+                                    <label className="form-label">{t('orderNo')} <span style={{color: 'var(--danger)'}}>*</span></label>
                                     <input className="form-input" value={formData.brojNaloga} onChange={e => setFormData(f => ({...f, brojNaloga: e.target.value}))} />
                                 </div>
                                 
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Relacija' : 'Route'}</label>
+                                    <label className="form-label">{t('route2')}</label>
                                     <input className="form-input" value={formData.relacija} onChange={e => setFormData(f => ({...f, relacija: e.target.value}))} />
                                 </div>
 
                                 <div className="form-grid-2">
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum polaska' : 'Date Out'}</label>
+                                        <label className="form-label">{t('dateOut')}</label>
                                         <DateInput value={formData.datumPolaska} onChange={v => setFormData(f => ({...f, datumPolaska: v}))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum povratka' : 'Date In'}</label>
+                                        <label className="form-label">{t('dateIn')}</label>
                                         <DateInput value={formData.datumPovratka} onChange={v => setFormData(f => ({...f, datumPovratka: v}))} />
                                     </div>
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Svrha puta' : 'Purpose'}</label>
+                                    <label className="form-label">{t('purpose')}</label>
                                     <textarea className="form-input" rows="2" value={formData.svrha} onChange={e => setFormData(f => ({...f, svrha: e.target.value}))} />
                                 </div>
                             </div>
@@ -264,15 +264,15 @@ function FleetOrdersInner() {
                         <button className="btn btn-primary btn-sm" onClick={() => { 
                             setFormData({ vehicleId: '', vozacId: '', vozacIme: '', brojNaloga: '', relacija: '', svrha: '', datumPolaska: new Date().toISOString().split('T')[0], datumPovratka: '' }); 
                             setVehicleSearch(''); setWorkerSearch(''); setShowForm(true); 
-                        }}>+ {bs ? 'Novi nalog' : 'New Order'}</button>
+                        }}>+ {t('newOrder1')}</button>
                         <SavedFlash />
-                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži naloge...' : '🔍 Search orders...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={t('searchOrders')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                         {selectedIds.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}</span>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                             </div>
-                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'naloga' : 'orders'}</span>}
+                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {t('orders')}</span>}
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
@@ -280,12 +280,12 @@ function FleetOrdersInner() {
                                 <tr>
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
-                                    <th onClick={() => toggleSort('brojNaloga')} style={thStyle('brojNaloga')}>{bs ? 'Broj Naloga' : 'Order No.'}{sortIcon('brojNaloga')}</th>
-                                    <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{bs ? 'Vozilo' : 'Vehicle'}{sortIcon('vehicleReg')}</th>
-                                    <th onClick={() => toggleSort('workerName')} style={thStyle('workerName')}>{bs ? 'Vozač' : 'Driver'}{sortIcon('workerName')}</th>
-                                    <th onClick={() => toggleSort('relacija')} style={thStyle('relacija')}>{bs ? 'Relacija' : 'Route'}{sortIcon('relacija')}</th>
-                                    <th onClick={() => toggleSort('datumPolaska')} style={thStyle('datumPolaska')}>{bs ? 'Datum Polaska' : 'Date Out'}{sortIcon('datumPolaska')}</th>
-                                    <th onClick={() => toggleSort('datumPovratka')} style={thStyle('datumPovratka')}>{bs ? 'Datum Povratka' : 'Date In'}{sortIcon('datumPovratka')}</th>
+                                    <th onClick={() => toggleSort('brojNaloga')} style={thStyle('brojNaloga')}>{t('orderNo1')}{sortIcon('brojNaloga')}</th>
+                                    <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{t('vozilo1')}{sortIcon('vehicleReg')}</th>
+                                    <th onClick={() => toggleSort('workerName')} style={thStyle('workerName')}>{t('driver8')}{sortIcon('workerName')}</th>
+                                    <th onClick={() => toggleSort('relacija')} style={thStyle('relacija')}>{t('route3')}{sortIcon('relacija')}</th>
+                                    <th onClick={() => toggleSort('datumPolaska')} style={thStyle('datumPolaska')}>{t('dateOut1')}{sortIcon('datumPolaska')}</th>
+                                    <th onClick={() => toggleSort('datumPovratka')} style={thStyle('datumPovratka')}>{t('dateIn1')}{sortIcon('datumPovratka')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -298,15 +298,15 @@ function FleetOrdersInner() {
                                         </td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(o.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(o.id, e)}>{t('akcije')} ▼</button>
                                                 {actionMenuId === o.id && (<>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                     <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => { setActionMenuId(null); openInFleet(o.vehicleId); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                        <button onClick={() => { setActionMenuId(null); handleCopy(o); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                        <button onClick={() => { setActionMenuId(null); handlePrint(o); }} className="dropdown-item">🖨️ {bs ? 'Printaj' : 'Print'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); openInFleet(o.vehicleId); }} className="dropdown-item">✏️ {t('otvori')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleCopy(o); }} className="dropdown-item">📋 {t('kopiraj')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handlePrint(o); }} className="dropdown-item">🖨️ {t('printaj')}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => { setActionMenuId(null); handleDelete(o.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(o.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                     </div>
                                                 </>)}
                                             </div>

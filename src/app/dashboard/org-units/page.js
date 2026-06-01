@@ -91,7 +91,7 @@ export default function OrgUnitsPage() {
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} org. jedinica?` : `Delete ${selectedIds.size} org. units?`);
+        const ok = await confirm(t('deleteOrgUnits').replace('{0}', selectedIds.size));
         if (ok) {
             for (const id of selectedIds) remove(COLLECTIONS.ORG_UNITS, id);
             setSelectedIds(new Set());
@@ -144,7 +144,7 @@ export default function OrgUnitsPage() {
 
     const handleSave = async () => {
         if (!formData.naziv) {
-            await alert(lang !== 'en' ? 'Naziv je obavezno polje!' : 'Name is a required field!');
+            await alert(t('nazivJeObaveznoPolje'));
             return;
         }
         let savedId = editingId;
@@ -422,7 +422,7 @@ export default function OrgUnitsPage() {
                                     <th style={thStyle('skraceniNaziv')} onClick={() => toggleSort('skraceniNaziv')}>{t('skraceni')}{sortIcon('skraceniNaziv')}</th>
                                     <th>{t('nadreena')}</th>
                                     <th style={thStyle('mjesto')} onClick={() => toggleSort('mjesto')}>{t('place')}{sortIcon('mjesto')}</th>
-                                    <th style={thStyle('odgovornaOsoba')} onClick={() => toggleSort('odgovornaOsoba')}>{lang !== 'en' ? 'Odgovorna osoba' : 'Resp. Person'}{sortIcon('odgovornaOsoba')}</th>
+                                    <th style={thStyle('odgovornaOsoba')} onClick={() => toggleSort('odgovornaOsoba')}>{t('odgovornaOsoba')}{sortIcon('odgovornaOsoba')}</th>
                                     <th>{t('radnici')}</th>
                                 </tr>
                             </thead>
@@ -481,7 +481,7 @@ export default function OrgUnitsPage() {
                                                             const w = workers.find(x => `${x.ime} ${x.prezime}` === u.odgovornaOsoba);
                                                             if (w) setViewWorkerId(w.id);
                                                             else alert(t('radnikNijePronaenUBazi'));
-                                                        }} title={lang !== 'en' ? 'Klikni za pregled profila' : 'View profile'}>
+                                                        }} title={t('klikniZaPregledProfila')}>
                                                             {u.odgovornaOsoba}
                                                         </span>
                                                     ) : '-'}

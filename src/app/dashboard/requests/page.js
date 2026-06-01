@@ -87,7 +87,7 @@ export default function RequestsPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems26').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) await remove(COLLECTIONS.REQUESTS, id);
       setSelectedIds(new Set());
       loadData();

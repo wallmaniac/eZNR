@@ -109,7 +109,7 @@ export default function MedicalExamsPage() {
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+        if (await confirm(t('deleteItems20').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
             setSelectedIds(new Set());
             reload();
@@ -218,8 +218,8 @@ export default function MedicalExamsPage() {
     };
 
     const handleSave = async () => {
-        if (!form.workerId) { await alert(bs ? 'Odaberite radnika!' : 'Select a worker!'); return; }
-        if (!form.datumPregleda) { await alert(bs ? 'Unesite datum pregleda!' : 'Enter exam date!'); return; }
+        if (!form.workerId) { await alert(t('odaberiteRadnika')); return; }
+        if (!form.datumPregleda) { await alert(t('unesiteDatumPregleda')); return; }
         const w = workers.find(wk => wk.id === form.workerId);
         const payload = { ...form, radnikIme: w ? `${w.ime} ${w.prezime}` : '' };
         if (editingId) { update(COLLECTIONS.MEDICAL_EXAMS, editingId, payload); }
@@ -244,20 +244,20 @@ export default function MedicalExamsPage() {
     };
 
     const handleDelete = async (exam) => {
-        if (await confirm(bs ? `Obrisati pregled za ${exam._workerName}?` : `Delete exam for ${exam._workerName}?`)) { remove(COLLECTIONS.MEDICAL_EXAMS, exam.id); reload(); }
+        if (await confirm(t('deleteExamFor').replace('{0}', exam._workerName))) { remove(COLLECTIONS.MEDICAL_EXAMS, exam.id); reload(); }
     };
 
     const handleNew = () => { setEditingId(null); setForm({ ...emptyForm }); setShowForm(true); };
 
-    const examTypeLabel = (v) => EXAM_TYPES.find(t => t.value === v)?.[bs ? 'labelBs' : 'labelEn'] || v;
+    const examTypeLabel = (v) => EXAM_TYPES.find(t => t.value === v)?.[t('labelen')] || v;
     const resultColor = (v) => RESULTS.find(r => r.value === v)?.color || 'var(--text)';
-    const resultLabel = (v) => RESULTS.find(r => r.value === v)?.[bs ? 'labelBs' : 'labelEn'] || v;
+    const resultLabel = (v) => RESULTS.find(r => r.value === v)?.[t('labelen1')] || v;
 
     const tabs = [
-        { key: 'all', label: bs ? `Svi (${stats.total})` : `All (${stats.total})` },
-        { key: 'expired', label: bs ? `Isteklo (${stats.expired})` : `Expired (${stats.expired})`, col: 'var(--danger)' },
-        { key: 'soon', label: bs ? `Uskoro (${stats.soon})` : `Soon (${stats.soon})`, col: 'var(--warning)' },
-        { key: 'valid', label: bs ? `Vrijedi (${stats.valid})` : `Valid (${stats.valid})`, col: 'var(--success)' },
+        { key: 'all', label: t('all1').replace('{0}', stats.total) },
+        { key: 'expired', label: t('expired2').replace('{0}', stats.expired), col: 'var(--danger)' },
+        { key: 'soon', label: t('soon2').replace('{0}', stats.soon), col: 'var(--warning)' },
+        { key: 'valid', label: t('valid').replace('{0}', stats.valid), col: 'var(--success)' },
     ];
 
     return (
@@ -267,26 +267,26 @@ export default function MedicalExamsPage() {
             {/* ── Page header — emoji + title only, NO button here ── */}
             <PageHeader 
                 icon={<Icon3D name="Ljekarski pregledi.png" size={64} />} 
-                title={bs ? 'Ljekarski pregledi' : 'Medical Examinations'} 
-                subtitle={`${stats.total} ${bs ? 'zapisa' : 'records'} · ${getFullCitation(country)}${medPravilnik ? ` + ${medPravilnik.name}` : ''}`}
+                title={t('ljekarskiPregledi1')} 
+                subtitle={`${stats.total} ${t('zapisa')} · ${getFullCitation(country)}${medPravilnik ? ` + ${medPravilnik.name}` : ''}`}
             />
 
             {/* ── Toolbar: New button LEFT, search RIGHT ── */}
             <div className="card"><div className="card-body" style={{ padding: 0 }}>
             <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                <button className="btn btn-primary" id="btn-new-exam" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={bs ? 'Dodaj novi ljekarski pregled' : 'Add new medical exam'}>
-                    + {bs ? 'Novi pregled' : 'New Exam'}
+                <button className="btn btn-primary" id="btn-new-exam" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={t('addNewMedicalExam')}>
+                    + {t('noviPregled')}
                 </button>
 
                 <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 260, display: 'flex', alignItems: 'center' }}>
                     <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                     <input
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }}
-                        placeholder={bs ? 'Pretraži radnika, doktora...' : 'Search worker, doctor...'}
+                        placeholder={t('searchWorkerDoctor')}
                         value={searchQ}
                         onChange={e => setSearchQ(e.target.value)}
                     />
-                    {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={bs ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                    {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                 </div>
 
                 <select
@@ -294,7 +294,7 @@ export default function MedicalExamsPage() {
                     style={{ height: 38, padding: '0 12px', flexShrink: 0, fontSize: '0.85rem', width: 140, cursor: 'pointer' }}
                     value={filterTab}
                     onChange={(e) => setFilterTab(e.target.value)}
-                    title={bs ? 'Filtriraj preglede' : 'Filter exams'}>
+                    title={t('filterExams')}>
                     {tabs.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
                 </select>
 
@@ -303,13 +303,13 @@ export default function MedicalExamsPage() {
                 {selectedIds.size> 0 && (
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                            {selectedIds.size} {bs ? 'odabrano' : 'selected'}:
+                            {selectedIds.size} {t('odabrano1')}:
                         </span>
-                        <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={bs ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
-                        <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={bs ? 'Obriši odabrane preglede' : 'Delete selected exams'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                        <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={t('isprintajOdabrano')}>🖨️ {t('isprintaj')}</button>
+                        <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={t('deleteSelectedExams')}>🗑️ {t('obrisi')}</button>
                     </div>
                 )}
-                {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
+                {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{exams.length} {t('zapisa')}</span>}
             </div>
             
 
@@ -317,9 +317,7 @@ export default function MedicalExamsPage() {
             {/* ── Legal tip ── */}
             <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', marginBottom: 12, background: 'rgba(33,150,243,0.05)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
                 <strong style={{ color: 'var(--text)' }}>⚖️</strong>{' '}
-                {bs
-                    ? `Preglede obavlja specijalist medicine rada. Radnik koji ne obavi periodični pregled ne može nastaviti s radom. Troškove snosi poslodavac (${medCitation}).`
-                    : `Exams performed by occupational medicine specialist. Workers who skip periodic exams cannot continue working. Costs paid by employer (${medCitation}).`}
+                {t('examsPerformedByOccupationalMedicine').replace('{0}', medCitation)}
             </div>
 
             {/* ── Table ── */}
@@ -328,19 +326,19 @@ export default function MedicalExamsPage() {
                             <thead>
                                 <tr>
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
-                                    <th style={{ width: 90 }}>{bs ? 'Akcije' : 'Actions'}</th>
-                                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{bs ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
-                                    <th onClick={() => toggleSort('tipPregleda')} style={thStyle('tipPregleda')}>{bs ? 'Vrsta pregleda' : 'Exam Type'}{sortIcon('tipPregleda')}</th>
-                                    <th onClick={() => toggleSort('datumPregleda')} style={thStyle('datumPregleda')}>{bs ? 'Datum' : 'Date'}{sortIcon('datumPregleda')}</th>
-                                    <th onClick={() => toggleSort('vrijediDo')} style={thStyle('vrijediDo')}>{bs ? 'Naredni pregled' : 'Next Exam'}{sortIcon('vrijediDo')}</th>
-                                    <th>{bs ? 'Status' : 'Status'}</th>
-                                    <th onClick={() => toggleSort('rezultat')} style={thStyle('rezultat')}>{bs ? 'Rezultat' : 'Result'}{sortIcon('rezultat')}</th>
-                                    <th onClick={() => toggleSort('zdravstvenaUstanova')} style={thStyle('zdravstvenaUstanova')}>{bs ? 'Ustanova' : 'Institution'}{sortIcon('zdravstvenaUstanova')}</th>
+                                    <th style={{ width: 90 }}>{t('akcije')}</th>
+                                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{t('radnik1')}{sortIcon('_workerName')}</th>
+                                    <th onClick={() => toggleSort('tipPregleda')} style={thStyle('tipPregleda')}>{t('vrstaPregleda')}{sortIcon('tipPregleda')}</th>
+                                    <th onClick={() => toggleSort('datumPregleda')} style={thStyle('datumPregleda')}>{t('datum')}{sortIcon('datumPregleda')}</th>
+                                    <th onClick={() => toggleSort('vrijediDo')} style={thStyle('vrijediDo')}>{t('naredniPregled')}{sortIcon('vrijediDo')}</th>
+                                    <th>{t('status')}</th>
+                                    <th onClick={() => toggleSort('rezultat')} style={thStyle('rezultat')}>{t('rezultat')}{sortIcon('rezultat')}</th>
+                                    <th onClick={() => toggleSort('zdravstvenaUstanova')} style={thStyle('zdravstvenaUstanova')}>{t('ustanova')}{sortIcon('zdravstvenaUstanova')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {sorted.length === 0 && (
-                                    <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>{bs ? 'Nema unesenih ljekarskih pregleda' : 'No medical exams recorded'}</td></tr>
+                                    <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>{t('noMedicalExamsRecorded')}</td></tr>
                                 )}
                                 {paged.map(exam => {
                                     const badge = getStatusBadge(exam);
@@ -366,7 +364,7 @@ export default function MedicalExamsPage() {
                                                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                         );
                                                         setActionMenuId(exam.id);
-                                                    }} title={bs ? 'Prikaži akcije za pregled' : 'Show exam actions'}>Akcije ▼</button>
+                                                    }} title={t('showExamActions')}>Akcije ▼</button>
                                                     {actionMenuId === exam.id && (
                                                         <>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -380,7 +378,7 @@ export default function MedicalExamsPage() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }} title={bs ? 'Idi na profil radnika' : 'Go to worker profile'}>{exam._workerName}</button></td>
+                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }} title={t('goToWorkerProfile')}>{exam._workerName}</button></td>
                                             <td style={{ fontSize: '0.82rem' }}>{examTypeLabel(exam.tipPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem' }}>{formatDate(exam.datumPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem', fontWeight: days !== null && days < 0 ? 700 : 400, color: days !== null && days < 0 ? 'var(--danger)' : days !== null && days <= 90 ? 'var(--warning)' : 'inherit' }}>{exam.vrijediDo ? formatDate(exam.vrijediDo) : '—'}</td>
@@ -423,20 +421,20 @@ export default function MedicalExamsPage() {
                     <div className="modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
                             <h2 style={{ color: 'white', margin: 0 }}>
-                                <Icon3D name="Ljekarski pregledi.png" size={48} /> {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
+                                <Icon3D name="Ljekarski pregledi.png" size={48} /> {editingId ? (t('editMedicalExam')) : (t('noviLjekarskiPregled'))}
                             </h2>
-                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={handleClose} title={bs ? 'Zatvori bez snimanja' : 'Close without saving'}>✕</button>
+                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={handleClose} title={t('closeWithoutSaving')}>✕</button>
                         </div>
 
                         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.06)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                                ⚖️ {bs ? `Preglede obavlja specijalist medicine rada. Troškove snosi poslodavac (${medCitation}).` : `Exams performed by occupational medicine specialist. Employer bears costs (${medCitation}).`}
+                                ⚖️ {t('examsPerformedByOccupationalMedicine1').replace('{0}', medCitation)}
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">👷 {bs ? 'Radnik *' : 'Worker *'}</label>
+                                <label className="form-label">👷 {t('radnik')}</label>
                                 <select className="form-select" value={form.workerId} onChange={e => setField('workerId', e.target.value)}>
-                                    <option value="">{bs ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                                    <option value="">{t('odaberiteRadnika1')}</option>
                                     {[...workers].filter(w => w.aktivan !== false).sort((a, b) => (a.prezime || '').localeCompare(b.prezime || '')).map(w => (
                                         <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                                     ))}
@@ -445,7 +443,7 @@ export default function MedicalExamsPage() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Vrsta pregleda *' : 'Exam Type *'}</label>
+                                    <label className="form-label">{t('examType')}</label>
                                     <select className="form-select" value={form.tipPregleda} onChange={e => setField('tipPregleda', e.target.value)}>
                                         {EXAM_TYPES.map(t => <option key={t.value} value={t.value}>{bs ? t.labelBs : t.labelEn}</option>)}
                                     </select>
@@ -455,13 +453,13 @@ export default function MedicalExamsPage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>{bs ? 'Broj uputnice (RA-1)' : 'Referral No. (RA-1)'}</span>
+                                        <span>{t('brojUputniceRa1')}</span>
                                         <button
                                             type="button"
-                                            title={bs ? 'Idi na kreiranje nove Uputnice RA-1' : 'Create new RA-1 Referral'}
+                                            title={t('createNewRa1Referral')}
                                             onClick={() => router.push('/dashboard/referral-ra1?openNew=1')}
                                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, padding: 0, textDecoration: 'underline' }}>
-                                            ↗ {bs ? 'Modul RA-1' : 'RA-1 Module'}
+                                            ↗ {t('ra1Module')}
                                         </button>
                                     </label>
                                     <input className="form-input" placeholder="RA1-2026-001" value={form.uputnicaBroj} onChange={e => setField('uputnicaBroj', e.target.value)} />
@@ -470,17 +468,17 @@ export default function MedicalExamsPage() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datum pregleda *' : 'Exam Date *'}</label>
+                                    <label className="form-label">{t('datumPregleda')}</label>
                                     <DateInput value={form.datumPregleda} onChange={v => setField('datumPregleda', v)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Naredni pregled do' : 'Next Exam Due By'}</label>
+                                    <label className="form-label">{t('naredniPregledDo')}</label>
                                     <DateInput value={form.vrijediDo} onChange={v => setField('vrijediDo', v)} />
                                 </div>
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">{bs ? 'Rezultat pregleda *' : 'Exam Result *'}</label>
+                                <label className="form-label">{t('examResult1')}</label>
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     {RESULTS.map(r => (
                                         <button key={r.value} type="button" onClick={() => setField('rezultat', r.value)}
@@ -493,35 +491,35 @@ export default function MedicalExamsPage() {
 
                             {(form.rezultat === 'Nesposoban' || form.rezultat === 'Uvjetno Sposoban') && (
                                 <div className="form-group">
-                                    <label className="form-label" style={{ color: 'var(--warning)' }}>⚠️ {bs ? 'Ograničenja / razlog nesposobnosti' : 'Restrictions / unfitness reason'}</label>
-                                    <textarea className="form-input" rows={2} value={form.ogranicenja} placeholder={bs ? 'Npr. Zabranjeno dizanje tereta iznad 20kg...' : 'E.g. No lifting over 20kg...'} onChange={e => setField('ogranicenja', e.target.value)} />
+                                    <label className="form-label" style={{ color: 'var(--warning)' }}>⚠️ {t('restrictionsUnfitnessReason')}</label>
+                                    <textarea className="form-input" rows={2} value={form.ogranicenja} placeholder={t('egNoLiftingOver20kg')} onChange={e => setField('ogranicenja', e.target.value)} />
                                 </div>
                             )}
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">🏥 {bs ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
-                                    <input className="form-input" placeholder={bs ? 'Dom zdravlja / Klinika...' : 'Health center...'} value={form.zdravstvenaUstanova} onChange={e => setField('zdravstvenaUstanova', e.target.value)} />
+                                    <label className="form-label">🏥 {t('zdravstvenaUstanova')}</label>
+                                    <input className="form-input" placeholder={t('domZdravlja')} value={form.zdravstvenaUstanova} onChange={e => setField('zdravstvenaUstanova', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">👨‍⚕️ {bs ? 'Doktor medicine rada' : 'Occupational Doctor'}</label>
+                                    <label className="form-label">👨‍⚕️ {t('doktorMedicineRada')}</label>
                                     <input className="form-input" list="doc-list-page" placeholder="Dr. Ime Prezime" value={form.doktorIme} onChange={e => setField('doktorIme', e.target.value)} />
                                     <datalist id="doc-list-page">{doctors.map(d => <option key={d.id} value={d.ime} />)}</datalist>
                                 </div>
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">{bs ? 'Napomena' : 'Note'}</label>
-                                <textarea className="form-input" rows={2} value={form.napomena} placeholder={bs ? 'Dodatne napomene...' : 'Additional notes...'} onChange={e => setField('napomena', e.target.value)} />
+                                <label className="form-label">{t('napomena')}</label>
+                                <textarea className="form-input" rows={2} value={form.napomena} placeholder={t('additionalNotes')} onChange={e => setField('napomena', e.target.value)} />
                             </div>
                         </div>
 
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={async () => { if (isDirty) { const ok = await confirm(bs ? 'Imate nesačuvane podatke. Želite li odustati?' : 'You have unsaved data. Discard?'); if (!ok) return; } setShowForm(false); setEditingId(null); setIsDirty(false); }}>{t('cancel')}</button>
-                            <button className="btn btn-outline btn-sm" style={{ marginRight: 'auto' }} onClick={() => { sessionStorage.setItem('eznr_draft_medexam', JSON.stringify(form)); router.push('/dashboard/referral-ra1?openNew=1'); }} title={bs ? 'Kreiraj RA-1 uputnicu na osnovu ovih podataka' : 'Create RA-1 referral based on this data'}>
-                                📋 {bs ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
+                            <button className="btn btn-ghost" onClick={async () => { if (isDirty) { const ok = await confirm(t('youHaveUnsavedDataDiscard')); if (!ok) return; } setShowForm(false); setEditingId(null); setIsDirty(false); }}>{t('cancel')}</button>
+                            <button className="btn btn-outline btn-sm" style={{ marginRight: 'auto' }} onClick={() => { sessionStorage.setItem('eznr_draft_medexam', JSON.stringify(form)); router.push('/dashboard/referral-ra1?openNew=1'); }} title={t('createRa1ReferralBasedOn')}>
+                                📋 {t('novaUputnicaRa1')}
                             </button>
-                            <button className="btn btn-primary" onClick={handleSave} title={bs ? 'Spremi ljekarski pregled' : 'Save medical exam'}>💾 {t('save')}</button>
+                            <button className="btn btn-primary" onClick={handleSave} title={t('saveMedicalExam')}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
                     </div>

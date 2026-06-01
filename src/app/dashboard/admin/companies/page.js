@@ -89,12 +89,10 @@ export default function AdminCompaniesPage() {
     const handleDelete = async (c) => {
         const usersInCompany = users.filter(u => (u.companyIds || []).includes(c.id));
         if (usersInCompany.length> 0) {
-            await alert(lang !== 'en'
-                ? `Ne možete obrisati firmu "${c.naziv}" jer ima ${usersInCompany.length} korisnika.`
-                : `Cannot delete company "${c.naziv}" — it has ${usersInCompany.length} users.`);
+            await alert(t('cannotDeleteCompanyItHas').replace('{0}', c.naziv).replace('{1}', usersInCompany.length));
             return;
         }
-        const ok = await confirm(lang !== 'en' ? `Obrisati firmu ${c.naziv}?` : `Delete company ${c.naziv}?`);
+        const ok = await confirm(t('deleteCompany').replace('{0}', c.naziv));
         if (ok) {
             remove(COLLECTIONS.COMPANIES, c.id);
             refreshData();

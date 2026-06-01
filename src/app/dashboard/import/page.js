@@ -877,7 +877,7 @@ export default function ImportPage() {
                     {/* Company warning if needed */}
                     {activeCompanyId === 'all' && (
                         <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: '0.85rem', color: 'var(--warning)' }}>
-                            ⚠️ {lang !== 'en' ? `Podaci će biti uvezeni za prvu firmu u vašoj listi. Odaberite aktivnu firmu u headeru za preciznost.` : `Data will be imported to the first company. Select an active company in the header for accuracy.`}
+                            ⚠️ {t('dataWillBeImportedTo')}
                         </div>
                     )}
                 </div>
@@ -1023,7 +1023,7 @@ export default function ImportPage() {
                                             <button
                                                 onClick={() => toggleExpand(sec.key)}
                                                 style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                                {isExp ? (t('sakrij')) : `▼ ${lang !== 'en' ? `Prikaži sve (${sec.data.length})` : `Show all (${sec.data.length})`}`}
+                                                {isExp ? (t('sakrij')) : `▼ ${t('showAll').replace('{0}', sec.data.length)}`}
                                             </button>
                                         )}
                                     </div>
@@ -1040,7 +1040,7 @@ export default function ImportPage() {
                                                             <button
                                                                 onClick={() => toggleExpand(sec.key)}
                                                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}>
-                                                                ▼ {lang !== 'en' ? `...i još ${remaining} reda` : `...and ${remaining} more`}
+                                                                ▼ {t('andMore').replace('{0}', remaining)}
                                                             </button>
                                                         </td>
                                                     </tr>

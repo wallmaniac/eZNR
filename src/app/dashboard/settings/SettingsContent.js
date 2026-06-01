@@ -291,7 +291,7 @@ export default function SettingsContent() {
         await changeName(profileData.firstName, profileData.lastName);
       }
     } catch (e) {
-      alert(lang !== 'en' ? `Greška pri ažuriranju emaila/imena u Firebase: ${e.message}` : `Firebase update error: ${e.message}`);
+      alert(t('firebaseUpdateError').replace('{0}', e.message));
       return; 
     }
 
@@ -317,7 +317,7 @@ export default function SettingsContent() {
       return;
     }
     if (passwordData.newPass.length < appSettings.minPasswordLength) {
-      setPasswordError(lang !== 'en' ? `Lozinka mora imati barem ${appSettings.minPasswordLength} znakova!` : `Password must be at least ${appSettings.minPasswordLength} characters!`);
+      setPasswordError(t('passwordMustBeAtLeast').replace('{0}', appSettings.minPasswordLength));
       return;
     }
     try {
@@ -1503,7 +1503,7 @@ export default function SettingsContent() {
                 <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📋 {t('ukljuciKategorijeUEmail')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                   <Toggle checked={notifSettings.emailNotifCerts ?? true} onChange={v => updateNotif('emailNotifCerts', v)} label={t('uvjerenjaRadnika1')} />
-                  <Toggle checked={notifSettings.emailNotifEquip ?? true} onChange={v => updateNotif('emailNotifEquip', v)} label={lang !== 'en' ? '⚙️ Radna oprema' : '⚙️ Equipment inspections'} />
+                  <Toggle checked={notifSettings.emailNotifEquip ?? true} onChange={v => updateNotif('emailNotifEquip', v)} label={t('radnaOprema')} />
                   <Toggle checked={notifSettings.emailNotifDocs ?? true} onChange={v => updateNotif('emailNotifDocs', v)} label={t('dokumentiPoslodavca1')} />
                   <Toggle checked={notifSettings.emailNotifFleet ?? true} onChange={v => updateNotif('emailNotifFleet', v)} label={t('vozniPark1')} />
                   <Toggle checked={notifSettings.emailNotifMedical ?? true} onChange={v => updateNotif('emailNotifMedical', v)} label={t('ljekarskiPregledi')} />

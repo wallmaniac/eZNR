@@ -190,7 +190,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
     const roleBadge = isAdmin
         ? { label: 'Admin', bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: 'white' }
-        : { label: lang === 'en' ? 'Safety Officer' : 'Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
+        : { label: t('strucnjakZnr'), bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
 
     const LANGUAGES = [
         { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
@@ -256,7 +256,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             }}>
                             <span style={{ fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                {activeCompanyId === 'all' ? (lang !== 'en' ? 'Sve firme' : 'All') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || '—')}
+                                {activeCompanyId === 'all' ? (t('sveFirme')) : (activeCompany?.skraceniNaziv || activeCompany?.naziv || '—')}
                             </div>
                             <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', flexShrink: 0 }}>▼</span>
                         </button>

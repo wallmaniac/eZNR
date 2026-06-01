@@ -160,9 +160,9 @@ function FleetInner() {
 
     const getExpiryBadge = (dateStr) => {
         if (!dateStr) return null;
-        if (dateStr < today) return <span className="badge badge-danger">{bs ? 'Isteklo' : 'Expired'}</span>;
-        if (dateStr <= alertDate) return <span className="badge badge-warning">{bs ? 'Uskoro' : 'Soon'}</span>;
-        return <span className="badge badge-success">{bs ? 'Vrijedi' : 'Valid'}</span>;
+        if (dateStr < today) return <span className="badge badge-danger">{t('isteklo')}</span>;
+        if (dateStr <= alertDate) return <span className="badge badge-warning">{t('soon1')}</span>;
+        return <span className="badge badge-success">{t('vrijedi')}</span>;
     };
 
     // Stats
@@ -200,7 +200,7 @@ function FleetInner() {
 
     const handleSave = async () => {
         if (!formData.registracija) {
-            await alert(bs ? 'Registracija je obavezna!' : 'Registration is required!');
+            await alert(t('registrationIsRequired'));
             return;
         }
         if (editingId) { update(COLLECTIONS.VEHICLES, editingId, formData); }
@@ -209,7 +209,7 @@ function FleetInner() {
     };
 
     const handleDelete = async (id) => {
-        if (await confirm(bs ? 'Obrisati ovo vozilo?' : 'Delete this vehicle?')) {
+        if (await confirm(t('deleteThisVehicle'))) {
             remove(COLLECTIONS.VEHICLES, id); setActionMenuId(null); loadData();
         }
     };
@@ -225,7 +225,7 @@ function FleetInner() {
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} vozila?` : `Delete ${selectedIds.size} vehicles?`)) {
+        if (await confirm(t('deleteVehicles').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) remove(COLLECTIONS.VEHICLES, id);
             setSelectedIds(new Set()); loadData();
         }
@@ -295,15 +295,15 @@ function FleetInner() {
                 )}
 
                 {/* Header */}
-                <PageHeader icon={<Icon3D name="Vozni park.png" size={64} />} title={bs ? 'Vozni park' : 'Fleet Management'} subtitle={bs ? 'Evidencija vozila, registracija, tehnički pregledi i osiguranja' : 'Vehicle tracking, registration, inspections & insurance'} />
+                <PageHeader icon={<Icon3D name="Vozni park.png" size={64} />} title={t('vozniPark')} subtitle={t('vehicleTrackingRegistrationInspectionsInsurance')} />
 
                 {/* Stats cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20, marginTop: 16 }}>
                     {[
-                        { label: bs ? 'Ukupno vozila' : 'Total Vehicles', val: stats.total, icon: '🚗', color: 'var(--primary)' },
-                        { label: bs ? 'Aktivna' : 'Active', val: stats.active, icon: '✅', color: '#22C55E' },
-                        { label: bs ? 'Registracija uskoro' : 'Reg. Expiring Soon', val: stats.regExpired, icon: '🔴', color: '#EF4444' },
-                        { label: bs ? 'Tehnički uskoro' : 'Inspection Soon', val: stats.serviceSoon, icon: '⚠️', color: '#F59E0B' },
+                        { label: t('totalVehicles'), val: stats.total, icon: '🚗', color: 'var(--primary)' },
+                        { label: t('aktivna'), val: stats.active, icon: '✅', color: '#22C55E' },
+                        { label: t('regExpiringSoon'), val: stats.regExpired, icon: '🔴', color: '#EF4444' },
+                        { label: t('inspectionSoon'), val: stats.serviceSoon, icon: '⚠️', color: '#F59E0B' },
                     ].map((s, i) => (
                         <div key={i} className="card" style={{ padding: '16px 20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -322,17 +322,17 @@ function FleetInner() {
                     <div className="modal-overlay" onClick={closeForm}>
                         <div className="modal" style={{ width: '100%', maxWidth: 850, minHeight: 650, padding: 0, display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px' }}>
-                                <h2>{editingId ? '✏️' : '+'} {bs ? 'Vozilo: ' : 'Vehicle: '} {formData.registracija || ''}</h2>
+                                <h2>{editingId ? '✏️' : '+'} {t('vehicle')} {formData.registracija || ''}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={closeForm}>✕</button>
                             </div>
 
                             {/* Tab bar */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
                                 {[
-                                    { key: 'osnovno', icon: '📄', label: bs ? 'Osnovni podaci' : 'Basic Info', show: true },
-                                    { key: 'istorija', icon: '🔄', label: bs ? 'Zaduženja' : 'Assignments', show: !!editingId },
-                                    { key: 'arhiva', icon: '📁', label: bs ? 'Arhiva dokumenata' : 'Documents', show: !!editingId },
-                                    { key: 'nalozi', icon: '📝', label: bs ? 'Putni nalozi' : 'Travel Orders', show: !!editingId }
+                                    { key: 'osnovno', icon: '📄', label: t('basicData'), show: true },
+                                    { key: 'istorija', icon: '🔄', label: t('fleetAssignments'), show: !!editingId },
+                                    { key: 'arhiva', icon: '📁', label: t('documents'), show: !!editingId },
+                                    { key: 'nalozi', icon: '📝', label: t('fleetOrders'), show: !!editingId }
                                 ].filter(t => t.show).map(tab => (
                                     <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                                         padding: '9px 16px', border: 'none', cursor: 'pointer',
@@ -354,37 +354,37 @@ function FleetInner() {
                                     <div className="form-grid-2">
                                         {/* Registration */}
                                         <div className="form-group">
-                                        <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Registracija' : 'Registration'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{t('registracija')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <input className="form-input" value={formData.registracija} onChange={e => set('registracija', e.target.value)} placeholder="A12-B-345" />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Tip vozila' : 'Vehicle Type'}</label>
+                                        <label className="form-label">{t('vehicleType')}</label>
                                         <select className="form-select" value={formData.tip} onChange={e => set('tip', e.target.value)}>
                                             {Object.entries(TYPE_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Marka' : 'Brand'}</label>
+                                        <label className="form-label">{t('brand')}</label>
                                         <input className="form-input" value={formData.marka} onChange={e => set('marka', e.target.value)} placeholder="VW, Mercedes..." />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Model' : 'Model'}</label>
+                                        <label className="form-label">{t('tipmodel')}</label>
                                         <input className="form-input" value={formData.model} onChange={e => set('model', e.target.value)} placeholder="Golf 8, Sprinter..." />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Godina proizvodnje' : 'Year'}</label>
+                                        <label className="form-label">{t('godinaProizvodnje')}</label>
                                         <input className="form-input" type="number" value={formData.godinaProizvodnje} onChange={e => set('godinaProizvodnje', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'VIN broj' : 'VIN Number'}</label>
+                                        <label className="form-label">{t('vinNumber')}</label>
                                         <input className="form-input" value={formData.vin} onChange={e => set('vin', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Boja' : 'Color'}</label>
+                                        <label className="form-label">{t('color')}</label>
                                         <input className="form-input" value={formData.boja} onChange={e => set('boja', e.target.value)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Status' : 'Status'}</label>
+                                        <label className="form-label">{t('status')}</label>
                                         <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
                                             {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
                                         </select>
@@ -393,54 +393,54 @@ function FleetInner() {
                                     {/* Dates section */}
                                     <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', marginTop: 4, paddingTop: 12 }}>
                                         <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 12 }}>
-                                            📅 {bs ? 'Rokovi i datumi' : 'Deadlines & Dates'}
+                                            📅 {t('deadlinesDates')}
                                         </div>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Registracija od' : 'Registered On'}</label>
+                                        <label className="form-label">{t('registeredOn')}</label>
                                         <DateInput value={formData.datumRegistracije} onChange={v => set('datumRegistracije', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Registracija ističe' : 'Reg. Expires'}</label>
+                                        <label className="form-label">{t('regExpires')}</label>
                                         <DateInput value={formData.registracijaIstice} onChange={v => set('registracijaIstice', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Zadnji tehnički pregled' : 'Last Technical Inspection'}</label>
+                                        <label className="form-label">{t('lastTechnicalInspection')}</label>
                                         <DateInput value={formData.datumTehnickogPregleda} onChange={v => set('datumTehnickogPregleda', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Sljedeći tehnički' : 'Next Inspection'}</label>
+                                        <label className="form-label">{t('nextInspection')}</label>
                                         <DateInput value={formData.tehnickiIstice} onChange={v => set('tehnickiIstice', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Osiguranje ističe' : 'Insurance Expires'}</label>
+                                        <label className="form-label">{t('insuranceExpires')}</label>
                                         <DateInput value={formData.osiguranjeIstice} onChange={v => set('osiguranjeIstice', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'PP aparat ističe' : 'Fire Ext. Expires'}</label>
+                                        <label className="form-label">{t('fireExtExpires')}</label>
                                         <DateInput value={formData.vatrogasniAparatDatum} onChange={v => set('vatrogasniAparatDatum', v)} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Prva pomoć ističe' : 'First Aid Kit Expires'}</label>
+                                        <label className="form-label">{t('firstAidKitExpires')}</label>
                                         <DateInput value={formData.prvaPomocIstice} onChange={v => set('prvaPomocIstice', v)} />
                                     </div>
 
                                     {/* Driver section */}
                                     <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', marginTop: 4, paddingTop: 12 }}>
                                         <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 12 }}>
-                                            👤 {bs ? 'Zaduženi vozač' : 'Assigned Driver'}
+                                            👤 {t('assignedDriver')}
                                         </div>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
-                                        <label className="form-label">{bs ? 'Vozač' : 'Driver'}</label>
+                                        <label className="form-label">{t('driver')}</label>
                                         <div style={{ position: 'relative' }}>
-                                            <input className="form-input" placeholder={bs ? '🔍 Pretraži radnika...' : '🔍 Search worker...'} value={workerSearch}
+                                            <input className="form-input" placeholder={t('pretraziRadnika')} value={workerSearch}
                                                 onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('vozacId', ''); set('vozacIme', ''); }}
                                                 onFocus={() => setShowWorkerDropdown(true)} autoComplete="off" />
                                             {showWorkerDropdown && (
                                                 <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 100, maxHeight: 200, overflowY: 'auto' }}>
                                                     {filteredWorkers.length === 0 ? (
-                                                        <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{bs ? 'Nema radnika' : 'No workers'}</div>
+                                                        <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('nemaRadnika')}</div>
                                                     ) : filteredWorkers.slice(0, 15).map(w => (
                                                         <button key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
                                                             
@@ -461,7 +461,7 @@ function FleetInner() {
                                     </div>
 
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Org. jedinica' : 'Org. Unit'}</label>
+                                        <label className="form-label">{t('orgJedinica1')}</label>
                                         <select className="form-select" value={formData.orgJedinicaId} onChange={e => set('orgJedinicaId', e.target.value)}>
                                             <option value="">—</option>
                                             {orgUnits.map(o => <option key={o.id} value={o.id}>{o.naziv}</option>)}
@@ -515,29 +515,29 @@ function FleetInner() {
                 <div className="card">
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew} title={bs ? 'Dodaj novo vozilo' : 'Add new vehicle'}>+ {bs ? 'Novo vozilo' : 'New Vehicle'}</button>
+                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew} title={t('addNewVehicle')}>+ {t('newVehicle')}</button>
                             <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
-                                <input placeholder={bs ? 'Pretraži vozila...' : 'Search vehicles...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                                <input placeholder={t('searchVehicles')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={bs ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                             </div>
                             <PDFExportButton title={t('prikaziPdfIzvjestaje')} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
-                                { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
-                                ...(selectedIds.size> 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
+                                { label: t('allVehicles'), icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
+                                ...(selectedIds.size> 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
                             ]} />
-                            <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38, flexShrink: 0 }} options={[
-                                { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
-                                ...(selectedIds.size> 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
+                            <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38, flexShrink: 0 }} options={[
+                                { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
+                                ...(selectedIds.size> 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
                             ]} />
                             <SavedFlash />
                             {selectedIds.size> 0 && (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={bs ? 'Obriši odabrana vozila' : 'Delete selected vehicles'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span>
+                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={t('deleteSelectedVehicles')}>🗑️ {t('obrisi')}</button>
                                 </div>
                             )}
-                            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {bs ? 'vozila' : 'vehicles'}</span>}
+                            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('vozila')}</span>}
                         </div>
                         <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
                             <table className="data-table">
@@ -545,14 +545,14 @@ function FleetInner() {
                                     <tr>
                                         <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                         <th style={{ width: 90 }}>{t('actions')}</th>
-                                        <th onClick={() => toggleSort('registracija')} style={thStyle('registracija')}>{bs ? 'Registracija' : 'Registration'}{sortIcon('registracija')}</th>
-                                        <th onClick={() => toggleSort('marka')} style={thStyle('marka')}>{bs ? 'Marka/Model' : 'Brand/Model'}{sortIcon('marka')}</th>
-                                        <th onClick={() => toggleSort('tip')} style={{ ...thStyle('tip'), textAlign: 'center' }}>{bs ? 'Tip' : 'Type'}{sortIcon('tip')}</th>
-                                        <th onClick={() => toggleSort('vozacIme')} style={thStyle('vozacIme')}>{bs ? 'Vozač' : 'Driver'}{sortIcon('vozacIme')}</th>
-                                        <th onClick={() => toggleSort('registracijaIstice')} style={{ ...thStyle('registracijaIstice'), textAlign: 'center' }}>{bs ? 'Reg. ističe' : 'Reg. Expires'}{sortIcon('registracijaIstice')}</th>
-                                        <th onClick={() => toggleSort('tehnickiIstice')} style={{ ...thStyle('tehnickiIstice'), textAlign: 'center' }}>{bs ? 'Tehnički' : 'Inspection'}{sortIcon('tehnickiIstice')}</th>
-                                        <th onClick={() => toggleSort('osiguranjeIstice')} style={{ ...thStyle('osiguranjeIstice'), textAlign: 'center' }}>{bs ? 'Osiguranje' : 'Insurance'}{sortIcon('osiguranjeIstice')}</th>
-                                        <th style={{ textAlign: 'center' }}>{bs ? 'Status' : 'Status'}</th>
+                                        <th onClick={() => toggleSort('registracija')} style={thStyle('registracija')}>{t('registracija')}{sortIcon('registracija')}</th>
+                                        <th onClick={() => toggleSort('marka')} style={thStyle('marka')}>{t('brandmodel')}{sortIcon('marka')}</th>
+                                        <th onClick={() => toggleSort('tip')} style={{ ...thStyle('tip'), textAlign: 'center' }}>{t('tip')}{sortIcon('tip')}</th>
+                                        <th onClick={() => toggleSort('vozacIme')} style={thStyle('vozacIme')}>{t('driver1')}{sortIcon('vozacIme')}</th>
+                                        <th onClick={() => toggleSort('registracijaIstice')} style={{ ...thStyle('registracijaIstice'), textAlign: 'center' }}>{t('regExpires1')}{sortIcon('registracijaIstice')}</th>
+                                        <th onClick={() => toggleSort('tehnickiIstice')} style={{ ...thStyle('tehnickiIstice'), textAlign: 'center' }}>{t('tehnicki')}{sortIcon('tehnickiIstice')}</th>
+                                        <th onClick={() => toggleSort('osiguranjeIstice')} style={{ ...thStyle('osiguranjeIstice'), textAlign: 'center' }}>{t('insurance1')}{sortIcon('osiguranjeIstice')}</th>
+                                        <th style={{ textAlign: 'center' }}>{t('status')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -577,16 +577,16 @@ function FleetInner() {
                                                                 ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
                                                                 : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow - 15) });
                                                             setActionMenuId(v.id);
-                                                        }} title={bs ? 'Prikaži akcije za vozilo' : 'Show vehicle actions'}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                        }} title={t('showVehicleActions')}>{t('akcije')} ▼</button>
                                                         {actionMenuId === v.id && (
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                                    <button onClick={() => { setActionMenuId(null); openEdit(v); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...v }; delete copy.id; copy.registracija = ''; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.VEHICLES, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([v]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {bs ? 'Printaj QR kod' : 'Print QR code'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); openEdit(v); }} className="dropdown-item">✏️ {t('otvori')}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...v }; delete copy.id; copy.registracija = ''; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (t('copy4')); create(COLLECTIONS.VEHICLES, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {t('kopiraj')}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([v]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {t('printajQrKod')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(v.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(v.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                                 </div>
                                                             </>
                                                         )}
@@ -619,7 +619,7 @@ function FleetInner() {
                                                         style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.color}33`, cursor: 'pointer', transition: 'all 0.15s', minWidth: 80 }}
                                                         onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
-                                                        title={bs ? 'Klikni za promjenu statusa' : 'Click to change status'}>{bs ? st.bs : st.en} ▾</button>
+                                                        title={t('clickToChangeStatus')}>{bs ? st.bs : st.en} ▾</button>
                                                     {statusDropdownId === v.id && (<>
                                                         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setStatusDropdownId(null); }} />
                                                         <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, padding: '4px 0 8px 0' }}>

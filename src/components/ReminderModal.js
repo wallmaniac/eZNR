@@ -1,4 +1,5 @@
 'use client';
+import { t } from '@/i18n/translations';
 import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getSessionsForTraining } from '@/lib/firebaseSync';
@@ -106,7 +107,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                 }}>
                     <div>
                         <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text, #e2e8f0)' }}>
-                            📩 {lang !== 'en' ? 'Pošalji podsjetnik' : 'Send Reminders'}
+                            📩 {t('posaljiPodsjetnik')}
                         </h2>
                         <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)' }}>
                             {questionnaire?.naziv || ''}
@@ -151,7 +152,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
                                 <div style={statBox('#22c55e')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{completed.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang !== 'en' ? 'Završeno' : 'Done'}</div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{t('zavrseno')}</div>
                                 </div>
                                 <div style={statBox('#f59e0b')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{incomplete.length}</div>
@@ -317,7 +318,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                 </button>
                                 {incomplete.length > 0 && (
                                     <button onClick={handleSendReminders} disabled={selectedTokens.size === 0} style={{...sendBtn, opacity: selectedTokens.size === 0 ? 0.5 : 1, cursor: selectedTokens.size === 0 ? 'not-allowed' : 'pointer'}}>
-                                        📩 {lang !== 'en' ? `Pošalji podsjetnik (${selectedTokens.size})` : `Send reminders (${selectedTokens.size})`}
+                                        📩 {t('sendReminders').replace('{0}', selectedTokens.size)}
                                     </button>
                                 )}
                             </div>

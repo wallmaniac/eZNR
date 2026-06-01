@@ -9,7 +9,7 @@ import PageHeader from '@/components/PageHeader';
 
 export default function DoctorsPage() {
   const { t, lang } = useLanguage();
-  const bs = lang !== 'en';
+  
   const { confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const [items, setItems] = useState([]);
@@ -40,10 +40,10 @@ export default function DoctorsPage() {
     if (editingId) update(col, editingId, formData); else create(col, formData);
     setShowForm(false); loadData(); showFlash();
   };
-  const handleDelete = async (id) => { if (await confirm(bs ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.DOCTORS, id); loadData(); } };
+  const handleDelete = async (id) => { if (await confirm(t('obrisati'))) { remove(COLLECTIONS.DOCTORS, id); loadData(); } };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(bs ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems5').replace('{0}', selectedIds.size))) {
       for (const id of selectedIds) remove(COLLECTIONS.DOCTORS, id);
       setSelectedIds(new Set()); loadData();
     }
@@ -58,18 +58,18 @@ export default function DoctorsPage() {
         <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('doctors')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
         <div className="modal-body">
           <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.ime} onChange={e => setFormData({ ...formData, ime: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">{(bs ? 'Specijalizacija' : 'Specialization')}</label><input className="form-input" value={formData.specijalizacija} onChange={e => setFormData({ ...formData, specijalizacija: e.target.value })} /></div>
+          <div className="form-group"><label className="form-label">{(t('specialization'))}</label><input className="form-input" value={formData.specijalizacija} onChange={e => setFormData({ ...formData, specijalizacija: e.target.value })} /></div>
         </div>
         <div className="modal-footer"><button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button><button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button></div>
       </div></div>)}
       <div className="card"><div className="card-body" style={{ padding: 0 }}>
         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? 'Novi doktor' : 'New Doctor'}</button>
+          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {t('newDoctor')}</button>
           <SavedFlash />
           {selectedIds.size> 0 && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-              <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span>
+              <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
             </div>
           )}
           {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
@@ -78,7 +78,7 @@ export default function DoctorsPage() {
           <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
           <th style={{ width: 90 }}>{t('actions')}</th>
           <th style={thStyle('ime')} onClick={() => toggleSort('ime')}>{t('name')}{sortIcon('ime')}</th>
-          <th style={thStyle('specijalizacija')} onClick={() => toggleSort('specijalizacija')}>{(bs ? 'Specijalizacija' : 'Specialization')}{sortIcon('specijalizacija')}</th>
+          <th style={thStyle('specijalizacija')} onClick={() => toggleSort('specijalizacija')}>{(t('specialization'))}{sortIcon('specijalizacija')}</th>
         </tr></thead>
           <tbody>{sorted.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : sorted.map(i => (
             <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
@@ -104,9 +104,9 @@ export default function DoctorsPage() {
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{i.ime}</span>
                         <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                       </div>
-                      <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                      <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {t('uredi')}</button>
                       <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                      <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                      <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                     </div>
                   </>)}
                 </div>

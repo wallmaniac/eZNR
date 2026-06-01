@@ -71,6 +71,9 @@ const TRANSLATIONS = {
         catDocs: 'Dokumenti poslodavca', document: 'Dokument', category: 'Kategorija',
         catFleet: 'Vozni park', vehicle: 'Vozilo',
         catMed: 'Ljekarski pregledi', examType: 'Vrsta pregleda', validUntil: 'Važi do',
+        registracija: 'Registracija',
+        tehnickiPregled: 'Tehnički pregled',
+        insurance: 'Osiguranje',
     },
     en: {
         expired: 'Expired', days: 'd', status: 'Status',
@@ -84,6 +87,9 @@ const TRANSLATIONS = {
         catDocs: 'Employer Docs', document: 'Document', category: 'Category',
         catFleet: 'Vehicle Fleet', vehicle: 'Vehicle',
         catMed: 'Medical Exams', examType: 'Exam Type', validUntil: 'Valid Until',
+        registracija: 'Registration',
+        tehnickiPregled: 'Technical inspection',
+        insurance: 'Insurance',
     },
 };
 
@@ -368,7 +374,7 @@ export async function GET(request) {
                     if (settings?.emailNotifFleet !== false) {
                         const rows = cap(vehiclesSnap.docs.flatMap(doc => {
                             const v = doc.data();
-                            return [{ label: lang !== 'en' ? 'Registracija' : 'Registration', date: v.registracijaIstice }, { label: lang !== 'en' ? 'Tehnički pregled' : 'Technical inspection', date: v.tehnickiIstice }, { label: lang !== 'en' ? 'Osiguranje' : 'Insurance', date: v.osiguranjeIstice }]
+                            return [{ label: t(lang, 'registracija'), date: v.registracijaIstice }, { label: t(lang, 'tehnickiPregled'), date: v.tehnickiIstice }, { label: t(lang, 'insurance'), date: v.osiguranjeIstice }]
                                 .reduce((acc, chk) => {
                                     const days = daysUntil(chk.date);
                                     if (days !== null && days <= threshold) acc.push({ _days: days, [t(lang, 'vehicle')]: `${v.registracija || ''} ${v.marka || ''}`.trim(), [t(lang, 'type')]: chk.label, [t(lang, 'expires')]: fmtDate(chk.date) });

@@ -68,7 +68,7 @@ export default function FormRO2Page() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems14').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) await remove(COLLECTIONS.FORMS_RO2, id);
       setSelectedIds(new Set());
       loadData();
@@ -121,7 +121,7 @@ export default function FormRO2Page() {
 
   const handleSave = async () => {
     if (!formData.workerId) {
-      await alert(lang !== 'en' ? 'Odaberite radnika!' : 'Select a worker!');
+      await alert(t('odaberiteRadnika'));
       return;
     }
 
@@ -390,7 +390,7 @@ export default function FormRO2Page() {
                 </span>
                 <input className="form-input" style={{ width: 100 }} value={formData.clanak3Tocke} onChange={e => set('clanak3Tocke', e.target.value)} />
                 <span style={{ color: 'var(--text-muted)' }}>
-                  {lang !== 'en' ? 'Pravilnika o poslovima s posebnim uvjetima rada.' : 'of the Regulation on special working conditions.'}
+                  {t('pravilnikaOPoslovimaSPosebnim')}
                 </span>
               </div>
             </div>

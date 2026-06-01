@@ -13,7 +13,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { apiExtractQuestionsFromDocument } from '@/lib/testGeneratorAI';
 
 export default function TestGenerator() {
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const bs = lang !== 'en';
     const country = useCountry();
     const { activeCompanyId } = useAuth();
@@ -125,10 +125,10 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
     const handleAddQuestion = () => {
         const newQ = {
             id: 0, // temporary, will be mapped to 1
-            text: bs ? 'Novo pitanje' : 'New Question',
+            text: t('newQuestion'),
             options: [
-                { label: 'a', text: bs ? 'Opcija A' : 'Option A' },
-                { label: 'b', text: bs ? 'Opcija B' : 'Option B' }
+                { label: 'a', text: t('optionA') },
+                { label: 'b', text: t('optionB') }
             ]
         };
         const newList = [newQ, ...questions];
@@ -282,7 +282,7 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
 
         } catch (error) {
             console.error(error);
-            alert(bs ? "Greška pri generisanju testa" : "Error generating test");
+            alert(t('errorGeneratingTest'));
             setLoading(false);
         }
     };
@@ -314,26 +314,24 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
                     <button className="btn btn-outline btn-sm" onClick={handleShuffleQuestions}>
-                        🔀 {bs ? 'Izmiješaj pitanja' : 'Shuffle Questions'}
+                        🔀 {t('shuffleQuestions')}
                     </button>
                     <input type="file" accept=".pdf,.doc,.docx" id="testUploadInput" style={{ display: 'none' }} onChange={handleFileUpload} />
                     <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('testUploadInput').click()} disabled={uploading || loading} style={{ background: uploading ? 'var(--bg-input)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                         {uploading ? '⏳...' : '📎 Učitaj postojeći test'}
                     </button>
                     <button className="btn btn-outline btn-sm" onClick={handleAddQuestion}>
-                        ➕ {bs ? 'Dodaj pitanje' : 'Add Question'}
+                        ➕ {t('addQuestion')}
                     </button>
                     <button className="btn btn-primary" onClick={handleDownload} disabled={loading || editingId !== null}>
-                        {loading ? '🔄...' : `📥 ${bs ? 'Preuzmi prilagođeni test' : 'Download Custom Test'}`}
+                        {loading ? '🔄...' : `📥 ${t('downloadCustomTest')}`}
                     </button>
                 </div>
             </div>
 
             <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 0 }}>
-                    {bs 
-                        ? 'Ovdje možete uređivati pitanja, mijenjati njihov redoslijed prevlačenjem (drag & drop) ili miješati odgovore. Kada završite, preuzmite dokument u DOCX formatu.' 
-                        : 'Here you can edit questions, change their order using drag & drop, or shuffle options. When done, download the document in DOCX format.'}
+                    {t('hereYouCanEditQuestions')}
                 </p>
 
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -385,15 +383,15 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
                                                                 ))}
                                                             </div>
                                                             <button className="btn btn-outline btn-sm" style={{ marginTop: 12 }} onClick={handleAddOptionToEdit}>
-                                                                + {bs ? 'Dodaj opciju' : 'Add Option'}
+                                                                + {t('dodajOpciju')}
                                                             </button>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12, borderTop: '1px solid var(--border-color)', paddingTop: 16 }}>
                                                             <button className="btn btn-outline" onClick={() => setEditingId(null)}>
-                                                                {bs ? 'Odustani' : 'Cancel'}
+                                                                {t('odustani')}
                                                             </button>
                                                             <button className="btn btn-primary" onClick={saveEditing}>
-                                                                {bs ? 'Sačuvaj promjene' : 'Save Changes'}
+                                                                {t('saveChanges')}
                                                             </button>
                                                         </div>
                                                     </div>

@@ -79,7 +79,7 @@ function EquipmentPageInner() {
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+        if (await confirm(t('deleteItems6').replace('{0}', selectedIds.size))) {
             for (let id of selectedIds) await remove(COLLECTIONS.EQUIPMENT, id);
             setSelectedIds(new Set());
             loadData();
@@ -277,7 +277,7 @@ function EquipmentPageInner() {
 
     const handleCopy = async (eq) => {
         setActionMenuId(null);
-        if (!await confirm(lang !== 'en' ? `Kopirati opremu "${eq.naziv}"?` : `Duplicate equipment "${eq.naziv}"?`)) return;
+        if (!await confirm(t('duplicateEquipment').replace('{0}', eq.naziv))) return;
         const copyData = { ...eq };
         delete copyData.id;
         copyData.naziv = (copyData.naziv || '') + ' (Kopija)';
@@ -720,8 +720,8 @@ function EquipmentPageInner() {
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('vrsta')} style={thStyle('vrsta')}>{t('vrsta')}{sortIcon('vrsta')}</th>
                                     <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
-                                    <th onClick={() => toggleSort('tvBroj')} style={thStyle('tvBroj')}>{lang !== 'en' ? 'Tv. broj' : 'Serial'}{sortIcon('tvBroj')}</th>
-                                    <th onClick={() => toggleSort('invBroj')} style={thStyle('invBroj')}>{lang !== 'en' ? 'Inv. broj' : 'Inv.'}{sortIcon('invBroj')}</th>
+                                    <th onClick={() => toggleSort('tvBroj')} style={thStyle('tvBroj')}>{t('tvBroj')}{sortIcon('tvBroj')}</th>
+                                    <th onClick={() => toggleSort('invBroj')} style={thStyle('invBroj')}>{t('invBroj')}{sortIcon('invBroj')}</th>
                                     <th onClick={() => toggleSort('orgName')} style={thStyle('orgName')}>{t('organizacija')}{sortIcon('orgName')}</th>
                                     <th onClick={() => toggleSort('posljednji')} style={thStyle('posljednji')}>{t('posljednji')}{sortIcon('posljednji')}</th>
                                     <th onClick={() => toggleSort('iduci')} style={thStyle('iduci')}>{t('iduci')}{sortIcon('iduci')}</th>
@@ -759,7 +759,7 @@ function EquipmentPageInner() {
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                     <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(eq, 'podaci')} className="dropdown-item">📂 {t('open')}</button>
-                                                        <button onClick={() => handleEdit(eq, 'servis')} className="dropdown-item">🔧 {lang !== 'en' ? 'Servisni zapisnici' : 'Service log'}</button>
+                                                        <button onClick={() => handleEdit(eq, 'servis')} className="dropdown-item">🔧 {t('serviceRecords')}</button>
                                                         <button onClick={() => { setActionMenuId(null); setPrintSelection([eq]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {t('printajQrKod')}</button>
                                                         {docLog && (
                                                             <>

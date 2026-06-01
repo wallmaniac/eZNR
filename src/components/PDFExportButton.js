@@ -20,8 +20,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
  *   - single?: If true, acts as a single button (no dropdown)
  */
 export default function PDFExportButton({ options = [], label, single = false, buttonStyle = {}, title }) {
-  const { lang } = useLanguage();
-  const bs = lang !== 'en';
+  const { lang , t } = useLanguage();
+  
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 220, right: 0 });
@@ -61,7 +61,7 @@ export default function PDFExportButton({ options = [], label, single = false, b
     setOpen(true);
   };
 
-  const btnLabel = label || (bs ? '📄 PDF Izvještaj' : '📄 PDF Report');
+  const btnLabel = label || (t('pdfIzvjestaj'));
 
   // Single mode — no dropdown, just call the first option
   if (single && options.length === 1) {
@@ -104,7 +104,7 @@ export default function PDFExportButton({ options = [], label, single = false, b
         borderBottom: '1px solid var(--border-light)',
         marginBottom: 4,
       }}>
-        {bs ? 'Generiši izvještaj' : 'Generate report'}
+        {t('generateReport')}
       </div>
       {options.map((opt, i) => (
         <button

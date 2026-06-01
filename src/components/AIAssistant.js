@@ -153,9 +153,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             ? (t('sveDodijeljeneFirmeAgregatniPrikaz'))
             : (userCompanies?.find(c => c.id === activeCompanyId)?.naziv || activeCompanyId);
             
-        lines.push(lang !== 'en' 
-            ? `TRENUTNI KONTEKST FIRME: ${activeCompName}. Prilikom davanja odgovora o radnicima ili incidentima obavezno uzmi u obzir iz koje su firme ako je odabrano više firmi.`
-            : `CURRENT COMPANY CONTEXT: ${activeCompName}. When answering queries about workers or incidents, be sure to consider which company they belong to if multiple companies are selected.`
+        lines.push(t('currentCompanyContextWhenAnswering').replace('{0}', activeCompName)
         );
 
         const today = new Date();
@@ -212,24 +210,18 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Employer Docs
         const docsObj = employerDocs.map(d => `${d.naziv} (Vrijedi do: ${d.datumIsteka || 'Nema roka'})`);
         if (docsObj.length > 0) {
-            lines.push(lang !== 'en'
-                ? `\nNORMATIVNI AKTI POSLODAVCA: ${docsObj.join('; ')}`
-                : `\nEMPLOYER DOCUMENTATION: ${docsObj.join('; ')}`
+            lines.push(t('nemployerDocumentation').replace('{0}', docsObj.join('; '))
             );
         }
 
         // Risk Assessments
         const activeAssessments = riskAssessments.filter(r => r.nazivProcjene);
         if (activeAssessments.length > 0) {
-            lines.push(lang !== 'en' 
-                ? `\nAKTIVNE PROCJENE RIZIKA (${activeAssessments.length}): ${activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', ')}`
-                : `\nACTIVE RISK ASSESSMENTS (${activeAssessments.length}): ${activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', ')}`
+            lines.push(t('nactiveRiskAssessments').replace('{0}', activeAssessments.length).replace('{1}', activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', '))
             );
             const highRisks = riskItems.filter(ri => ri.rizik >= 16); // 16-20 Znatan, 21-25 Nedopustiv
             if (highRisks.length > 0) {
-                lines.push(lang !== 'en'
-                    ? `KRITIČNI RIZICI (Znatan i Nedopustiv) (${highRisks.length}): ${highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; ')}`
-                    : `CRITICAL RISKS (High and Unacceptable) (${highRisks.length}): ${highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; ')}`
+                lines.push(t('criticalRisksHighAndUnacceptable').replace('{0}', highRisks.length).replace('{1}', highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; '))
                 );
             }
         }
@@ -289,9 +281,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
                 const compStr = compMatch ? ` [Firma: ${compMatch.name}]` : '';
                 return `W[${w.id}]${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}${compStr}`;
             });
-            lines.push(lang !== 'en'
-                ? `\nSVI AKTIVNI RADNICI (${activeWorkerList.length}) sa radnim mjestima:\n${rosterLines.join('\n')}`
-                : `\nALL ACTIVE WORKERS (${activeWorkerList.length}) with positions:\n${rosterLines.join('\n')}`
+            lines.push(t('nallActiveWorkersWithPositionsn').replace('{0}', activeWorkerList.length).replace('{1}', rosterLines.join('\n'))
             );
         }
 
@@ -307,9 +297,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             }).filter(Boolean);
 
             if (wpWorkers.length > 0) {
-                lines.push(lang !== 'en'
-                    ? `\nRADNA MJESTA → RADNICI:\n${wpWorkers.join('\n')}`
-                    : `\nWORKPLACES → WORKERS:\n${wpWorkers.join('\n')}`
+                lines.push(t('nworkplacesWorkersn').replace('{0}', wpWorkers.join('\n'))
                 );
             }
         }
@@ -326,9 +314,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             }).filter(Boolean);
 
             if (ouWorkers.length > 0) {
-                lines.push(lang !== 'en'
-                    ? `\nORGANIZACIJSKE JEDINICE → RADNICI:\n${ouWorkers.join('\n')}`
-                    : `\nORG UNITS → WORKERS:\n${ouWorkers.join('\n')}`
+                lines.push(t('norgUnitsWorkersn').replace('{0}', ouWorkers.join('\n'))
                 );
             }
         }
@@ -336,9 +322,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // ── Questionnaires ─────────────────────────────────────────────────────
         if (questionnaires.length > 0) {
             const qList = questionnaires.map(q => `ID:${q.id} "${q.naziv || '(bez naziva)'}"${q.zaVrstu ? ` [${q.zaVrstu}]` : ''}`).join('; ');
-            lines.push(lang !== 'en'
-                ? `\nUPITNICI (${questionnaires.length}): ${qList}`
-                : `\nQUESTIONNAIRES (${questionnaires.length}): ${qList}`);
+            lines.push(t('nquestionnaires').replace('{0}', questionnaires.length).replace('{1}', qList));
         }
 
         // ── Safety Observations (Prijava opasnosti) ──────────────────────────────
@@ -350,9 +334,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             );
         }
         if (safetyObservations.length > 0 && openObs.length === 0) {
-            lines.push(lang !== 'en'
-                ? `\nPRIJAVE OPASNOSTI: Sve ${safetyObservations.length} prijava su riješene.`
-                : `\nHAZARD REPORTS: All ${safetyObservations.length} reports are resolved.`
+            lines.push(t('nhazardReportsAllReportsAre').replace('{0}', safetyObservations.length)
             );
         }
 
@@ -360,9 +342,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         if (evacuationPlans.length > 0 || evacuationDrills.length > 0) {
             const planNames = evacuationPlans.slice(0, 5).map(p => `"${p.nazivObjekta || p.naziv || 'Plan'}" (Status: ${p.status || '?'})`);
             const drillNames = evacuationDrills.sort((a,b) => (b.datum || '').localeCompare(a.datum || '')).slice(0, 5).map(d => `"${d.nazivVjezbe || 'Vježba'}" (${d.datum || '?'}, Evakuirano: ${d.brojEvakuiranih || '?'})`);
-            lines.push(lang !== 'en'
-                ? `\nEVAKUACIJA: ${evacuationPlans.length} planova${planNames.length > 0 ? ': ' + planNames.join('; ') : ''} | ${evacuationDrills.length} vježbi${drillNames.length > 0 ? ': ' + drillNames.join('; ') : ''}`
-                : `\nEVACUATION: ${evacuationPlans.length} plans${planNames.length > 0 ? ': ' + planNames.join('; ') : ''} | ${evacuationDrills.length} drills${drillNames.length > 0 ? ': ' + drillNames.join('; ') : ''}`
+            lines.push(t('nevacuationPlansDrills').replace('{0}', evacuationPlans.length).replace('{1}', planNames.length > 0 ? ': ' + planNames.join('; ') : '').replace('{2}', evacuationDrills.length).replace('{3}', drillNames.length > 0 ? ': ' + drillNames.join('; ') : '')
             );
         }
 
@@ -381,9 +361,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             const ppeSummary = {};
             activePpe.forEach(p => { ppeSummary[p.naziv || 'Nepoznato'] = (ppeSummary[p.naziv || 'Nepoznato'] || 0) + (p.kolicina || 1); });
             const topPpe = Object.entries(ppeSummary).sort((a,b) => b[1] - a[1]).slice(0, 10).map(([name, cnt]) => `${name}: ${cnt}`);
-            lines.push(lang !== 'en'
-                ? `\nZADUŽENA OZO OPREMA (${activePpe.length} aktivnih): ${topPpe.join(', ')}`
-                : `\nACTIVE PPE ASSIGNMENTS (${activePpe.length}): ${topPpe.join(', ')}`
+            lines.push(t('nactivePpeAssignments').replace('{0}', activePpe.length).replace('{1}', topPpe.join(', '))
             );
         }
 
@@ -399,9 +377,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Stats
         const activeWorkers = workers.filter(w => w.aktivan !== false).length;
         const activePpeCount = ppeAssignments.filter(p => !p.datumRazduzenja).length;
-        lines.push(lang !== 'en'
-            ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja, ${questionnaires.length} upitnika, ${trainings.length} obuka, ${safetyObservations.length} prijava opasnosti, ${activePpeCount} aktivnih OZO zaduženja`
-            : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment, ${certificates.length} certificates, ${questionnaires.length} questionnaires, ${trainings.length} trainings, ${safetyObservations.length} hazard reports, ${activePpeCount} active PPE assignments`
+        lines.push(t('nstatisticsActiveWorkersEquipmentCertificates').replace('{0}', activeWorkers).replace('{1}', equipment.length).replace('{2}', certificates.length).replace('{3}', questionnaires.length).replace('{4}', trainings.length).replace('{5}', safetyObservations.length).replace('{6}', activePpeCount)
         );
 
         return lines.join('\n');
@@ -411,16 +387,14 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
 function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies, country) {
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
-        ? (lang !== 'en' ? `Korisnik se trenutno nalazi na: ${currentPage.label_bs} — ${currentPage.desc_bs}` : `User is currently on: ${currentPage.label_en} — ${currentPage.desc_en}`)
+        ? (t('userIsCurrentlyOn').replace('{0}', currentPage.label_bs).replace('{1}', currentPage.desc_bs).replace('{2}', currentPage.label_en).replace('{3}', currentPage.desc_en))
         : '';
 
     const pagesText = APP_KNOWLEDGE.pages
-        .map(p => lang !== 'en'
-            ? `• ${p.label_bs} (${p.path}): ${p.desc_bs}`
-            : `• ${p.label_en} (${p.path}): ${p.desc_en}`)
+        .map(p => t('tempKey').replace('{0}', p.label_bs).replace('{1}', p.path).replace('{2}', p.desc_bs).replace('{3}', p.label_en).replace('{4}', p.desc_en))
         .join('\n');
 
-    const today = new Date().toLocaleDateString(lang !== 'en' ? 'bs-BA' : 'en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const today = new Date().toLocaleDateString(t('bsba'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     if (lang !== 'en') {
         return `Ti si Zia, napredni AI AGENT za eZNR — digitalnu platformu za zaštitu na radu u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku. Danas je ${today}.
@@ -1013,9 +987,7 @@ export default function AIAssistant() {
             setIsMinimized(false);
             
             // Welcome message for file analysis
-            const welcomeMsg = lang !== 'en' 
-                ? `📄 Učitao sam dokument **${name}**. Šta te zanima iz njega? (Možeš me tražiti sažetak, objašnjenje ili specifične podatke).`
-                : `📄 I've loaded the document **${name}**. What would you like to know? (You can ask for a summary, explanation, or specific data).`;
+            const welcomeMsg = t('iveLoadedTheDocumentWhat').replace('{0}', name);
             setMessages(prev => [...prev.filter(m => !m.isSystemWelcome), { role: 'assistant', content: welcomeMsg, timestamp: new Date(), isSystemWelcome: true }]);
         };
         window.addEventListener('ziaLoadFile', handleZiaLoad);
@@ -1190,7 +1162,7 @@ export default function AIAssistant() {
             setAttachments([{ name, type, data, preview: null }]);
             setIsOpen(true);
             setIsMinimized(false);
-            const msg = lang !== 'en' ? `Prikačio sam datoteku **${name}**. Şta želiš da uradim s njom?` : `I attached **${name}**. What should I do with it?`;
+            const msg = t('iAttachedWhatShouldI').replace('{0}', name);
             setMessages(prev => [...prev, { role: 'assistant', content: msg, timestamp: new Date() }]);
         };
         window.addEventListener('ziaLoadFile', handleLoadFile);
@@ -1247,24 +1219,18 @@ export default function AIAssistant() {
 
                 let welcome;
                 if (total === 0) {
-                    welcome = lang !== 'en'
-                        ? `Zdravo! Ja sam **Zia** ✨\n\nSve izgleda uredno — nema ničeg hitnog.\n\nMogu navigirati do stranica, analizirati podatke ili pokrenuti slanje upitnika. Šta trebate?`
-                        : `Hello! I'm **Zia** ✨\n\nEverything looks good — nothing urgent right now.\n\nI can navigate pages, analyse data, or trigger questionnaire dispatch. What do you need?`;
+                    welcome = t('helloImZiaNneverythingLooks');
                 } else {
                     const items = [];
-                    if (expired > 0) items.push(lang !== 'en' ? `🔴 **${expired}** istekla uvjerenja` : `🔴 **${expired}** expired certificates`);
-                    if (soonCerts > 0) items.push(lang !== 'en' ? `⏰ **${soonCerts}** uvjerenja ističe u 30 dana` : `⏰ **${soonCerts}** certificates expiring in 30 days`);
-                    if (overdueEq > 0) items.push(lang !== 'en' ? `⚠️ **${overdueEq}** pregleda opreme u zakašnjenju` : `⚠️ **${overdueEq}** equipment inspections overdue`);
-                    if (sickLeave > 0) items.push(lang !== 'en' ? `🏥 **${sickLeave}** radnika na bolovanju` : `🏥 **${sickLeave}** workers on sick leave`);
-                    welcome = lang !== 'en'
-                        ? `Zdravo! Ja sam **Zia** ✨\n\nImate **${total}** stvari koje zahtijevaju pažnju:\n• ${items.join('\n• ')}\n\nŠta želite uraditi?`
-                        : `Hello! I'm **Zia** ✨\n\nYou have **${total}** items needing attention:\n• ${items.join('\n• ')}\n\nWhat would you like to do?`;
+                    if (expired > 0) items.push(t('expiredCertificates').replace('{0}', expired));
+                    if (soonCerts > 0) items.push(t('certificatesExpiringIn30Days').replace('{0}', soonCerts));
+                    if (overdueEq > 0) items.push(t('equipmentInspectionsOverdue').replace('{0}', overdueEq));
+                    if (sickLeave > 0) items.push(t('workersOnSickLeave').replace('{0}', sickLeave));
+                    welcome = t('helloImZiaNnyouHave').replace('{0}', total).replace('{1}', items.join('\n• '));
                 }
                 setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
             } catch {
-                const welcome = lang !== 'en'
-                    ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nŠta trebate uraditi?`
-                    : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nWhat do you need to get done?`;
+                const welcome = t('helloImZiaYourAi');
                 setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
             }
         }
@@ -1606,19 +1572,7 @@ export default function AIAssistant() {
             if (retryTimerRef.current) clearInterval(retryTimerRef.current);
             setRetryCountdown(0);
             pendingRetryRef.current = null;
-            const quotaMsg = lang !== 'en'
-                ? `🚫 **Dnevna kvota iscrpljena.** Vaš API ključ je dostigao besplatni dnevni limit.
-
-**Šta uraditi:**
-• 🔗 Omogućite naplatu na [Google Cloud Console](https://console.cloud.google.com/billing) za više zahtjeva
-• ⏳ Ili pričekajte do suće dok se limiti ne resetuju (oko pononoći po pacifičkom vremenu)
-• 🔑 Alternativno, koristite novi API ključ sa [Google AI Studio](https://aistudio.google.com/apikey)`
-                : `🚫 **Daily quota exhausted.** Your API key has hit the free daily limit.
-
-**What to do:**
-• 🔗 Enable billing on [Google Cloud Console](https://console.cloud.google.com/billing) for higher limits
-• ⏳ Or wait until tomorrow when limits reset (around midnight Pacific Time)
-• 🔑 Alternatively, use a new API key from [Google AI Studio](https://aistudio.google.com/apikey)`;
+            const quotaMsg = t('dailyQuotaExhaustedYourApi');
             setMessages(prev => [...prev, { role: 'assistant', content: quotaMsg, timestamp: new Date() }]);
             return;
         }
@@ -1719,15 +1673,13 @@ export default function AIAssistant() {
             console.warn('Zia API error:', err.message);
             if (err.isRateLimit) {
                 const waitSec = 10; // Changed to 10s per user request (reduced from 30)
-                const countdownMsg = lang !== 'en'
-                    ? `⏳ Limit zahtjeva dostignut. Pokušavam ponovo za **${waitSec}s**...`
-                    : `⏳ Rate limit reached. Auto-retrying in **${waitSec}s**...`;
+                const countdownMsg = t('rateLimitReachedAutoretryingIn').replace('{0}', waitSec);
                 setMessages(prev => [...prev, { role: 'assistant', content: countdownMsg, timestamp: new Date(), isRetryMsg: true }]);
                 setIsLoading(false);
                 startRetryCountdown(waitSec, text, newHistory);
                 return;
             }
-            const errText = lang !== 'en' ? `⚠️ Greška: ${err.message}` : `⚠️ Error: ${err.message}`;
+            const errText = t('error4').replace('{0}', err.message);
             setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
             setIsLoading(false);
         }
@@ -1770,7 +1722,7 @@ export default function AIAssistant() {
             const ok = file.type.startsWith('image/') || file.type === 'application/pdf' || file.type.startsWith('text/');
             // Keep under 4MB to avoid Vercel 4.5MB Serverless Function payload limits
             if (!ok || file.size > 4_000_000) {
-                alert(lang !== 'en' ? `Fajl ${file.name} je prevelik (Maks 4MB) ili format nije podržan.` : `File ${file.name} is too large (Max 4MB) or format not supported.`);
+                alert(t('fileIsTooLargeMax2').replace('{0}', file.name));
                 return;
             }
             const reader = new FileReader();
@@ -1875,9 +1827,7 @@ export default function AIAssistant() {
         chatHistoryRef.current = [];
         setShowSuggestions(true);
         // Re-show welcome
-        const welcome = lang !== 'en'
-            ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nMogu navigirati do stranica, pokrenuti slanje upitnika i analizirati vaše podatke. Šta trebate uraditi?`
-            : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nI can navigate pages, trigger questionnaire dispatch, and analyse your data. What do you need to get done?`;
+        const welcome = t('helloImZiaYourAi1');
         setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
     }, [lang]);
 
@@ -2004,7 +1954,7 @@ export default function AIAssistant() {
                                     {retryCountdown > 0
                                         ? (
                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                               {lang !== 'en' ? `Pokušavalac za ${retryCountdown}s` : `Retry in ${retryCountdown}s`}
+                                               {t('retryInS').replace('{0}', retryCountdown)}
                                                <button onClick={(e) => { e.stopPropagation(); if (retryTimerRef.current) clearInterval(retryTimerRef.current); retryTimerRef.current = null; setRetryCountdown(0); pendingRetryRef.current = null; setIsLoading(false); }} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 4, fontSize: '0.6rem', padding: '2px 5px', cursor: 'pointer', opacity: 0.85, color: 'inherit', fontWeight: 600 }}>{t('otkazi')}</button>
                                            </div>
                                         )
@@ -2133,7 +2083,7 @@ export default function AIAssistant() {
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isLoading}
-                                        title={lang !== 'en' ? 'Priloži datoteku' : 'Attach file'}
+                                        title={t('priloziDatoteku')}
                                         style={{ flexShrink: 0, width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)', transition: 'all 0.15s', marginRight: 4 }}
                                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#00BFA6'; e.currentTarget.style.color = '#00BFA6'; }}
                                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}

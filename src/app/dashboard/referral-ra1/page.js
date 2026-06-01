@@ -172,7 +172,7 @@ export default function ReferralRA1Page() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems25').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) await remove(COLLECTIONS.REFERRALS_RA1, id);
       setSelectedIds(new Set());
       loadData();
@@ -242,7 +242,7 @@ export default function ReferralRA1Page() {
 
   const handleSave = async () => {
     if (!formData.workerId) {
-      await alert(lang !== 'en' ? 'Odaberite radnika!' : 'Select a worker!');
+      await alert(t('odaberiteRadnika'));
       return;
     }
 
@@ -553,7 +553,7 @@ export default function ReferralRA1Page() {
               <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>OIB:</span> <strong>{worker.oib || '—'}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Prezime, ime, ime oca:' : 'Name, father:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t('prezimeImeImeOca')}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t('datumRoenja')}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t('orgJedinica')}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
                 </div>
@@ -680,7 +680,7 @@ export default function ReferralRA1Page() {
             {/* Last exam */}
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr', gap: 12, marginBottom: 14, alignItems: 'end' }}>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Posljednji pregled' : 'Last exam date'}</div>
+                <div style={labelSt}>{t('posljednjiPregled')}</div>
                 <DateInput value={formData.posljednjiPregledDatum} onChange={v => set('posljednjiPregledDatum', v)} />
               </div>
               <div>
@@ -695,7 +695,7 @@ export default function ReferralRA1Page() {
 
             <div style={{ marginBottom: 14 }}>
               <textarea className="form-input" rows={2} value={formData.posljednjiPregledZakoni} onChange={e => set('posljednjiPregledZakoni', e.target.value)}
-                placeholder={lang !== 'en' ? 'navesti zakon, propis ili kolektivni ugovor' : 'specify law, regulation or agreement'} />
+                placeholder={t('navestiZakonPropisIliKolektivni')} />
             </div>
 
             <div style={{ marginBottom: 14 }}>
@@ -746,7 +746,7 @@ export default function ReferralRA1Page() {
                 <Chk field="orgTerenskiRad" label={t('terenskiRad')} />
                 <Chk field="orgRadiSam" label={t('radiSam')} />
                 <Chk field="orgRadiSGrupom" label={t('radiSGrupom')} />
-                <Chk field="orgRadiSaStrankama" label={lang !== 'en' ? 'radi sa strankama' : 'works with clients'} />
+                <Chk field="orgRadiSaStrankama" label={t('radiSaStrankama')} />
                 <Chk field="orgRadiNaTraci" label={t('radiNaTraci')} />
                 <Chk field="orgBrziTempo" label={t('brziTempoRada')} />
                 <Chk field="orgRitamOdreden" label={t('ritamOdreen')} />
@@ -760,7 +760,7 @@ export default function ReferralRA1Page() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 16px', marginBottom: 10 }}>
                 <Chk field="polRadStojeci" label={t('radStojeci')} />
                 <Chk field="polUcestaloSagibanje" label={t('ucestaloSagibanje1')} />
-                <Chk field="polPodvlacenje" label={lang !== 'en' ? 'podvlačenje' : 'crawling under'} />
+                <Chk field="polPodvlacenje" label={t('podvlacenje')} />
                 <Chk field="polRadSjedeci" label={t('radSjedeci')} />
                 <Chk field="polZakretanjeTrupa" label={t('zakretanjeTrupa')} />
                 <Chk field="polBalansiranje" label={t('balansiranje')} />

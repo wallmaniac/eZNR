@@ -438,7 +438,7 @@ export default function RiskAssessmentPage() {
     
     const handleBulkDeleteRi = async () => {
         if (selectedRiIds.size === 0) return;
-        if (await confirm(lang !== 'en' ? `Obrisati ${selectedRiIds.size} odabranih stavki?` : `Delete ${selectedRiIds.size} selected items?`)) {
+        if (await confirm(t('deleteSelectedItems').replace('{0}', selectedRiIds.size))) {
             for (const id of selectedRiIds) {
                 remove(COLLECTIONS.RISK_ITEMS, id);
             }
@@ -1128,7 +1128,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
         const bulkDelete = async () => {
             if (selectedIds.size === 0) return;
-            const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} procjena?` : `Delete ${selectedIds.size} assessments?`);
+            const ok = await confirm(t('deleteAssessments').replace('{0}', selectedIds.size));
             if (!ok) return;
             selectedIds.forEach(id => remove(COLLECTIONS.RISK_ASSESSMENTS, id));
             setSelectedIds(new Set()); loadData();
@@ -2361,7 +2361,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, padding: '16px 20px', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', position: 'sticky', bottom: 16, zIndex: 100 }}>
                         <div style={{ display: 'flex', gap: 12 }}>
                             <button className="btn btn-ghost" onClick={() => hasPrevTab && setActiveTab(tabs[currentTabIndex - 1].key)} disabled={!hasPrevTab} style={{ opacity: !hasPrevTab ? 0.3 : 1 }}>
-                                ← {lang !== 'en' ? 'Nazad' : 'Previous'}
+                                ← {t('nazad')}
                             </button>
                             <button className="btn btn-outline" onClick={() => hasNextTab && setActiveTab(tabs[currentTabIndex + 1].key)} disabled={!hasNextTab} style={{ opacity: !hasNextTab ? 0.3 : 1, borderColor: 'var(--primary)', color: 'var(--primary)' }}>
                                 {t('dalje')} →

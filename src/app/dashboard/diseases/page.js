@@ -137,7 +137,7 @@ export default function DiseasesPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems4').replace('{0}', selectedIds.size))) {
         for (let id of selectedIds) await remove(COLLECTIONS.DISEASES, id);
         setSelectedIds(new Set());
         loadData();

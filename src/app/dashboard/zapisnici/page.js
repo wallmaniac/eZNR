@@ -205,12 +205,12 @@ export default function ZapisniciPage() {
             else { create(COLLECTIONS.ZAPISNICI, payload); }
             reload(); setShowForm(false); setEditId(null); setForm({ ...EMPTY_ZAP }); setPendingFile(null);
         } catch (err) {
-            await alert(lang !== 'en' ? `Greška pri čuvanju: ${err?.message}` : `Save error: ${err?.message}`);
+            await alert(t('saveError').replace('{0}', err?.message));
         } finally { setSaving(false); }
     };
 
     const handleDelete = async (item) => {
-        const ok = await confirm(lang !== 'en' ? `Obrisati "${item.naziv}"?` : `Delete "${item.naziv}"?`);
+        const ok = await confirm(t('delete3').replace('{0}', item.naziv));
         if (!ok) return;
         if (item.idbKey) await idbDeleteFile(item.idbKey).catch(() => {});
         remove(COLLECTIONS.ZAPISNICI, item.id);
@@ -219,7 +219,7 @@ export default function ZapisniciPage() {
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`);
+        const ok = await confirm(t('deleteRecords2').replace('{0}', selectedIds.size));
         if (!ok) return;
         for (const id of selectedIds) {
             const it = items.find(x => x.id === id);
@@ -495,7 +495,7 @@ export default function ZapisniciPage() {
                                                 </th>
                                                 <th style={{ width: 100 }}>{t('akcije')}</th>
                                                 <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('naziv')}{sortIcon('naziv')}</th>
-                                                <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{lang !== 'en' ? 'Broj' : 'No.'}{sortIcon('broj')}</th>
+                                                <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{t('broj')}{sortIcon('broj')}</th>
                                                 <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{t('datum')}{sortIcon('datum')}</th>
                                                 <th style={{ width: 200 }}>{t('vrsta')}</th>
                                                 <th style={{ width: 70, textAlign: 'center' }}>{t('dokument')}</th>
@@ -547,7 +547,7 @@ export default function ZapisniciPage() {
                                                                         <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} className="dropdown-item">✏️ {t('otvori')}</button>
                                                                         {item.idbKey && <>
                                                                             <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} className="dropdown-item">📂 {t('otvoriZapisnik')}</button>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} className="dropdown-item">📥 {lang !== 'en' ? 'Preuzmi zapisnik' : 'Download record'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} className="dropdown-item">📥 {t('preuzmiZapisnik')}</button>
                                                                         </>}
                                                                         <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} className="dropdown-item">📋 {t('kopiraj')}</button>
                                                                         <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} className="dropdown-item">✉️ {t('posaljiEmail')}</button>
@@ -691,7 +691,7 @@ export default function ZapisniciPage() {
                                 <div style={{ flex: 1 }}>
                                     <strong>{docFile?.name}</strong>
                                     <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 2 }}>
-                                        {lang !== 'en' ? `Pronađeno ${rows.length} potencijalnih imena · ${activeChanges} izmjena` : `Found ${rows.length} names · ${activeChanges} changes`}
+                                        {t('foundNamesChanges').replace('{0}', rows.length).replace('{1}', activeChanges)}
                                     </div>
                                 </div>
                                 <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>

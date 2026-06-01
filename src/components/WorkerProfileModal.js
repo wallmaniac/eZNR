@@ -162,7 +162,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
     const handleSave = async () => {
         if (!formData.ime || !formData.prezime) {
-            await alert(lang !== 'en' ? 'Ime i prezime su obavezna polja!' : 'First and last name are required!');
+            await alert(t('imeIPrezimeSuObavezna'));
             return;
         }
         update(COLLECTIONS.WORKERS, workerId, formData);
@@ -273,7 +273,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                     <TabBar active={activeTab} onChange={setActiveTab} 
                         tabs={[
                             { key: 'osnovno', icon: '👤', label: t('osnovno') },
-                            { key: 'uvjerenja', icon: '📜', label: `${lang !== 'en' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                            { key: 'uvjerenja', icon: '📜', label: `${t('uvjerenja')} (${certificates.length})` },
                             { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
                             { key: 'pregledi', icon: '👨‍⚕️', label: `${t('pregledi')} (${medExams.length})` },
                             { key: 'dokumenti', icon: '📁', label: `${t('dokumenti1')} (${(formData.dokumenti || []).length})` },
@@ -295,11 +295,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                         <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
                             onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                            👨‍⚕️ {lang !== 'en' ? 'Novi pregled' : 'New exam'}
+                            👨‍⚕️ {t('noviPregled')}
                         </button>
                         <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
                             onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                            📄 {lang !== 'en' ? 'Novo uvjerenje' : 'New cert'}
+                            📄 {t('novoUvjerenje')}
                         </button>
                         <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'var(--bg-card)' }}
                             onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
@@ -307,11 +307,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         </button>
                     </div>
 
-                    <ModalSection title={lang !== 'en' ? 'Osnovno' : 'Basic info'}>
+                    <ModalSection title={t('osnovno')}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('ime')} field="ime" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('prezime')} field="prezime" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Ime roditelja' : "Parent's name"} field="imeRoditelja" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('parentName')} field="imeRoditelja" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="JMBG" field="jmbg" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
@@ -327,7 +327,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         </div>
                     </ModalSection>
 
-                    <ModalSection title={lang !== 'en' ? 'Radno mjesto' : 'Employment'}>
+                    <ModalSection title={t('radnoMjesto')}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('workplace')} field="radnoMjestoId"
                                 opts={workplaces.map(w => ({ value: w.id, label: w.naziv }))} />
@@ -362,7 +362,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('koeficijent')} field="koef" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('vanjskiSuradnik')} field="vanjskiSuradnik" type="checkbox" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Posebni uvjeti' : 'Special conditions'} field="posebniUvjeti" type="checkbox" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('posebniUvjeti')} field="posebniUvjeti" type="checkbox" />
                         </div>
                         {/* Radno vrijeme */}
                         {editMode ? (
@@ -389,7 +389,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         )}
                         {formData.posebniUvjeti && (
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600, marginTop: 4 }}>
-                                ⚠️ {lang !== 'en' ? 'Za pozicije sa posebnim uvjetima rada potrebno je provesti periodične ljekarske preglede.' : 'Special conditions require periodic medical examinations.'}
+                                ⚠️ {t('zaPozicijeSaPosebnimUvjetima')}
                             </div>
                         )}
                         {editMode && (
@@ -414,14 +414,14 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 2fr 1fr', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('ulica')} field="ulica" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('br')} field="kucniBroj" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Mjesto' : 'Place'} field="mjestoId"
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('mjesto')} field="mjestoId"
                                 opts={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj || ''})` }))} />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('opcina')} field="opcina" />
                         </div>
                     </ModalSection>
 
                     {(editMode || formData.napomena) && (
-                        <ModalSection title={lang !== 'en' ? 'Napomena' : 'Notes'}>
+                        <ModalSection title={t('napomena')}>
                             {editMode ? (
                                 <textarea className="form-input" rows={3} value={formData.napomena || ''} onChange={e => set('napomena', e.target.value)} />
                             ) : (
@@ -473,11 +473,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         <DateInput value={certFormData.vrijediDo || ''} onChange={v => setCertFormData(f => ({ ...f, vrijediDo: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Sposobnost' : 'Capability'}</div>
+                                        <div style={labelStyle}>{t('sposobnost')}</div>
                                         <select className="form-select" value={certFormData.sposobnost || 'Sposoban'} onChange={e => setCertFormData(f => ({ ...f, sposobnost: e.target.value }))}>
-                                            <option value="Sposoban">{lang !== 'en' ? 'Sposoban' : 'Capable'}</option>
-                                            <option value="Nesposoban">{lang !== 'en' ? 'Nesposoban' : 'Not capable'}</option>
-                                            <option value="Uvjetno sposoban">{lang !== 'en' ? 'Uvjetno sposoban' : 'Conditionally capable'}</option>
+                                            <option value="Sposoban">{t('sposoban')}</option>
+                                            <option value="Nesposoban">{t('nesposoban')}</option>
+                                            <option value="Uvjetno sposoban">{t('uvjetnoSposoban')}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -530,15 +530,15 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             <div style={{ padding: 14, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 12, border: '1px solid var(--primary)' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 70px', gap: 10, marginBottom: 10 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Naziv OZO' : 'PPE name'} *</div>
+                                        <div style={labelStyle}>{t('nazivOzo')} *</div>
                                         <input className="form-input" value={ppeFormData.naziv || ''} onChange={e => setPpeFormData(f => ({ ...f, naziv: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Datum zaduženja' : 'Assigned'}</div>
+                                        <div style={labelStyle}>{t('datumZaduzenja')}</div>
                                         <DateInput value={ppeFormData.datumZaduzenja || ''} onChange={v => setPpeFormData(f => ({ ...f, datumZaduzenja: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Datum razduženja' : 'Returned'}</div>
+                                        <div style={labelStyle}>{t('datumRazduzenja')}</div>
                                         <DateInput value={ppeFormData.datumRazduzenja || ''} onChange={v => setPpeFormData(f => ({ ...f, datumRazduzenja: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
@@ -575,7 +575,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         action={
                             <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
                                 onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                                + {lang !== 'en' ? 'Novi pregled' : 'New exam'}
+                                + {t('noviPregled')}
                             </button>
                         }
                     >
@@ -597,10 +597,10 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                 >
                                     <span style={{ fontSize: '1.2rem' }}>🩺</span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.tipPregleda || (lang !== 'en' ? 'Pregled' : 'Exam')}</div>
+                                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.tipPregleda || (t('pregled1'))}</div>
                                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                                             {m.datumPregleda ? `${t('datum')}: ${formatDate(m.datumPregleda)}` : ''}
-                                            {m.vrijediDo ? ` · ${lang !== 'en' ? 'Vrijedi do' : 'Until'}: ${formatDate(m.vrijediDo)}` : ''}
+                                            {m.vrijediDo ? ` · ${t('vrijediDo')}: ${formatDate(m.vrijediDo)}` : ''}
                                             {m.rezultat ? ` · ${m.rezultat}` : ''}
                                         </div>
                                     </div>
@@ -624,7 +624,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
                 {activeTab === 'dokumenti' && (
                     <ModalSection
-                        title={`${lang !== 'en' ? 'Dokumenti' : 'Documents'} (${(formData.dokumenti || []).length})`}
+                        title={`${t('dokumenti1')} (${(formData.dokumenti || []).length})`}
                         action={
                             <label className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px', cursor: 'pointer' }}>
                                 + {t('upload')}
@@ -655,7 +655,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                     <div style={{ fontWeight: 600, fontSize: '0.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
                                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{d.source || ''}{d.date ? ` · ${formatDate(d.date)}` : ''}{d.size ? ` · ${(d.size/1024).toFixed(0)}KB` : ''}</div>
                                 </div>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Otvori' : 'View'} onClick={() => window.open(d.url, '_blank')}>👁️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={t('otvori')} onClick={() => window.open(d.url, '_blank')}>👁️</button>
                                 <button className="btn btn-ghost btn-sm btn-icon" title={t('preuzmi')} onClick={async () => { 
                                     if (d.url) {
                                         try {

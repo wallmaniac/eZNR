@@ -411,7 +411,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                     if (child.children) {
                                         const childGroupOpen = openMenus[child.key];
                                         const childGroupActive = child.children.some(gc => isActive(gc.path));
-                                        const childLabel = lang !== 'en' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
+                                        const childLabel = t(child.key);
                                         return (
                                             <div key={child.key}>
                                                 <button
@@ -469,7 +469,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             }}
                                         >
                                             <Icon3D name={child.icon} size={18} />
-                                            <span>{lang !== 'en' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
+                                            <span>{t(child.key)}</span>
                                         </Link>
                                     );
                                 })}
@@ -746,7 +746,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                         <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{t('uloga')}</div>
                                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                                                {user?.role === 'admin' || user?.role === 'superadmin' ? '👑 Administrator' : '👷 ' + (lang !== 'en' ? 'Stručnjak ZNR' : 'OSH Officer')}
+                                                {user?.role === 'admin' || user?.role === 'superadmin' ? '👑 Administrator' : '👷 ' + (t('strucnjakZnr'))}
                                             </div>
                                         </div>
                                         <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>

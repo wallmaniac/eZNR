@@ -7,7 +7,7 @@ import DateInput from '@/components/DateInput';
 
 export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData }) {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const { confirm } = useDialog();
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
     const docs = vehicle.dokumenti || [];
@@ -24,7 +24,7 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} dokumenata?` : `Delete ${selectedIds.size} documents?`)) {
+        if (await confirm(t('deleteDocuments').replace('{0}', selectedIds.size))) {
             const updatedDocs = docs.filter(d => !selectedIds.has(d.id));
             update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: updatedDocs });
             setSelectedIds(new Set()); reloadData();
@@ -34,7 +34,7 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
     const handleFileChange = (e) => { const file = e.target.files[0]; if (file) { setSelectedFile(file); if (!form.naziv) setForm(f => ({...f, naziv: file.name})); } };
 
     const handleSave = async () => {
-        if (!selectedFile && !form.naziv && !editingId) { alert(bs ? 'Unesite naziv ili odaberite datoteku!' : 'Enter name or select file!'); return; }
+        if (!selectedFile && !form.naziv && !editingId) { alert(t('enterNameOrSelectFile')); return; }
         
         let uploadedUrl = null;
         if (selectedFile) {
@@ -101,24 +101,24 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
         else if (doc.docData.startsWith('data:application/pdf')) { pw.document.write(`<html><body style="margin:0"><embed width="100%" height="100%" src="${doc.docData}" type="application/pdf"/></body></html>`); pw.document.close(); }
         else { handleDownload(doc); pw.close(); }
     };
-    const handleDelete = async (docId) => { if (await confirm(bs ? 'Brisati dokument?' : 'Delete document?')) { const updatedDocs = docs.filter(d => d.id !== docId); update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: updatedDocs }); reloadData(); } };
+    const handleDelete = async (docId) => { if (await confirm(t('obrisatiDokument'))) { const updatedDocs = docs.filter(d => d.id !== docId); update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: updatedDocs }); reloadData(); } };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div>
-                    <h3 style={{ margin: '0 0 4px 0' }}>{bs ? 'Arhiva dokumenata' : 'Document Archive'}</h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{bs ? 'Police osiguranja, saobraćajne dozvole, tehnički pregledi.' : 'Insurance policies, registration, and technical inspections.'}</p>
+                    <h3 style={{ margin: '0 0 4px 0' }}>{t('documentArchive')}</h3>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('insurancePoliciesRegistrationAndTechnical')}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     {selectedIds.size> 0 && (
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                            <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}</span>
+                            <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                         </div>
                     )}
                     <button className="btn btn-primary btn-sm" onClick={() => { setEditingId(null); setForm({ naziv: '', kategorija: 'Ostalo', datumIzdavanja: '', datumIsteka: '' }); setSelectedFile(null); setShowForm(true); }}>
-                        + {bs ? 'Novi dokument' : 'New Document'}
+                        + {t('noviDokument')}
                     </button>
                 </div>
             </div>
@@ -127,22 +127,22 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                 <div className="modal-overlay" style={{ zIndex: 12000 }} onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? (bs ? 'Uredi dokument' : 'Edit Document') : (bs ? 'Novi dokument' : 'New Document')}</h2>
+                            <h2>{editingId ? (t('editDocument')) : (t('noviDokument'))}</h2>
                             <button type="button" className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body" style={{ padding: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datoteka' : 'File'}</label>
+                                    <label className="form-label">{t('file1')}</label>
                                     <input type="file" className="form-input" onChange={handleFileChange} />
-                                    {editingId && !selectedFile && <div style={{ fontSize: '0.78rem', marginTop: 4, color: 'var(--text-muted)' }}>{bs ? 'Ostavite prazno ako ne mijenjate datoteku.' : 'Leave empty to keep current file.'}</div>}
+                                    {editingId && !selectedFile && <div style={{ fontSize: '0.78rem', marginTop: 4, color: 'var(--text-muted)' }}>{t('leaveEmptyToKeepCurrent')}</div>}
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Naziv dokumenta' : 'Document Name'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <label className="form-label">{t('documentName')} <span style={{color:'var(--danger)'}}>*</span></label>
                                     <input className="form-input" value={form.naziv} onChange={e => setForm(f => ({...f, naziv: e.target.value}))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Kategorija' : 'Category'}</label>
+                                    <label className="form-label">{t('kategorija')}</label>
                                     <select className="form-select" value={form.kategorija} onChange={e => setForm(f => ({...f, kategorija: e.target.value}))}>
                                         <option value="Osiguranje">Osiguranje / Insurance</option>
                                         <option value="Saobraćajna / Prometna">Saobraćajna / Registration</option>
@@ -153,11 +153,11 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
+                                        <label className="form-label">{t('datumIzdavanja')}</label>
                                         <DateInput value={form.datumIzdavanja} onChange={v => setForm(f => ({...f, datumIzdavanja: v}))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum isteka' : 'Expiry Date'}</label>
+                                        <label className="form-label">{t('expiryDate2')}</label>
                                         <DateInput value={form.datumIsteka} onChange={v => setForm(f => ({...f, datumIsteka: v}))} />
                                     </div>
                                 </div>
@@ -165,7 +165,7 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                         </div>
                         <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px', background: 'var(--bg-card)' }}>
                             <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
-                            <button type="button" className="btn btn-primary" onClick={handleSave}>💾 {bs ? 'Spremi dokument' : 'Save Document'}</button>
+                            <button type="button" className="btn btn-primary" onClick={handleSave}>💾 {t('saveDocument')}</button>
                         </div>
                     </div>
                 </div>
@@ -176,17 +176,17 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                     <thead>
                         <tr>
                             <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === docs.length && docs.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
-                            <th>{bs ? 'Naziv dokumenta' : 'Document Name'}</th>
-                            <th>{bs ? 'Kategorija' : 'Category'}</th>
-                            <th>{bs ? 'Datumi (Izd/Ist)' : 'Dates (Iss/Exp)'}</th>
-                            <th>{bs ? 'Datum upisa' : 'Uploaded On'}</th>
-                            <th>{bs ? 'Veličina' : 'Size'}</th>
+                            <th>{t('documentName1')}</th>
+                            <th>{t('kategorija')}</th>
+                            <th>{t('datesIssexp')}</th>
+                            <th>{t('datumUpisa')}</th>
+                            <th>{t('velicina')}</th>
                             <th style={{ width: 100 }}>{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {docs.length === 0 ? (
-                            <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{bs ? 'Nema učitanih dokumenata' : 'No documents uploaded'}</td></tr>
+                            <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{t('noDocumentsUploaded')}</td></tr>
                         ) : docs.sort((a,b)=> new Date(b.datumUpisa) - new Date(a.datumUpisa)).map(d => (
                             <tr key={d.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(d)}>
                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(d.id)} onChange={() => toggleOne(d.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
@@ -197,16 +197,16 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                                 <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{d.velicina}</td>
                                 <td onClick={e => e.stopPropagation()}>
                                     <div style={{ position: 'relative' }}>
-                                        <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { if (actionMenuId === d.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const flipUp = spaceBelow < 170; setMenuPos(flipUp ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 80, maxH: Math.max(120, rect.top - 8) } : { top: rect.bottom + 4, left: rect.left - 80, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(d.id); }}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                        <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { if (actionMenuId === d.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const flipUp = spaceBelow < 170; setMenuPos(flipUp ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 80, maxH: Math.max(120, rect.top - 8) } : { top: rect.bottom + 4, left: rect.left - 80, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(d.id); }}>{t('akcije')} ▼</button>
                                         {actionMenuId === d.id && (<>
                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                             <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                <button onClick={() => { setActionMenuId(null); handleEdit(d); }} className="dropdown-item">✏️ {bs ? 'Uredi meta' : 'Edit meta'}</button>
-                                                {d.docData && <button onClick={() => { setActionMenuId(null); handleDownload(d); }} className="dropdown-item">📑 {bs ? 'Preuzmi' : 'Download'}</button>}
-                                                {d.docData && <button onClick={() => { setActionMenuId(null); handlePrint(d); }} className="dropdown-item">🖨️ {bs ? 'Printaj' : 'Print'}</button>}
-                                                <button onClick={() => { setActionMenuId(null); handleCopy(d); }} className="dropdown-item">📋 {bs ? 'Kopiraj metadate' : 'Copy metadata'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleEdit(d); }} className="dropdown-item">✏️ {t('editMeta')}</button>
+                                                {d.docData && <button onClick={() => { setActionMenuId(null); handleDownload(d); }} className="dropdown-item">📑 {t('preuzmi')}</button>}
+                                                {d.docData && <button onClick={() => { setActionMenuId(null); handlePrint(d); }} className="dropdown-item">🖨️ {t('printaj')}</button>}
+                                                <button onClick={() => { setActionMenuId(null); handleCopy(d); }} className="dropdown-item">📋 {t('copyMetadata')}</button>
                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                             </div>
                                         </>)}
                                     </div>

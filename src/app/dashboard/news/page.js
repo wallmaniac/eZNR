@@ -130,6 +130,8 @@ const LAW_LINKS_MAP = {
 const FORM_CATEGORIES_MAP = {
     BA: [
         {
+            key: 'newsCatInjuriesBA',
+            legalKey: 'legalInjuryFBiH',
             title_bs: 'Prijave povreda i oboljenja',
             title_hr: 'Prijave ozljeda i oboljenja',
             title_en: 'Injury & Disease Reporting',
@@ -142,6 +144,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
+            key: 'newsCatMedicalBA',
+            legalKey: 'legalMedicalFBiH',
             title_bs: 'Ljekarske uputnice i nalazi',
             title_hr: 'Liječničke uputnice i nalazi',
             title_en: 'Medical Referrals & Reports',
@@ -155,6 +159,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
+            key: 'newsCatTrainingsBA',
+            legalKey: 'legalTrainingFBiH',
             title_bs: 'Zapisnici o osposobljavanju',
             title_hr: 'Zapisnici o osposobljavanju',
             title_en: 'Training Records',
@@ -166,6 +172,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
+            key: 'newsCatRecordsBA',
+            legalKey: 'legalLaborFBiH',
             title_bs: 'Evidencije i ostali obrasci',
             title_hr: 'Evidencije i ostali obrasci',
             title_en: 'Records & Other Forms',
@@ -178,6 +186,8 @@ const FORM_CATEGORIES_MAP = {
     ],
     HR: [
         {
+            key: 'newsCatInjuriesHR',
+            legalKey: 'legalInjuryRH',
             title_bs: 'Prijave povreda i oboljenja',
             title_hr: 'Prijave ozljeda i oboljenja',
             title_en: 'Injury & Disease Reporting',
@@ -190,6 +200,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
+            key: 'newsCatMedicalHR',
+            legalKey: 'legalMedicalRH',
             title_bs: 'Ljekarske uputnice i nalazi',
             title_hr: 'Liječničke uputnice i nalazi',
             title_en: 'Medical Referrals & Reports',
@@ -203,6 +215,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
+            key: 'newsCatTrainingsHR',
+            legalKey: 'legalTrainingRH',
             title_bs: 'Zapisnici o osposobljavanju',
             title_hr: 'Zapisnici o osposobljavanju',
             title_en: 'Training Records',
@@ -214,6 +228,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
+            key: 'newsCatRecordsHR',
+            legalKey: 'legalLaborRH',
             title_bs: 'Evidencije i ostali obrasci',
             title_hr: 'Evidencije i ostali obrasci',
             title_en: 'Records & Other Forms',
@@ -377,9 +393,9 @@ export default function NewsPage() {
 
 
     const tabs = [
-        { key: 'news', label: 'Vijesti', icon: '📰' },
-        { key: 'laws', label: 'Zakoni & propisi', icon: '⚖️' },
-        { key: 'forms', label: 'Obrasci', icon: '📄' },
+        { key: 'news', label: t('vijesti'), icon: '📰' },
+        { key: 'laws', label: t('lawsRegulations'), icon: '⚖️' },
+        { key: 'forms', label: t('forms'), icon: '📄' },
     ];
 
     const formatTime = (d) => fmtDateTime(d) || '';
@@ -406,26 +422,26 @@ export default function NewsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             {source === 'gemini' ? (
                                 <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#00897B,#00695C)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
-                                    🤖 AI Pregled
+                                    🤖 {t('aiPregled')}
                                 </span>
                             ) : source === 'static' ? (
                                 <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#37474F,#546E7A)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
-                                    📚 Info ZNR
+                                    📚 {t('infoZnr')}
                                 </span>
                             ) : (
                                 <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-input)', color: 'var(--text-muted)', fontWeight: 600 }}>
-                                    📰 Vijesti
+                                    📰 {t('vijesti')}
                                 </span>
                             )}
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                Zaštita na radu · {country === 'HR' ? 'Republika Hrvatska' : 'Bosna i Hercegovina'}
+                                {t('zastitaNaRadu')} · {country === 'HR' ? (t('croatian') || 'Hrvatski') : (t('bosnian') || 'Bosanski')}
                             </span>
                         </div>
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                             {lastUpdated && (
                                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                    {fromCache ? '💾 Sačuvano' : '🔄 Osvježeno'}: {formatTime(lastUpdated)}
-                                    {nextRefresh != null && ` · sljedeće za ${nextRefresh}min`}
+                                    {fromCache ? `💾 ${t('sacuvano')}` : `🔄 ${t('osvjezeno')}`}: {formatTime(lastUpdated)}
+                                    {nextRefresh != null && ` · ${t('sljedeceZa')} ${nextRefresh}min`}
                                 </span>
                             )}
                             <button
@@ -434,8 +450,8 @@ export default function NewsPage() {
                                 disabled={loading}
                                 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem' }}>
                                 {loading
-                                    ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Učitavam...</>
-                                    : <>🔄 Osvježi vijesti</>
+                                    ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> {t('ucitavam')}</>
+                                    : <>🔄 {t('osvjeziVijesti')}</>
                                 }
                             </button>
                         </div>
@@ -473,21 +489,17 @@ export default function NewsPage() {
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: 12 }}>📰</div>
-                                <div style={{ fontWeight: 600, marginBottom: 8 }}>Nema sačuvanih vijesti</div>
-                                <div style={{ fontSize: '0.85rem', marginBottom: 14, opacity: 0.75 }}>Klikni "Osvježi vijesti" da učitaš najnovije vijesti iz oblasti ZNR.</div>
-                                <button className="btn btn-primary btn-sm" onClick={() => fetchAndCache(true)}>🔄 Učitaj vijesti</button>
+                                <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('nemaSacuvanihVijesti')}</div>
+                                <div style={{ fontSize: '0.85rem', marginBottom: 14, opacity: 0.75 }}>{t('klikniOsvjeziVijestiDaUcitas')}</div>
+                                <button className="btn btn-primary btn-sm" onClick={() => fetchAndCache(true)}>🔄 {t('ucitajVijesti')}</button>
                             </div>
                         </div>
                     )}
 
                     <div style={{ marginTop: 20, padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         {source === 'gemini'
-                            ? (country === 'HR'
-                                ? '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona RH. Uvijek provjerite Narodne novine i zakon.hr za službene informacije.'
-                                : '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona BiH. Uvijek provjerite Sl. novine FBiH i Sl. glasnik RS za zvanične informacije.')
-                            : (country === 'HR'
-                                ? '📚 Prikazane informacije temelje se na važećim propisima ZNR u RH. Uvijek provjerite originalne izvore za aktualne izmjene.'
-                                : '📚 Prikazane informacije temelje se na važećim propisima ZNR u BiH. Uvijek provjerite originalne izvore za aktualne izmjene.')}
+                            ? (country === 'HR' ? t('vijestiGeminiRH') : t('vijestiGeminiBiH'))
+                            : (country === 'HR' ? t('prikazaneInformacijeRH') : t('prikazaneInformacijeBiH'))}
                     </div>
                 </div>
             )}
@@ -501,17 +513,15 @@ export default function NewsPage() {
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 800, fontSize: '1rem', color: 'white', marginBottom: 4 }}>
-                                    ⚖️ {country === 'HR' ? 'Zakonodavstvo ZNR u RH — kompletan pregled' : 'Zakonodavstvo ZNR u BiH — kompletan pregled'}
+                                    ⚖️ {country === 'HR' ? t('zakonodavstvoRhPregled') : t('zakonodavstvoBihPregled')}
                                 </div>
                                 <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.82)' }}>
-                                    {country === 'HR'
-                                        ? 'Svi zakoni, pravilnici, EU direktive i institucioni linkovi — na jednom mjestu.'
-                                        : 'Svi zakoni, pravilnici (uključujući novi OZO pravilnik 42/25), EU direktive i institucioni linkovi — na jednom mjestu.'}
+                                    {country === 'HR' ? t('sviZakoniPravilniciRh') : t('sviZakoniPravilniciBih')}
                                 </div>
                             </div>
                             <a href="/dashboard/znr-zakonodavstvo"
                                 style={{ flexShrink: 0, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--bg-card)', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem', textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                                Otvori dokument →
+                                {t('otvoriDokument')}
                             </a>
                         </div>
                     </div>
@@ -733,10 +743,10 @@ function FormsTab({ lang, country }) {
                     <div className="card-body">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                             <span style={{ fontSize: '1.4rem' }}>{cat.icon}</span>
-                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{lang === 'en' ? cat.title_en : (lang === 'hr' ? cat.title_hr : cat.title_bs)}</h3>
+                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{t(cat.key) || (lang === 'en' ? cat.title_en : (lang === 'hr' ? cat.title_hr : cat.title_bs))}</h3>
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 16, paddingLeft: 36, fontStyle: 'italic' }}>
-                            📌 {cat.legal}
+                            📌 {t(cat.legalKey) || cat.legal}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
                             {cat.items.map((form, idx) => (

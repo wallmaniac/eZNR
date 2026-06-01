@@ -13,8 +13,8 @@ import Icon3D from '@/components/Icon3D';
 // For now, I will create a hub with only "Dokumentacija Poslodavca" and "Zapisnici" to merge the top-level items!
 
 export default function ArchivesHub() {
-    const { lang } = useLanguage();
-    const bs = lang !== 'en';
+    const { lang , t } = useLanguage();
+    
     const [tab, setTab] = useState('employer');
     
     return (
@@ -38,7 +38,7 @@ export default function ArchivesHub() {
                       transition: 'all 0.2s'
                   }}>
                     <Icon3D name="📑" size={18} />
-                    {bs ? 'Dokumentacija Poslodavca' : 'Employer Documents'}
+                    {t('dokumentiPoslodavca')}
                 </button>
                 <button 
                   onClick={() => setTab('zapisnici')} 
@@ -54,7 +54,7 @@ export default function ArchivesHub() {
                       transition: 'all 0.2s'
                   }}>
                     <Icon3D name="📋" size={18} />
-                    {bs ? 'Zapisnici' : 'Minutes/Records'}
+                    {t('zapisniciAlat')}
                 </button>
             </div>
             

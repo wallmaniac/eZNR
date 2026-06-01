@@ -546,8 +546,8 @@ function UvjerenjeFormPage() {
                                         style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
                                     />
                                     {formData.sposoban
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ {lang !== 'en' ? 'Sposoban' : 'Capable'}</span>
-                                        : <span style={{ color: 'var(--danger)', fontWeight: 600 }}>✗ {lang !== 'en' ? 'Nesposoban' : 'Incapable'}</span>
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ {t('sposoban')}</span>
+                                        : <span style={{ color: 'var(--danger)', fontWeight: 600 }}>✗ {t('nesposoban')}</span>
                                     }
                                 </label>
                             </div>
@@ -656,7 +656,7 @@ function UvjerenjeFormPage() {
                         </div>
 
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Stručnjak ZNR' : 'ZNR Specialist'}</div>
+                            <div style={labelStyle}>{t('strucnjakZnr')}</div>
                             <input className="form-input" value={formData.strucnjakZNR} onChange={e => set('strucnjakZNR', e.target.value)} />
                         </div>
                     </div>
@@ -724,7 +724,7 @@ function UvjerenjeFormPage() {
                                                 set('attachedFileType', result.type);
                                             } catch (err) {
                                                 console.error('[Upload] Attachment error:', err);
-                                                alert(lang !== 'en' ? `Greška pri učitavanju: ${err.message}` : `Upload failed: ${err.message}`);
+                                                alert(t('uploadFailed').replace('{0}', err.message));
                                             } finally {
                                                 e.target.value = '';
                                             }
@@ -802,9 +802,7 @@ function UvjerenjeFormPage() {
                         })()}
                         {selectedWorkerIds.size> 0 && (
                             <span style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
-                                💡 {lang !== 'en'
-                                    ? `Uvjerenje će biti dodijeljeno ${selectedWorkerIds.size} radnik(u/a)`
-                                    : `Certificate will be assigned to ${selectedWorkerIds.size} worker(s)`}
+                                💡 {t('certificateWillBeAssignedTo').replace('{0}', selectedWorkerIds.size)}
                             </span>
                         )}
                     </div>

@@ -79,7 +79,7 @@ export default function InjuriesPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems15').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) await remove(COLLECTIONS.INJURIES, id);
       setSelectedIds(new Set());
       loadData();
@@ -499,7 +499,7 @@ export default function InjuriesPage() {
                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                                 <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                   <button onClick={() => { setActionMenuId(null); openEdit(inj); }} className="dropdown-item">✏️ {t('otvori')}</button>
-                                  <button onClick={() => { setActionMenuId(null); openCopy(inj); }} className="dropdown-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
+                                  <button onClick={() => { setActionMenuId(null); openCopy(inj); }} className="dropdown-item">📋 {t('kopiraj')}</button>
                                   <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                   <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                 </div>

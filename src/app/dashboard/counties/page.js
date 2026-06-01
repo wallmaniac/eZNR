@@ -42,10 +42,10 @@ export default function CountiesPage() {
     if (editingId) update(col, editingId, formData); else create(col, formData);
     setShowForm(false); loadData(); showFlash();
   };
-  const handleDelete = async (id) => { if (await confirm(bs ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.COUNTIES || 'counties', id); loadData(); } };
+  const handleDelete = async (id) => { if (await confirm(t('obrisati'))) { remove(COLLECTIONS.COUNTIES || 'counties', id); loadData(); } };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(bs ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems2').replace('{0}', selectedIds.size))) {
       for (const id of selectedIds) remove(COLLECTIONS.COUNTIES || 'counties', id);
       setSelectedIds(new Set()); loadData();
     }
@@ -70,8 +70,8 @@ export default function CountiesPage() {
           <SavedFlash />
           {selectedIds.size> 0 && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-              <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span>
+              <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
             </div>
           )}
           {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
@@ -106,9 +106,9 @@ export default function CountiesPage() {
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{i.naziv}</span>
                         <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                       </div>
-                      <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                      <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {t('uredi')}</button>
                       <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                      <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                      <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                     </div>
                   </>)}
                 </div>

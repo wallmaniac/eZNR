@@ -16,7 +16,7 @@ const emptyDoc = {
 
 export default function ISZNRDocumentsPage() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     
@@ -66,12 +66,12 @@ export default function ISZNRDocumentsPage() {
     const handleNew = () => { setFormData({ ...emptyDoc }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
     const handleDelete = async (id) => {
-        const ok = await confirm(bs ? 'Jeste li sigurni?' : 'Are you sure?');
+        const ok = await confirm(t('jesteLiSigurni'));
         if (ok) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = async () => {
         if (!formData.naslov || !formData.partyId) {
-            await alert(bs ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!');
+            await alert(t('titleAndPartyAreRequired'));
             return;
         }
         if (editingId) { update(COLLECTIONS.ISZNR_DOCUMENTS, editingId, formData); } else { create(COLLECTIONS.ISZNR_DOCUMENTS, formData); }
@@ -84,7 +84,7 @@ export default function ISZNRDocumentsPage() {
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} dokumenata?` : `Delete ${selectedIds.size} documents?`)) {
+        if (await confirm(t('deleteDocuments2').replace('{0}', selectedIds.size))) {
             for (const id of selectedIds) remove(COLLECTIONS.ISZNR_DOCUMENTS, id);
             setSelectedIds(new Set()); loadData();
         }
@@ -101,13 +101,13 @@ export default function ISZNRDocumentsPage() {
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 650 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {bs ? 'Dokument' : 'Document'}</h2>
+                            <h2>{editingId ? '✏️' : '+'} {t('dokument')}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-grid-2">
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Naslov' : 'Title'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <label className="form-label" style={{ fontWeight: 700 }}>{t('naslov')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <input className="form-input" value={formData.naslov} onChange={e => updateField('naslov', e.target.value)} />
                                 </div>
                                 <div className="form-group">
@@ -147,7 +147,7 @@ export default function ISZNRDocumentsPage() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? 'Novi dokument' : 'New Document'}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {t('noviDokument')}</button>
                         <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
                             <span style={{ opacity: 0.5 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
@@ -155,8 +155,8 @@ export default function ISZNRDocumentsPage() {
                         <SavedFlash />
                         {selectedIds.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                             </div>
                         ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
                     </div>
@@ -167,11 +167,11 @@ export default function ISZNRDocumentsPage() {
                                 <tr>
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
-                                    <th onClick={() => toggleSort('partyId')} style={thStyle('partyId')}>{bs ? 'Stranka' : 'Party'} {sortIcon('partyId')}</th>
-                                    <th onClick={() => toggleSort('naslov')} style={thStyle('naslov')}>{bs ? 'Naslov' : 'Title'} {sortIcon('naslov')}</th>
+                                    <th onClick={() => toggleSort('partyId')} style={thStyle('partyId')}>{t('party')} {sortIcon('partyId')}</th>
+                                    <th onClick={() => toggleSort('naslov')} style={thStyle('naslov')}>{t('naslov')} {sortIcon('naslov')}</th>
                                     <th onClick={() => toggleSort('tipDokumentaId')} style={thStyle('tipDokumentaId')}>{t('type')} {sortIcon('tipDokumentaId')}</th>
                                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')} {sortIcon('datum')}</th>
-                                    <th onClick={() => toggleSort('potpisano')} style={thStyle('potpisano')}>{bs ? 'Potpisano' : 'Signed'} {sortIcon('potpisano')}</th>
+                                    <th onClick={() => toggleSort('potpisano')} style={thStyle('potpisano')}>{t('signed')} {sortIcon('potpisano')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -186,7 +186,7 @@ export default function ISZNRDocumentsPage() {
                                                 {actionMenuId === doc.id && (
                                                     <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(doc)} className="dropdown-item">📂 {t('open')}</button>
-                                                        <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, { potpisano: !doc.potpisano }); loadData(); showFlash(); }} className="dropdown-item">✍️ {doc.potpisano ? (bs ? 'Ukloni potpis' : 'Remove signature') : t('digitalSigning')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, { potpisano: !doc.potpisano }); loadData(); showFlash(); }} className="dropdown-item">✍️ {doc.potpisano ? (t('removeSignature')) : t('digitalSigning')}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                         <button onClick={() => handleDelete(doc.id)} className="dropdown-item text-danger">🗑️ {t('delete')}</button>
                                                     </div>
@@ -199,8 +199,8 @@ export default function ISZNRDocumentsPage() {
                                         <td>{formatDate(doc.datum)}</td>
                                         <td>
                                             {doc.potpisano
-                                                ? <span className="badge badge-success">✓ {bs ? 'Potpisano' : 'Signed'}</span>
-                                                : <span className="badge badge-warning">{bs ? 'Nije potpisano' : 'Not signed'}</span>}
+                                                ? <span className="badge badge-success">✓ {t('signed1')}</span>
+                                                : <span className="badge badge-warning">{t('notSigned')}</span>}
                                         </td>
                                     </tr>
                                 ))}

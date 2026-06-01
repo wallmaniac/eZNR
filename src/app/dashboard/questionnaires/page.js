@@ -597,8 +597,8 @@ export default function QuestionnairesPage() {
                           const days = Math.ceil((new Date(r.rokIsteka) - new Date()) / (1000*60*60*24));
                           const col = days < 0 ? 'var(--danger)' : days <= 30 ? 'var(--danger)' : days <= 90 ? 'var(--warning)' : 'var(--success)';
                           const label = days < 0
-                            ? (lang !== 'en' ? `Isteklo ${Math.abs(days)}d` : `Expired ${Math.abs(days)}d ago`)
-                            : (lang !== 'en' ? `Za ${days}d` : `In ${days}d`);
+                            ? (t('expiredDAgo').replace('{0}', Math.abs(days)))
+                            : (t('inD').replace('{0}', days));
                           return <span style={{ fontSize: '0.78rem', fontWeight: 600, color: col }}>{label}</span>;
                         })() : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>}
                       </td>
@@ -639,7 +639,7 @@ export default function QuestionnairesPage() {
                     <th style={{ minWidth: 240 }}>{t('naziv')}</th>
                     <th>{t('oznaka')}</th>
                     <th>{t('vrstaAnkete')}</th>
-                    <th>{lang !== 'en' ? 'Prikaži na portalu' : 'Portal'}</th>
+                    <th>{t('prikaziNaPortalu')}</th>
                     <th>{t('actions')}</th>
                   </tr>
                 </thead>

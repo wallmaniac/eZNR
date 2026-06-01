@@ -9,7 +9,7 @@ import PageHeader from '@/components/PageHeader';
 
 export default function CountriesPage() {
   const { t, lang } = useLanguage();
-  const bs = lang !== 'en';
+  
   const { confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const [items, setItems] = useState([]);
@@ -30,8 +30,8 @@ export default function CountriesPage() {
   const handleNew = () => { setFormData({ naziv: '', kod: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = () => { if (!formData.naziv) return; if (editingId) update(COLLECTIONS.COUNTRIES, editingId, formData); else create(COLLECTIONS.COUNTRIES, formData); setShowForm(false); loadData(); showFlash(); };
-  const handleDelete = async (id) => { if (await confirm(bs ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.COUNTRIES, id); loadData(); } };
-  const handleDeleteSelected = async () => { if (selectedIds.size === 0) return; if (await confirm(bs ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) { for (const id of selectedIds) remove(COLLECTIONS.COUNTRIES, id); setSelectedIds(new Set()); loadData(); } };
+  const handleDelete = async (id) => { if (await confirm(t('obrisati'))) { remove(COLLECTIONS.COUNTRIES, id); loadData(); } };
+  const handleDeleteSelected = async () => { if (selectedIds.size === 0) return; if (await confirm(t('deleteItems3').replace('{0}', selectedIds.size))) { for (const id of selectedIds) remove(COLLECTIONS.COUNTRIES, id); setSelectedIds(new Set()); loadData(); } };
 
   const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
@@ -44,7 +44,7 @@ export default function CountriesPage() {
             <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('countries')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
             <div className="modal-body">
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.naziv} onChange={e => setFormData({ ...formData, naziv: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">{bs ? 'Kod' : 'Code'}</label><input className="form-input" value={formData.kod} onChange={e => setFormData({ ...formData, kod: e.target.value })} maxLength={3} /></div>
+              <div className="form-group"><label className="form-label">{t('sifra')}</label><input className="form-input" value={formData.kod} onChange={e => setFormData({ ...formData, kod: e.target.value })} maxLength={3} /></div>
             </div>
             <div className="modal-footer"><button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button><button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button></div>
           </div>
@@ -52,16 +52,16 @@ export default function CountriesPage() {
       )}
       <div className="card"><div className="card-body" style={{ padding: 0 }}>
         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? 'Nova država' : 'New Country'}</button>
+          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {t('newCountry')}</button>
           <SavedFlash />
-          {selectedIds.size> 0 && (<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}><span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span><button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button></div>)}
+          {selectedIds.size> 0 && (<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}><span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span><button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button></div>)}
           {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
         </div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>
           <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
           <th style={{ width: 90 }}>{t('actions')}</th>
           <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
-          <th style={thStyle('kod')} onClick={() => toggleSort('kod')}>{bs ? 'Kod' : 'Code'}{sortIcon('kod')}</th>
+          <th style={thStyle('kod')} onClick={() => toggleSort('kod')}>{t('sifra')}{sortIcon('kod')}</th>
         </tr></thead>
           <tbody>{sorted.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : sorted.map(i => (
             <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
@@ -70,9 +70,9 @@ export default function CountriesPage() {
                 <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (actionMenuId === i.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(i.id); }}>Akcije ▼</button>
                 {actionMenuId === i.id && (<><div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} /><div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}><span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{i.naziv}</span><button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button></div>
-                  <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                  <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {t('uredi')}</button>
                   <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                  <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                  <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                 </div></>)}
               </div></td>
               <td style={{ fontWeight: 600 }}>🏳️ {i.naziv}</td>

@@ -71,7 +71,7 @@ export default function WorkerPPEPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} zaduženja?` : `Delete ${selectedIds.size} assignments?`)) {
+    if (await confirm(t('deleteAssignments').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
       setSelectedIds(new Set());
       setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
@@ -203,7 +203,7 @@ export default function WorkerPPEPage() {
                               </div>
                               <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} className="dropdown-item" className="action-menu-item">✏️ {t('urediOzo')}</button>
                               <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} className="dropdown-item" className="action-menu-item">📂 {t('otvoriProfil')}</button>
-                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} className="dropdown-item" className="action-menu-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
+                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} className="dropdown-item" className="action-menu-item">📋 {t('kopiraj')}</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                               <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} className="dropdown-item text-danger" className="action-menu-item-danger">🗑️ {t('izbrisi')}</button>
                             </div>

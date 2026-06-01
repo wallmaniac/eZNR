@@ -334,17 +334,15 @@ function TrainingsInner() {
                 const existingCount = (formData.slides || []).length;
                 const newCount = data.slides.length;
                 const action = await choose(
-                    lang !== 'en'
-                        ? `Dokument ima ${newCount} slajdova. Trenutno već postoji ${existingCount} slajdova.\nŠto želite uraditi?`
-                        : `Document has ${newCount} slides. You already have ${existingCount} slide(s).\nWhat would you like to do?`,
+                    t('documentHasSlidesYouAlready').replace('{0}', newCount).replace('{1}', existingCount),
                     [
                         {
-                            label: lang !== 'en' ? `🔄 Zamijeni sve (zadrži samo novih ${newCount})` : `🔄 Replace all (keep only new ${newCount})`,
+                            label: t('replaceAllKeepOnlyNew').replace('{0}', newCount),
                             value: 'replace',
                             primary: true,
                         },
                         {
-                            label: lang !== 'en' ? `➕ Dodaj na kraj (ukupno ${existingCount + newCount} slajdova)` : `➕ Append to end (total ${existingCount + newCount} slides)`,
+                            label: t('appendToEndTotalSlides').replace('{0}', existingCount + newCount),
                             value: 'append',
                         },
                         {
@@ -444,9 +442,7 @@ function TrainingsInner() {
     const autoCreateCertificate = async (session) => {
         const worker = findWorkerBySession(session);
         if (!worker) {
-            await alert(lang !== 'en'
-                ? `Radnik "${session.recipientName}" nije pronađen u bazi. Uvjerenje se ne može automatski kreirati.`
-                : `Worker "${session.recipientName}" not found in database. Certificate cannot be auto-created.`);
+            await alert(t('workerNotFoundInDatabase').replace('{0}', session.recipientName));
             return;
         }
         const today = new Date().toISOString().split('T')[0];
@@ -469,9 +465,7 @@ function TrainingsInner() {
             ogranicenja: `Obuka: ${resultsTraining?.naziv || ''}. Rezultat testa: ${session.grade?.percentage || 0}%. Radno mjesto: ${wpName || 'nije specificirano'}.`,
         };
         create(COLLECTIONS.CERTIFICATES, certData);
-        const shouldPrint = await confirm(lang !== 'en'
-            ? `✅ Uvjerenje kreirano za ${worker.ime} ${worker.prezime}!\n\nŽelite li odmah ispisati/preuzeti ZOS dokument?`
-            : `✅ Certificate created for ${worker.ime} ${worker.prezime}!\n\nDo you want to print/download the ZOS document now?`);
+        const shouldPrint = await confirm(t('certificateCreatedForNndoYou').replace('{0}', worker.ime).replace('{1}', worker.prezime));
         if (shouldPrint) {
             const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
             printZosPdf({

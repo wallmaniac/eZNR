@@ -1,4 +1,5 @@
 'use client';
+import { t } from '@/i18n/translations';
 
 /**
  * pdfReportGenerator.js — Unified PDF Report Engine for eZNR
@@ -135,11 +136,11 @@ function daysUntil(dateStr) {
 
 // ─── Helper: status badge HTML ───────────────────────────────────────────────
 function statusBadge(days, bs) {
-  if (days === null) return `<span class="badge badge-neutral">${bs ? 'N/D' : 'N/A'}</span>`;
-  if (days < 0) return `<span class="badge badge-danger">${bs ? 'ISTEKLO' : 'EXPIRED'}</span>`;
-  if (days <= 30) return `<span class="badge badge-danger">${bs ? `${days} dana` : `${days} days`}</span>`;
-  if (days <= 90) return `<span class="badge badge-warn">${bs ? `${days} dana` : `${days} days`}</span>`;
-  return `<span class="badge badge-ok">${bs ? 'Važeće' : 'Valid'}</span>`;
+  if (days === null) return `<span class="badge badge-neutral">${t('na')}</span>`;
+  if (days < 0) return `<span class="badge badge-danger">${t('isteklo')}</span>`;
+  if (days <= 30) return `<span class="badge badge-danger">${t('days').replace('{0}', days)}</span>`;
+  if (days <= 90) return `<span class="badge badge-warn">${t('days1').replace('{0}', days)}</span>`;
+  return `<span class="badge badge-ok">${t('vrijedi')}</span>`;
 }
 
 // ─── Build the branded header ────────────────────────────────────────────────
@@ -247,7 +248,7 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
   }
 
   return `<!DOCTYPE html>
-<html lang="${bs ? 'bs' : 'en'}">
+<html lang="${t('en1')}">
 <head>
   <meta charset="UTF-8"/>
   <title>${title} — ${companyName || 'Report'}</title>
@@ -261,7 +262,7 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
   <div class="page">
     ${content}
   </div>
-  <button class="print-btn" onclick="window.print()">🖨️ ${bs ? 'Isprintaj / Spremi PDF' : 'Print / Save as PDF'}</button>
+  <button class="print-btn" onclick="window.print()">🖨️ ${t('printSaveAsPdf')}</button>
 </body>
 </html>`;
 }
@@ -288,10 +289,8 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
 
-  const title = bs ? 'EVIDENCIJA RADNIKA' : 'WORKER REGISTRY';
-  const subtitle = bs
-    ? `${workers.length} radnika · Datum ispisa: ${new Date().toLocaleDateString('bs-BA')}`
-    : `${workers.length} workers · Print date: ${new Date().toLocaleDateString('en-GB')}`;
+  const title = t('workerRegistry');
+  const subtitle = t('workersPrintDate').replace('{0}', workers.length).replace('{1}', new Date().toLocaleDateString('bs-BA')).replace('{2}', new Date().toLocaleDateString('en-GB'));
 
   const activeCount = workers.filter(w => w.aktivan !== false).length;
   const certsExpiring = allCerts.filter(c => {
@@ -304,9 +303,9 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   // Stats
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${workers.length}</div><div class="stat-lbl">${bs ? 'Ukupno radnika' : 'Total workers'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${activeCount}</div><div class="stat-lbl">${bs ? 'Aktivni' : 'Active'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#e65100">${certsExpiring}</div><div class="stat-lbl">${bs ? 'Uvjerenja ističu' : 'Certs expiring'}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${workers.length}</div><div class="stat-lbl">${t('totalWorkers')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${activeCount}</div><div class="stat-lbl">${t('aktivni')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#e65100">${certsExpiring}</div><div class="stat-lbl">${t('certsExpiring')}</div></div>
     </div>
   `;
 
@@ -314,13 +313,13 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${bs ? 'Ime i prezime' : 'Full name'}</th>
-      <th>${bs ? 'JMBG' : 'ID No.'}</th>
-      <th>${bs ? 'Radno mjesto' : 'Workplace'}</th>
-      <th>${bs ? 'Org. jedinica' : 'Org. unit'}</th>
-      <th style="text-align:center">${bs ? 'Uvj.' : 'Certs'}</th>
-      <th style="text-align:center">${bs ? 'OZO' : 'PPE'}</th>
-      <th>${bs ? 'Status' : 'Status'}</th>
+      <th>${t('imeIPrezime1')}</th>
+      <th>${t('jmbg')}</th>
+      <th>${t('radnoMjesto')}</th>
+      <th>${t('orgJedinica1')}</th>
+      <th style="text-align:center">${t('certs')}</th>
+      <th style="text-align:center">${t('ozoOprema')}</th>
+      <th>${t('status')}</th>
     </tr></thead>
     <tbody>`;
 
@@ -336,7 +335,7 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
       <td>${orgUnits.find(ou => ou.id === w.orgJedinicaId)?.naziv || '—'}</td>
       <td style="text-align:center;font-weight:600">${wCerts.length}</td>
       <td style="text-align:center;font-weight:600">${wPPE.length}</td>
-      <td><span class="badge ${aktivan ? 'badge-ok' : 'badge-neutral'}">${aktivan ? (bs ? 'Aktivan' : 'Active') : (bs ? 'Neaktivan' : 'Inactive')}</span></td>
+      <td><span class="badge ${aktivan ? 'badge-ok' : 'badge-neutral'}">${aktivan ? (t('aktivan')) : (t('neaktivan'))}</span></td>
     </tr>`;
   });
 
@@ -360,35 +359,35 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
     ? uniqueCertIds.map(id => allCerts.find(c => c.id === id)).filter(Boolean)
     : allCerts;
 
-  const title = bs ? 'PREGLED UVJERENJA I CERTIFIKATA' : 'CERTIFICATE STATUS REPORT';
+  const title = t('certificateStatusReport');
   const expired = certs.filter(c => daysUntil(c.vrijediDo) !== null && daysUntil(c.vrijediDo) < 0).length;
   const expiring = certs.filter(c => {
     const d = daysUntil(c.vrijediDo);
     return d !== null && d >= 0 && d <= 30;
   }).length;
   const valid = certs.length - expired - expiring;
-  const subtitle = `${certs.length} ${bs ? 'zapisa' : 'records'} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const subtitle = `${certs.length} ${t('zapisa')} · ${new Date().toLocaleDateString('bs-BA')}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${certs.length}</div><div class="stat-lbl">${bs ? 'Ukupno' : 'Total'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${valid}</div><div class="stat-lbl">${bs ? 'Važeća' : 'Valid'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#e65100">${expiring}</div><div class="stat-lbl">${bs ? 'Ističu ≤30d' : 'Expiring ≤30d'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${bs ? 'Istekla' : 'Expired'}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${certs.length}</div><div class="stat-lbl">${t('ukupno1')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${valid}</div><div class="stat-lbl">${t('vazeca')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#e65100">${expiring}</div><div class="stat-lbl">${t('istice30d')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${t('istekla')}</div></div>
     </div>
   `;
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${bs ? 'Radnik' : 'Worker'}</th>
-      <th>${bs ? 'Naziv uvjerenja' : 'Certificate name'}</th>
-      <th>${bs ? 'Oznaka' : 'Code'}</th>
-      <th>${bs ? 'Izdano' : 'Issued'}</th>
-      <th>${bs ? 'Važi do' : 'Valid until'}</th>
-      <th>${bs ? 'Status' : 'Status'}</th>
+      <th>${t('radnik1')}</th>
+      <th>${t('nazivUvjerenja1')}</th>
+      <th>${t('oznaka')}</th>
+      <th>${t('issued')}</th>
+      <th>${t('vrijediDo')}</th>
+      <th>${t('status')}</th>
     </tr></thead>
     <tbody>`;
 
@@ -424,20 +423,20 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
     ? assignmentIds.map(id => allPPE.find(p => p.id === id)).filter(Boolean)
     : allPPE;
 
-  const title = bs ? 'EVIDENCIJA OSOBNE ZAŠTITNE OPREME (OZO)' : 'PERSONAL PROTECTIVE EQUIPMENT (PPE) REPORT';
-  const subtitle = `${assignments.length} ${bs ? 'zaduženja' : 'assignments'} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('personalProtectiveEquipmentPpeReport');
+  const subtitle = `${assignments.length} ${t('fleetAssignments')} · ${new Date().toLocaleDateString('bs-BA')}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${bs ? 'Radnik' : 'Worker'}</th>
-      <th>${bs ? 'Naziv opreme' : 'Equipment name'}</th>
-      <th style="text-align:center">${bs ? 'Količina' : 'Qty'}</th>
-      <th>${bs ? 'Datum zaduženja' : 'Assigned on'}</th>
-      <th>${bs ? 'Rok zamjene' : 'Replace by'}</th>
-      <th>${bs ? 'Status' : 'Status'}</th>
+      <th>${t('radnik1')}</th>
+      <th>${t('equipmentName')}</th>
+      <th style="text-align:center">${t('kolicina')}</th>
+      <th>${t('datumZaduzenja')}</th>
+      <th>${t('replaceBy')}</th>
+      <th>${t('status')}</th>
     </tr></thead>
     <tbody>`;
 
@@ -472,21 +471,21 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
     ? equipmentIds.map(id => allEquip.find(e => e.id === id)).filter(Boolean)
     : allEquip;
 
-  const title = bs ? 'EVIDENCIJA SREDSTAVA RADA I OPREME' : 'WORK EQUIPMENT INSPECTION REPORT';
-  const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('workEquipmentInspectionReport');
+  const subtitle = `${items.length} ${t('stavke')} · ${new Date().toLocaleDateString('bs-BA')}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${bs ? 'Naziv' : 'Name'}</th>
-      <th>${bs ? 'Tip' : 'Type'}</th>
-      <th>${bs ? 'Serijski broj' : 'Serial No.'}</th>
-      <th>${bs ? 'Lokacija' : 'Location'}</th>
-      <th>${bs ? 'Zadnji pregled' : 'Last inspected'}</th>
-      <th>${bs ? 'Sljedeći pregled' : 'Next inspection'}</th>
-      <th>${bs ? 'Status' : 'Status'}</th>
+      <th>${t('naziv')}</th>
+      <th>${t('tip')}</th>
+      <th>${t('serialNumber')}</th>
+      <th>${t('lokacija')}</th>
+      <th>${t('lastInspected')}</th>
+      <th>${t('nextExam')}</th>
+      <th>${t('status')}</th>
     </tr></thead>
     <tbody>`;
 
@@ -521,21 +520,21 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
     ? vehicleIds.map(id => allVehicles.find(v => v.id === id)).filter(Boolean)
     : allVehicles;
 
-  const title = bs ? 'EVIDENCIJA VOZNOG PARKA' : 'FLEET REGISTRY REPORT';
-  const subtitle = `${vehicles.length} ${bs ? 'vozila' : 'vehicles'} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('fleetRegistryReport');
+  const subtitle = `${vehicles.length} ${t('vozila')} · ${new Date().toLocaleDateString('bs-BA')}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${bs ? 'Marka / Model' : 'Make / Model'}</th>
-      <th>${bs ? 'Reg.' : 'Plate No.'}</th>
-      <th>${bs ? 'God.' : 'Year'}</th>
-      <th>${bs ? 'Vozač' : 'Driver'}</th>
-      <th>${bs ? 'Reg. do' : 'Reg. until'}</th>
-      <th>${bs ? 'Tehn. do' : 'Tech. until'}</th>
-      <th>${bs ? 'Osig. do' : 'Ins. until'}</th>
+      <th>${t('makeModel')}</th>
+      <th>${t('plateNo')}</th>
+      <th>${t('godina')}</th>
+      <th>${t('driver9')}</th>
+      <th>${t('regUntil')}</th>
+      <th>${t('techUntil')}</th>
+      <th>${t('insUntil')}</th>
     </tr></thead>
     <tbody>`;
 
@@ -568,8 +567,8 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = '
   let items = itemIds.length > 0
     ? itemIds.map(id => allFE.find(f => f.id === id)).filter(Boolean)
     : allFE;
-  const title = bs ? 'EVIDENCIJA SREDSTAVA ZAŠTITE OD POŽARA' : 'FIRE PROTECTION EQUIPMENT REPORT';
-  const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('fireProtectionEquipmentReport');
+  const subtitle = `${items.length} ${t('stavke')} · ${new Date().toLocaleDateString('bs-BA')}`;
 
   const expired = items.filter(f => {
     const d = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
@@ -580,21 +579,21 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = '
 
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-lbl">${bs ? 'Ukupno' : 'Total'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${items.length - expired}</div><div class="stat-lbl">${bs ? 'Ispravno' : 'Serviced'}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${bs ? 'Istekao servis' : 'Overdue'}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-lbl">${t('ukupno1')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${items.length - expired}</div><div class="stat-lbl">${t('serviced')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${t('overdue')}</div></div>
     </div>
   `;
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${bs ? 'Lokacija' : 'Location'}</th>
-      <th>${bs ? 'Tip' : 'Type'}</th>
-      <th>${bs ? 'Serijski broj' : 'Serial No.'}</th>
-      <th>${bs ? 'Zadnji pregled / servis' : 'Last activity'}</th>
-      <th>${bs ? 'Sljedeći pregled / servis' : 'Next activity'}</th>
-      <th>${bs ? 'Status' : 'Status'}</th>
+      <th>${t('lokacija')}</th>
+      <th>${t('tip')}</th>
+      <th>${t('serialNumber')}</th>
+      <th>${t('lastActivity')}</th>
+      <th>${t('nextActivity')}</th>
+      <th>${t('status')}</th>
     </tr></thead>
     <tbody>`;
 
@@ -630,11 +629,11 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
     // Removed sort to preserve input order
 
     doc.setFontSize(16);
-    doc.text(lang !== 'en' ? 'Izvještaj: Prijave Opasnosti' : 'Hazard Reports', 14, 20);
+    doc.text(t('observations'), 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${lang !== 'en' ? 'Datum generisanja' : 'Generated on'}: ${new Date().toLocaleDateString()}`, 14, 28);
+    doc.text(`${t('generatedOn')}: ${new Date().toLocaleDateString()}`, 14, 28);
     
     const tableData = obsList.map((o, i) => [
         i + 1,
@@ -649,10 +648,10 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
         startY: 35,
         head: [[
             '#', 
-            lang !== 'en' ? 'Datum' : 'Date', 
-            lang !== 'en' ? 'Lokacija' : 'Location', 
-            lang !== 'en' ? 'Opis' : 'Description', 
-            lang !== 'en' ? 'Prijavio' : 'Reporter',
+            t('datum'), 
+            t('lokacija'), 
+            t('opis'), 
+            t('reporter'),
             'Status'
         ]],
         body: tableData,

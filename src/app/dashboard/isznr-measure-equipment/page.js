@@ -10,7 +10,7 @@ import PageHeader from '@/components/PageHeader';
 
 export default function ISZNRMeasureEquipmentPage() {
   const { t, lang } = useLanguage();
-  const bs = lang !== 'en';
+  
   const { confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const [items, setItems] = useState([]);
@@ -41,10 +41,10 @@ export default function ISZNRMeasureEquipmentPage() {
     if (editingId) update(col, editingId, formData); else create(col, formData);
     setShowForm(false); loadData(); showFlash();
   };
-  const handleDelete = async (id) => { if (await confirm(bs ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id); loadData(); } };
+  const handleDelete = async (id) => { if (await confirm(t('obrisati'))) { remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id); loadData(); } };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(bs ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems18').replace('{0}', selectedIds.size))) {
       for (const id of selectedIds) remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id);
       setSelectedIds(new Set()); loadData();
     }
@@ -65,12 +65,12 @@ export default function ISZNRMeasureEquipmentPage() {
       </div></div>)}
       <div className="card"><div className="card-body" style={{ padding: 0 }}>
         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? 'Novi uredaj' : 'New Device'}</button>
+          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {t('newDevice')}</button>
           <SavedFlash />
           {selectedIds.size> 0 && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-              <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano1')}:</span>
+              <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
             </div>
           )}
           {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
@@ -105,9 +105,9 @@ export default function ISZNRMeasureEquipmentPage() {
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{i.naziv}</span>
                         <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                       </div>
-                      <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                      <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {t('uredi')}</button>
                       <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                      <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                      <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                     </div>
                   </>)}
                 </div>

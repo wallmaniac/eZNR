@@ -71,12 +71,12 @@ export default function LoginPage() {
       if (isRegister) {
         // ── Registration via Firebase Auth ──
         if (formData.password !== formData.confirmPassword) {
-          setLoginError(lang !== 'en' ? 'Lozinke se ne poklapaju!' : 'Passwords do not match!');
+          setLoginError(t('passwordsDoNotMatch'));
           setIsLoading(false);
           return;
         }
         if (formData.password.length < 6) {
-          setLoginError(lang !== 'en' ? 'Lozinka mora imati najmanje 6 znakova!' : 'Password must be at least 6 characters!');
+          setLoginError(t('passwordMustBeAtLeast1'));
           setIsLoading(false);
           return;
         }
@@ -103,19 +103,19 @@ export default function LoginPage() {
       console.error('Auth error:', err);
       const code = err?.code || err?.message || '';
       if (code.includes('user-not-found') || code === 'USER_PROFILE_NOT_FOUND') {
-        setLoginError(lang !== 'en' ? 'Korisnik nije pronađen.' : 'User not found.');
+        setLoginError(t('userNotFound'));
       } else if (code.includes('wrong-password') || code.includes('invalid-credential')) {
-        setLoginError(lang !== 'en' ? 'Pogrešna lozinka!' : 'Wrong password!');
+        setLoginError(t('pogresnaLozinka'));
       } else if (code.includes('email-already-in-use')) {
-        setLoginError(lang !== 'en' ? 'Email je već registriran!' : 'Email already registered!');
+        setLoginError(t('emailAlreadyRegistered'));
       } else if (code.includes('invalid-email')) {
-        setLoginError(lang !== 'en' ? 'Neispravan email format!' : 'Invalid email format!');
+        setLoginError(t('invalidEmailFormat'));
       } else if (code.includes('weak-password')) {
-        setLoginError(lang !== 'en' ? 'Lozinka je preslaba (min 6 znakova)!' : 'Password too weak (min 6 chars)!');
+        setLoginError(t('passwordTooWeakMin6'));
       } else if (code === 'ACCOUNT_DEACTIVATED') {
-        setLoginError(lang !== 'en' ? 'Račun je deaktiviran. Kontaktirajte administratora.' : 'Account deactivated. Contact admin.');
+        setLoginError(t('accountDeactivatedContactAdmin'));
       } else {
-        setLoginError(lang !== 'en' ? 'Greška pri prijavi. Pokušajte ponovo.' : 'Login failed. Please try again.');
+        setLoginError(t('loginFailedPleaseTryAgain'));
       }
       setIsLoading(false);
       return;
@@ -147,10 +147,10 @@ export default function LoginPage() {
         const qs = new URLSearchParams(window.location.search);
         router.push(qs.get('redirect') || '/dashboard');
       } else {
-        setLoginError(lang !== 'en' ? 'Biometrijska prijava otkazana ili neuspješna.' : 'Biometric login canceled or failed.');
+        setLoginError(t('biometricLoginCanceledOrFailed'));
       }
     } catch (e) {
-      setLoginError(lang !== 'en' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
+      setLoginError(t('biometricLoginFailed'));
     }
     setIsLoading(false);
   };
@@ -252,7 +252,7 @@ export default function LoginPage() {
             <input
               className="form-input" style={styles.input}
               name="username" value={formData.username} onChange={handleChange}
-              placeholder={isRegister ? 'email@example.com' : (lang !== 'en' ? 'Email adresa' : 'Email address')}
+              placeholder={isRegister ? 'email@example.com' : (t('emailAddress'))}
               type={isRegister ? 'email' : 'text'}
               required autoComplete="username"
             />
@@ -297,16 +297,16 @@ export default function LoginPage() {
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
-                    {lang !== 'en' ? 'Email za resetiranje lozinke je poslan!' : 'Password reset email sent!'}
+                    {t('passwordResetEmailSent')}
                   </div>
                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowForgotPassword(false); setForgotSent(false); setForgotEmail(''); }}>
-                    {lang !== 'en' ? 'Zatvori' : 'Close'}
+                    {t('zatvori')}
                   </button>
                 </div>
               ) : (
                 <>
                   <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontWeight: 600 }}>
-                    {lang !== 'en' ? 'Unesite email za resetiranje lozinke:' : 'Enter email to reset password:'}
+                    {t('enterEmailToResetPassword')}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
@@ -320,11 +320,11 @@ export default function LoginPage() {
                         await forgotPassword(forgotEmail);
                         setForgotSent(true);
                       } catch (err) {
-                        setLoginError(lang !== 'en' ? 'Email nije pronađen.' : 'Email not found.');
+                        setLoginError(t('emailNotFound'));
                         setShowForgotPassword(false);
                       }
                     }}>
-                      {lang !== 'en' ? 'Pošalji' : 'Send'}
+                      {t('posalji')}
                     </button>
                   </div>
                   <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '0.75rem' }}
@@ -361,7 +361,7 @@ export default function LoginPage() {
                   cursor: 'pointer', fontFamily: 'var(--font-heading)',
                 }}
               >
-                🔐 {lang !== 'en' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
+                🔐 {t('loginWithFingerprint')}
               </button>
               <button
                 type="button"
@@ -376,7 +376,7 @@ export default function LoginPage() {
                   padding: '4px', textAlign: 'center', margin: '0 auto'
                 }}
               >
-                {lang !== 'en' ? 'Ukloni sačuvani otisak s uređaja' : 'Remove saved fingerprint from device'}
+                {t('removeSavedFingerprintFromDevice')}
               </button>
             </div>
           )}
@@ -395,12 +395,10 @@ export default function LoginPage() {
               }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔐</div>
                 <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: 8, fontFamily: 'var(--font-heading)' }}>
-                  {lang !== 'en' ? 'Omogući brzu prijavu?' : 'Enable quick login?'}
+                  {t('enableQuickLogin')}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 1.5 }}>
-                  {lang !== 'en'
-                    ? 'Koristite otisak prsta za brzu prijavu na ovom uređaju sljedeći put (izbjegnite stalno unošenje lozinke).'
-                    : 'Use fingerprint for quick login next time.'}
+                  {t('useFingerprintForQuickLogin')}
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={handleDeclineBiometric}
@@ -409,7 +407,7 @@ export default function LoginPage() {
                       background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                       fontSize: '0.85rem', fontWeight: 600, fontFamily: 'var(--font-heading)',
                     }}>
-                    {lang !== 'en' ? 'Ne sada' : 'Not now'}
+                    {t('notNow')}
                   </button>
                   <button onClick={handleAcceptBiometric}
                     className="btn btn-primary"
@@ -417,7 +415,7 @@ export default function LoginPage() {
                       flex: 1, padding: '12px', borderRadius: 12,
                       fontSize: '0.85rem', fontWeight: 700, justifyContent: 'center',
                     }}>
-                    ✅ {lang !== 'en' ? 'Omogući' : 'Enable'}
+                    ✅ {t('enable')}
                   </button>
                 </div>
               </div>

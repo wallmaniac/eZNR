@@ -74,7 +74,7 @@ export default function WorkplacesPage() {
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} radnih mjesta?` : `Delete ${selectedIds.size} workplaces?`);
+        const ok = await confirm(t('deleteWorkplaces').replace('{0}', selectedIds.size));
         if (ok) {
             for (const id of selectedIds) remove(COLLECTIONS.WORKPLACES, id);
             setSelectedIds(new Set());
@@ -355,7 +355,7 @@ export default function WorkplacesPage() {
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {t('odabrano')}:
                                 </span>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments} title={t('generirajDokumente')}>📄 {lang !== 'en' ? 'Dokumenti' : 'Documents'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments} title={t('generirajDokumente')}>📄 {t('dokumenti1')}</button>
                                 <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={t('isprintajOdabrano')}>🖨️ {t('isprintaj')}</button>
                                 <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={t('obrisiOdabranaRadnaMjesta')}>🗑️ {t('obrisi')}</button>
                             </div>
@@ -372,7 +372,7 @@ export default function WorkplacesPage() {
                                     <th style={tsWP('naziv')} onClick={() => tWP('naziv')}>{t('name')}{siWP('naziv')}</th>
                                     <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{t('strucnaSprema')}{siWP('strucnaSprema')}</th>
                                     <th>{t('radnoVrijeme')}</th>
-                                    <th style={tsWP('grupaRM')} onClick={() => tWP('grupaRM')}>{lang !== 'en' ? 'Grupa RM' : 'WP Group'}{siWP('grupaRM')}</th>
+                                    <th style={tsWP('grupaRM')} onClick={() => tWP('grupaRM')}>{t('grupaRm')}{siWP('grupaRM')}</th>
                                     <th>{t('radnici')}</th>
                                 </tr>
                             </thead>

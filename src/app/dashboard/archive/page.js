@@ -314,7 +314,7 @@ export default function ArchivePage() {
 
     const processFile = async (file) => {
         if (file.size> MAX_MB * 1024 * 1024) {
-            setUploadError(lang !== 'en' ? `Datoteka mora biti manja od ${MAX_MB}MB!` : `File must be under ${MAX_MB}MB!`);
+            setUploadError(t('fileMustBeUnderMb').replace('{0}', MAX_MB));
             return;
         }
         setUploadError('');
@@ -351,7 +351,7 @@ export default function ArchivePage() {
     };
 
     const handleDelete = async (id, name) => {
-        const ok = await confirm(lang !== 'en' ? `Obrisati "${name}"?` : `Delete "${name}"?`);
+        const ok = await confirm(t('delete1').replace('{0}', name));
         if (ok) { remove(COLLECTIONS.DIGITAL_ARCHIVE, id); reload(); }
     };
 
@@ -447,7 +447,7 @@ export default function ArchivePage() {
                 }));
             }
         } catch (err) {
-            alert(lang !== 'en' ? `Greška pri učenju datoteke: ${err.message}` : `Error loading file: ${err.message}`);
+            alert(t('errorLoadingFile').replace('{0}', err.message));
         }
     };
 
@@ -566,7 +566,7 @@ export default function ArchivePage() {
                         <div className="card">
                             <div className="card-body">
                                 <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    {lang !== 'en' ? `Pronađeni radnici (top ${scanMatches.length})` : `Matched workers (top ${scanMatches.length})`}
+                                    {t('matchedWorkersTop').replace('{0}', scanMatches.length)}
                                 </div>
                                 {scanMatches.length === 0 ? (
                                     <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>

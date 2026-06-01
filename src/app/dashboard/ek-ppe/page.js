@@ -32,7 +32,7 @@ export default function EKPPEPage() {
   const toggleSelect = (id) => setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   const toggleAll = () => setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(p => p.id)));
   const handleDeleteSelected = async () => {
-    const ok = await confirm(lang !== 'en' ? `Obrisati ${selected.size} označenih OZO?` : `Delete ${selected.size} selected PPE types?`);
+    const ok = await confirm(t('deleteSelectedPpeTypes').replace('{0}', selected.size));
     if (!ok) return;
     selected.forEach(id => remove(COLLECTIONS.PPE_TYPES, id));
     setSelected(new Set());
@@ -57,7 +57,7 @@ export default function EKPPEPage() {
     reload();
   };
   const handleDelete = async (item) => {
-    const ok = await confirm(lang !== 'en' ? `Obrisati "${item.naziv}"?` : `Delete "${item.naziv}"?`);
+    const ok = await confirm(t('delete2').replace('{0}', item.naziv));
     if (ok) { remove(COLLECTIONS.PPE_TYPES, item.id); reload(); }
   };
 
@@ -77,7 +77,7 @@ export default function EKPPEPage() {
       datumRazduzenja: '',
     });
     setAssignFor(null); // close modal first
-    await alert(lang !== 'en' ? `OZO "${ppeName}" uspješno zaduženo radniku!` : `PPE "${ppeName}" successfully assigned!`);
+    await alert(t('ppeSuccessfullyAssigned').replace('{0}', ppeName));
   };
 
   return (
@@ -106,7 +106,7 @@ export default function EKPPEPage() {
               className="btn btn-sm"
               style={{ background: 'var(--danger)', color: '#fff', fontWeight: 700 }}
               onClick={handleDeleteSelected}>
-              🗑️ {lang !== 'en' ? `Obriši označene (${selected.size})` : `Delete selected (${selected.size})`}
+              🗑️ {t('deleteSelected').replace('{0}', selected.size)}
             </button>
           )}
           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>

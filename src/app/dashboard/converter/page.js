@@ -449,7 +449,7 @@ export default function ConverterPage() {
       pdf.save(loaded.name.replace(/\.(docx|doc)$/i, '.pdf'));
     } catch (e) {
       console.error('[word2pdf]', e);
-      await alert(lang !== 'en' ? `Greška: ${e?.message || e}` : `Error: ${e?.message || e}`);
+      await alert(t('error1').replace('{0}', e?.message || e));
     } finally {
       setProcessing('');
     }
@@ -478,7 +478,7 @@ export default function ConverterPage() {
     } catch (e) {
       console.error('[pdf2word]', e);
       const msg = e?.message || String(e) || 'Unknown error';
-      await alert(lang !== 'en' ? `Greška: ${msg}` : `Error: ${msg}`);
+      await alert(t('error2').replace('{0}', msg));
     } finally {
       setProcessing('');
     }
@@ -505,7 +505,7 @@ export default function ConverterPage() {
       setMergeFiles([]);
     } catch (e) {
       console.error('[pdf-merge]', e);
-      await alert(lang !== 'en' ? `Greška pri spajanju: ${e?.message || e}` : `Merge error: ${e?.message || e}`);
+      await alert(t('mergeError').replace('{0}', e?.message || e));
     } finally {
       setProcessing('');
     }

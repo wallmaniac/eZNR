@@ -102,7 +102,7 @@ export default function AddressBookPage() {
                   onMouseLeave={() => setActionMenu(false)}>
                   <button className="dropdown-item" onClick={() => { openOutlook(false); setActionMenu(false); }}
                     disabled={selectedCount === 0} style={{ opacity: selectedCount === 0 ? 0.45 : 1 }}>
-                    ✉️ {lang !== 'en' ? `Email odabranima (${selectedCount})` : `Email selected (${selectedCount})`}
+                    ✉️ {t('emailSelected').replace('{0}', selectedCount)}
                   </button>
                   <button className="dropdown-item" onClick={() => { openOutlook(true); setActionMenu(false); }}>
                     📨 {t('emailSvimRadnicima')}
@@ -233,7 +233,7 @@ export default function AddressBookPage() {
                 📋 {t('kopirajEmailove')}
               </button>
               <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())} style={{ marginLeft: 'auto' }} title={t('ponistiOdabirRadnika')}>
-                ✕ {lang !== 'en' ? 'Poništi odabir' : 'Clear'}
+                ✕ {t('ponistiOdabir')}
               </button>
             </div>
           )}

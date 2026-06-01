@@ -15,7 +15,7 @@ import PageHeader from '@/components/PageHeader';
 
 function EmployerDocsInner() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
+    
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const searchParams = useSearchParams();
@@ -73,7 +73,7 @@ function EmployerDocsInner() {
     const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '', fileObj: null }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setOpenMenuId(null); setFormData({ docData: null, docName: '', docType: '', fileObj: null, ...item }); setEditingId(item.id); setShowForm(true); };
     const handleSave = async () => {
-        if (!formData.naziv) { await alert(bs ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
+        if (!formData.naziv) { await alert(t('nazivJeObaveznoPolje')); return; }
         
         let uploadedUrl = formData.docData;
         
@@ -96,7 +96,7 @@ function EmployerDocsInner() {
     
     const handleDelete = async (id) => {
         setOpenMenuId(null);
-        const delOk = await confirm(bs ? 'Jeste li sigurni?' : 'Are you sure?'); if (delOk) { remove(COLLECTIONS.EMPLOYER_DOCS, id); loadData(); }
+        const delOk = await confirm(t('jesteLiSigurni')); if (delOk) { remove(COLLECTIONS.EMPLOYER_DOCS, id); loadData(); }
     };
     
     const handleCopy = async (doc) => {
@@ -136,7 +136,7 @@ function EmployerDocsInner() {
     const handleFileUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size> 15 * 1024 * 1024) { await alert(bs ? 'Datoteka mora biti manja od 15MB!' : 'File must be under 15MB!'); return; }
+        if (file.size> 15 * 1024 * 1024) { await alert(t('fileMustBeUnder15mb')); return; }
         setFormData(prev => ({ ...prev, fileObj: file, docName: file.name, docType: file.type }));
     };
 
@@ -181,7 +181,7 @@ function EmployerDocsInner() {
     const bulkDelete = async () => {
         const count = selected.size;
         if (count === 0) return;
-        const ok = await confirm(bs ? `Obrisati ${count} odabranih dokumenata?` : `Delete ${count} selected documents?`);
+        const ok = await confirm(t('deleteSelectedDocuments').replace('{0}', count));
         if (!ok) return;
         selected.forEach(id => remove(COLLECTIONS.EMPLOYER_DOCS, id));
         setSelected(new Set());
@@ -234,8 +234,8 @@ ${toPrint.map((d, i) => `<tr>
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {bs ? 'Dokument' : 'Document'}</h2>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)} title={bs ? 'Zatvori' : 'Close'}>✕</button>
+                            <h2>{editingId ? '✏️' : '+'} {t('dokument')}</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)} title={t('zatvori')}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-grid-2">
@@ -244,7 +244,7 @@ ${toPrint.map((d, i) => `<tr>
                                     <input className="form-input" value={formData.naziv} onChange={(e) => updateField('naziv', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Kategorija' : 'Category'}<HelpTip text="Obavezna = dokumenti zakonom propisani za svakog poslodavca. Periodični = pregledi koji se ponavljaju redovno (PP aparati, hidranti, elektro). Dodatne = ostala dokumentacija korisna za firmu." /></label>
+                                    <label className="form-label">{t('kategorija')}<HelpTip text="Obavezna = dokumenti zakonom propisani za svakog poslodavca. Periodični = pregledi koji se ponavljaju redovno (PP aparati, hidranti, elektro). Dodatne = ostala dokumentacija korisna za firmu." /></label>
                                     <select className="form-select" value={formData.kategorija} onChange={e => updateField('kategorija', e.target.value)}>
                                         <option value="obavezna">{t('mandatoryDocs')}</option>
                                         <option value="periodicni">{t('periodicReviews')}</option>
@@ -259,19 +259,19 @@ ${toPrint.map((d, i) => `<tr>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue date'}</label>
+                                    <label className="form-label">{t('datumIzdavanja')}</label>
                                     <DateInput value={formData.datumIzdavanja} onChange={v => updateField('datumIzdavanja', v)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datum isteka' : 'Expiry date'}</label>
+                                    <label className="form-label">{t('expiryDate')}</label>
                                     <DateInput value={formData.datumIsteka} onChange={v => updateField('datumIsteka', v)} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{bs ? 'Povezana datoteka (opcionalno)' : 'Attached file (optional)'}</label>
+                                    <label className="form-label">{t('attachedFileOptional')}</label>
                                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                                         <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileUpload} style={{ flex: 1, fontSize: '0.85rem' }} />
                                         {formData.docName && (
-                                            <button className="btn btn-outline btn-sm" onClick={() => handleDownloadFile(formData)} title={bs ? 'Preuzmi datoteku' : 'Download file'}>⬇️ {formData.docName}</button>
+                                            <button className="btn btn-outline btn-sm" onClick={() => handleDownloadFile(formData)} title={t('downloadFile')}>⬇️ {formData.docName}</button>
                                         )}
                                     </div>
                                 </div>
@@ -301,19 +301,19 @@ ${toPrint.map((d, i) => `<tr>
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {bs ? 'Novi dokument' : 'New Document'}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {t('noviDokument')}</button>
                         <div className="search-bar" style={{ width: 250 }}>
                             <span style={{ opacity: 0.5 }}>🔍</span>
-                            <input placeholder={bs ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+                            <input placeholder={t('pretrazi1')} value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
                         <SavedFlash />
 
                         {selected.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selected.size} {bs ? 'odabrano' : 'selected'}:</span>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={bulkPrint} title={bs ? 'Isprintaj odabrane' : 'Print selected'}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={bulkDownload} title={bs ? 'Preuzmi datoteke' : 'Download files'}>📗 {bs ? 'Preuzmi' : 'Download'}</button>
-                                <button className="btn btn-danger" style={{ height: 38 }} onClick={bulkDelete} title={bs ? 'Obriši odabrane' : 'Delete selected'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selected.size} {t('odabrano1')}:</span>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={bulkPrint} title={t('isprintajOdabrano')}>🖨️ {t('isprintaj')}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={bulkDownload} title={t('downloadFiles')}>📗 {t('preuzmi')}</button>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={bulkDelete} title={t('deleteSelected1')}>🗑️ {t('obrisi')}</button>
                             </div>
                         ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
                     </div>
@@ -325,10 +325,10 @@ ${toPrint.map((d, i) => `<tr>
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
-                                    <th onClick={() => toggleSort('docName')} style={thStyle('docName')}>{bs ? 'Datoteka' : 'File'}{sortIcon('docName')}</th>
+                                    <th onClick={() => toggleSort('docName')} style={thStyle('docName')}>{t('file')}{sortIcon('docName')}</th>
                                     <th onClick={() => toggleSort('status')} style={thStyle('status')}>{t('status')}{sortIcon('status')}</th>
-                                    <th onClick={() => toggleSort('datumIzdavanja')} style={thStyle('datumIzdavanja')}>{bs ? 'Datum izdavanja' : 'Issue date'}{sortIcon('datumIzdavanja')}</th>
-                                    <th onClick={() => toggleSort('datumIsteka')} style={thStyle('datumIsteka')}>{bs ? 'Datum isteka' : 'Expiry date'}{sortIcon('datumIsteka')}</th>
+                                    <th onClick={() => toggleSort('datumIzdavanja')} style={thStyle('datumIzdavanja')}>{t('datumIzdavanja')}{sortIcon('datumIzdavanja')}</th>
+                                    <th onClick={() => toggleSort('datumIsteka')} style={thStyle('datumIsteka')}>{t('expiryDate1')}{sortIcon('datumIsteka')}</th>
                                     <th>{t('note')}</th>
                                 </tr>
                             </thead>
@@ -344,7 +344,7 @@ ${toPrint.map((d, i) => `<tr>
                                             <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={isChecked} onChange={() => toggleSelect(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
                                             <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }} title={bs ? 'Prikaži akcije za dokument' : 'Show document actions'}>{bs ? 'Akcije ▼' : 'Actions ▼'}</button>
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }} title={t('showDocumentActions')}>{t('actions1')}</button>
                                                     {openMenuId === doc.id && (
                                                         <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                             <button onClick={() => handleEdit(doc)} className="dropdown-item">✏️ Otvori</button>
@@ -359,8 +359,8 @@ ${toPrint.map((d, i) => `<tr>
                                                 </div>
                                             </td>
                                             <td style={{ fontWeight: 600 }}>{doc.naziv}</td>
-                                            <td>{doc.docData ? <span style={{ textDecoration: 'underline', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }} onClick={(e) => { e.stopPropagation(); handleDownloadFile(doc); }} title={bs ? 'Preuzmi' : 'Download'}>{doc.docName || doc.naziv}</span> : '—'}</td>
-                                            <td><span className={`badge ${doc.status === 'aktivan' ? 'badge-success' : 'badge-danger'}`}>{doc.status === 'aktivan' ? (bs ? '✓ Aktivan' : '✓ Active') : (bs ? '✕ Istekao' : '✕ Expired')}</span></td>
+                                            <td>{doc.docData ? <span style={{ textDecoration: 'underline', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }} onClick={(e) => { e.stopPropagation(); handleDownloadFile(doc); }} title={t('preuzmi')}>{doc.docName || doc.naziv}</span> : '—'}</td>
+                                            <td><span className={`badge ${doc.status === 'aktivan' ? 'badge-success' : 'badge-danger'}`}>{doc.status === 'aktivan' ? (t('active1')) : (t('expired1'))}</span></td>
                                             <td>{formatDate(doc.datumIzdavanja)}</td>
                                             <td style={{ color: isExpiring ? 'var(--warning)' : undefined, fontWeight: isExpiring ? 700 : undefined }}>{doc.datumIsteka ? formatDate(doc.datumIsteka) : '—'}{isExpiring && ' ⚠️'}</td>
                                             <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{doc.napomena || '—'}</td>

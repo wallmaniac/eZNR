@@ -100,7 +100,7 @@ export default function NightWorkPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(t('deleteItems21').replace('{0}', selectedIds.size))) {
       for (let id of selectedIds) await remove(COLLECTIONS.REFERRALS_NR1, id);
       setSelectedIds(new Set());
       loadData();
@@ -145,7 +145,7 @@ export default function NightWorkPage() {
 
   const handleSave = async () => {
     if (!formData.workerId) {
-      await alert(lang !== 'en' ? 'Odaberite radnika!' : 'Select a worker!');
+      await alert(t('odaberiteRadnika'));
       return;
     }
 
@@ -464,7 +464,7 @@ export default function NightWorkPage() {
                 <Chk field="orgNocniRad" label={t('nocniRad')} />
                 <Chk field="orgTerenskiRad" label={t('terenskiRad')} />
                 <Chk field="orgRadiSam" label={t('radiSam')} />
-                <Chk field="orgRadiSGrupom" label={lang !== 'en' ? 'radi s grupom' : 'in group'} />
+                <Chk field="orgRadiSGrupom" label={t('radiSGrupom')} />
                 <Chk field="orgRadiSaStrankama" label={t('radiSaStrankama')} />
                 <Chk field="orgRadiNaTraci" label={t('radiNaTraci')} />
                 <Chk field="orgBrziTempo" label={t('brziTempoRada')} />

@@ -268,8 +268,8 @@ function EditCertPageInner() {
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.9rem' }}>
                                     <input type="checkbox" checked={formData.sposoban ?? formData.sposobnost !== 'Nesposoban'} onChange={e => set('sposoban', e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />
                                     {(formData.sposoban ?? formData.sposobnost !== 'Nesposoban')
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ {lang !== 'en' ? 'Sposoban' : 'Capable'}</span>
-                                        : <span style={{ color: 'var(--danger)', fontWeight: 600 }}>✗ {lang !== 'en' ? 'Nesposoban' : 'Incapable'}</span>}
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ {t('sposoban')}</span>
+                                        : <span style={{ color: 'var(--danger)', fontWeight: 600 }}>✗ {t('nesposoban')}</span>}
                                 </label>
                             </div>
                         </div>
@@ -320,7 +320,7 @@ function EditCertPageInner() {
                             )}
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Stručnjak ZNR' : 'ZNR Specialist'}</div>
+                            <div style={labelStyle}>{t('strucnjakZnr')}</div>
                             <input className="form-input" value={formData.strucnjakZNR || ''} onChange={e => set('strucnjakZNR', e.target.value)} />
                         </div>
                     </div>
@@ -357,7 +357,7 @@ function EditCertPageInner() {
                     <div style={{ marginBottom: 24 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                📎 {lang !== 'en' ? `Priložene datoteke (${(formData.attachments || []).length})` : `Attached files (${(formData.attachments || []).length})`}
+                                📎 {t('attachedFiles').replace('{0}', (formData.attachments || []).length)}
                             </div>
                             <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', fontSize: '0.8rem' }}>
                                 + {t('dodajDatoteku')}
@@ -401,7 +401,7 @@ function EditCertPageInner() {
                                     <option value="">{t('vrsta1')}</option>
                                     {FILE_TYPE_OPTIONS.map(ft => <option key={ft} value={ft}>{ft}</option>)}
                                 </select>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Otvori' : 'View'}
+                                <button className="btn btn-ghost btn-sm btn-icon" title={t('otvori')}
                                     onClick={() => { const src = att.url || att.data; if (src?.startsWith('http')) window.open(src, '_blank'); else if (src) { const w = window.open('', '_blank'); w.document.write(src.includes('pdf') ? `<embed src="${src}" width="100%" height="100%" type="application/pdf" />` : `<img src="${src}" style="max-width:100%;margin:20px auto;display:block;" />`); w.document.close(); } }}>👁️</button>
                                 <button className="btn btn-ghost btn-sm btn-icon" title={t('preuzmi')}
                                     onClick={() => { const a = document.createElement('a'); a.href = att.url || att.data; a.download = att.name; if (att.url) a.target = '_blank'; a.click(); }}>⬇️</button>
@@ -426,7 +426,7 @@ function EditCertPageInner() {
                             const url = `/dashboard/worker-certificates/create?workerId=${cert?.workerId || ''}&copyFrom=${certId}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ''}`;
                             router.push(url);
                         }}>
-                            📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}
+                            📋 {t('kopiraj')}
                         </button>
                         {(formData.tipUvjerenjaIme || formData.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && worker && (
                             <button className="btn btn-outline btn-sm" onClick={() => {

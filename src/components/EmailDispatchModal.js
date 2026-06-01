@@ -1,4 +1,5 @@
 'use client';
+import { t } from '@/i18n/translations';
 import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import DateInput from '@/components/DateInput';
@@ -252,7 +253,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                 }}>
                                     {filteredWorkers.length === 0 ? (
                                         <p style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted, #94a3b8)', fontSize: '0.85rem' }}>
-                                            {lang !== 'en' ? 'Nema radnika' : 'No workers'}
+                                            {t('nemaRadnika')}
                                         </p>
                                     ) : filteredWorkers.map(w => (
                                         <label key={w.id} style={{
@@ -420,7 +421,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                         cursor: totalRecipients === 0 ? 'not-allowed' : 'pointer',
                                     }}
                                 >
-                                    📤 {lang !== 'en' ? `Pošalji (${totalRecipients})` : `Send (${totalRecipients})`}
+                                    📤 {t('send').replace('{0}', totalRecipients)}
                                 </button>
                             </div>
                         </>

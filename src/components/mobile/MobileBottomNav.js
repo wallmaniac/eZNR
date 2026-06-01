@@ -17,7 +17,7 @@ export default function MobileBottomNav({ onMenuOpen }) {
     const tabs = [
         { key: 'dashboard', icon: '📊', label: t('pocetna'), path: '/dashboard' },
         { key: 'workers', icon: '👷', label: t('radnici'), path: '/dashboard/workers' },
-        { key: 'certs', icon: '📜', label: lang !== 'en' ? 'Uvjerenja' : 'Certs', path: '/dashboard/worker-certificates' },
+        { key: 'certs', icon: '📜', label: t('uvjerenja'), path: '/dashboard/worker-certificates' },
         { key: 'search', icon: '🔍', label: t('pretrazi2'), action: 'search' },
         { key: 'menu', icon: '☰', label: t('meni'), action: 'menu' },
     ];
