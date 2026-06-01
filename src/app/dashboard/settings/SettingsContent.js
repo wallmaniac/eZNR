@@ -85,6 +85,190 @@ function translateLogTitle(title, lang, t) {
     const user = title.replace('Novi korisnik:', '').trim();
     return `${t('logUserRegistered') || 'Novi korisnik'}: ${user}`;
   }
+
+  // Parse dynamic automatic log patterns (like "Dodan(a) Med. pregled: Diko Braz")
+  const verbMatch = title.match(/^(Dodan\(a\)|Ažuriran\(a\)|Obrisan\(a\))\s+(.*)$/);
+  if (verbMatch) {
+    const rawVerb = verbMatch[1];
+    const rest = verbMatch[2].trim();
+    const colonIdx = rest.indexOf(':');
+    let noun = '';
+    let value = '';
+    
+    if (colonIdx !== -1) {
+      noun = rest.substring(0, colonIdx).trim();
+      value = rest.substring(colonIdx + 1).trim();
+    } else {
+      noun = rest;
+    }
+    
+    const verbsDict = {
+      en: { 'Dodan(a)': 'Added', 'Ažuriran(a)': 'Updated', 'Obrisan(a)': 'Deleted' },
+      de: { 'Dodan(a)': 'Hinzugefügt', 'Ažuriran(a)': 'Aktualisiert', 'Obrisan(a)': 'Gelöscht' },
+      sl: { 'Dodan(a)': 'Dodano', 'Ažuriran(a)': 'Posodobljeno', 'Obrisan(a)': 'Izbrisano' },
+      sr: { 'Dodan(a)': 'Dodato', 'Ažuriran(a)': 'Ažurirano', 'Obrisan(a)': 'Obrisano' },
+      hr: { 'Dodan(a)': 'Dodan(a)', 'Ažuriran(a)': 'Ažuriran(a)', 'Obrisan(a)': 'Obrisan(a)' },
+      bs: { 'Dodan(a)': 'Dodan(a)', 'Ažuriran(a)': 'Ažuriran(a)', 'Obrisan(a)': 'Obrisan(a)' },
+    };
+    
+    const nounsDict = {
+      en: {
+        'Događaj': 'Event',
+        'Procjena rizika': 'Risk Assessment',
+        'Zahtjev': 'Request',
+        'Zapisnik': 'Record',
+        'Vozilo': 'Vehicle',
+        'Zaduženje vozila': 'Vehicle Assignment',
+        'Putni nalog': 'Travel Order',
+        'Vatrogasni aparat': 'Fire Extinguisher',
+        'Hidrantska mreža': 'Hydrant Network',
+        'Plan evakuacije': 'Evacuation Plan',
+        'Vježba evakuacije': 'Evacuation Drill',
+        'Servis': 'Service',
+        'Noćni rad': 'Night Work',
+        'Uputnica RA-1': 'Referral RA-1',
+        'OIR-1': 'Form OIR-1',
+        'RO-1': 'Form RO-1',
+        'RO-2': 'Form RO-2',
+        'Uputnica Noćni Rad': 'Night Work Referral',
+        'Povreda': 'Injury',
+        'Bolest': 'Disease',
+        'Radno mjesto': 'Workplace',
+        'Org. jedinica': 'Org Unit',
+        'Med. pregled': 'Medical Exam',
+        'Obuka': 'Training',
+        'Upitnik': 'Questionnaire',
+        'Sistematizacija': 'Job Systematization',
+        'Uvjerenje': 'Certificate',
+        'Oprema': 'Equipment',
+        'Dokument': 'Document',
+        'OZO': 'PPE',
+        'Radnik': 'Worker',
+        'Prva pomoć': 'First Aid'
+      },
+      de: {
+        'Događaj': 'Ereignis',
+        'Procjena rizika': 'Gefährdungsbeurteilung',
+        'Zahtjev': 'Anforderung',
+        'Zapisnik': 'Protokoll',
+        'Vozilo': 'Fahrzeug',
+        'Zaduženje vozila': 'Fahrzeugzuweisung',
+        'Putni nalog': 'Reiseauftrag',
+        'Vatrogasni aparat': 'Feuerlöscher',
+        'Hidrantska mreža': 'Hydrantennetz',
+        'Plan evakuacije': 'Evakuierungsplan',
+        'Vježba evakuacije': 'Evakuierungsübung',
+        'Servis': 'Wartung',
+        'Noćni rad': 'Nachtarbeit',
+        'Uputnica RA-1': 'Überweisung RA-1',
+        'OIR-1': 'OIR-1-Formular',
+        'RO-1': 'RO-1-Formular',
+        'RO-2': 'RO-2-Formular',
+        'Uputnica Noćni Rad': 'Überweisung für Nachtarbeit',
+        'Povreda': 'Verletzung',
+        'Bolest': 'Krankheit',
+        'Radno mjesto': 'Arbeitsplatz',
+        'Org. jedinica': 'Org.-Einheit',
+        'Med. pregled': 'Ärztliche Untersuchung',
+        'Obuka': 'Schulung',
+        'Upitnik': 'Fragebogen',
+        'Sistematizacija': 'Systematisierung',
+        'Uvjerenje': 'Zertifikat',
+        'Oprema': 'Ausrüstung',
+        'Dokument': 'Dokument',
+        'OZO': 'PSA',
+        'Radnik': 'Arbeiter',
+        'Prva pomoć': 'Erste Hilfe'
+      },
+      sl: {
+        'Događaj': 'Dogodek',
+        'Procjena rizika': 'Ocena tveganja',
+        'Zahtjev': 'Zahteva',
+        'Zapisnik': 'Zapisnik',
+        'Vozilo': 'Vozilo',
+        'Zaduženje vozila': 'Dodelitev vozila',
+        'Putni nalog': 'Potni nalog',
+        'Vatrogasni aparat': 'Gasilni aparat',
+        'Hidrantska mreža': 'Hidrantno omrežje',
+        'Plan evakuacije': 'Načrt evakuacije',
+        'Vježba evakuacije': 'Vaja evakuacije',
+        'Servis': 'Servis',
+        'Noćni rad': 'Nočno delo',
+        'Uputnica RA-1': 'Napotnica RA-1',
+        'OIR-1': 'OIR-1',
+        'RO-1': 'RO-1',
+        'RO-2': 'RO-2',
+        'Uputnica Noćni Rad': 'Napotnica za nočno delo',
+        'Povreda': 'Poškodba',
+        'Bolest': 'Bolezen',
+        'Radno mjesto': 'Delovno mesto',
+        'Org. jedinica': 'Org. enota',
+        'Med. pregled': 'Zdravstveni pregled',
+        'Obuka': 'Usposabljanje',
+        'Upitnik': 'Vprašalnik',
+        'Sistematizacija': 'Sistematizacija',
+        'Uvjerenje': 'Potrdilo',
+        'Oprema': 'Oprema',
+        'Dokument': 'Dokument',
+        'OZO': 'OZO',
+        'Radnik': 'Delavec',
+        'Prva pomoć': 'Prva pomoč'
+      },
+      sr: {
+        'Događaj': 'Događaj',
+        'Procjena rizika': 'Procena rizika',
+        'Zahtjev': 'Zahtev',
+        'Zapisnik': 'Zapisnik',
+        'Vozilo': 'Vozilo',
+        'Zaduženje vozila': 'Zaduženje vozila',
+        'Putni nalog': 'Putni nalog',
+        'Vatrogasni aparat': 'Vatrogasni aparat',
+        'Hidrantska mreža': 'Hidrantska mreža',
+        'Plan evakuacije': 'Plan evakuacije',
+        'Vježba evakuacije': 'Vežba evakuacije',
+        'Servis': 'Servis',
+        'Noćni rad': 'Noćni rad',
+        'Uputnica RA-1': 'Uputnica RA-1',
+        'OIR-1': 'OIR-1',
+        'RO-1': 'RO-1',
+        'RO-2': 'RO-2',
+        'Uputnica Noćni Rad': 'Uputnica za noćni rad',
+        'Povreda': 'Povreda',
+        'Bolest': 'Bolest',
+        'Radno mjesto': 'Radno mesto',
+        'Org. jedinica': 'Org. jedinica',
+        'Med. pregled': 'Med. pregled',
+        'Obuka': 'Obuka',
+        'Upitnik': 'Upitnik',
+        'Sistematizacija': 'Sistematizacija',
+        'Uvjerenje': 'Uverenje',
+        'Oprema': 'Oprema',
+        'Dokument': 'Dokument',
+        'OZO': 'OZO',
+        'Radnik': 'Radnik',
+        'Prva pomoć': 'Prva pomoć'
+      }
+    };
+
+    const l = lang || 'bs';
+    const translatedVerb = (verbsDict[l] && verbsDict[l][rawVerb]) || rawVerb;
+    const translatedNoun = (nounsDict[l] && nounsDict[l][noun]) || noun;
+    
+    if (colonIdx !== -1) {
+      if (l === 'de' || l === 'en') {
+        return `${translatedNoun} ${translatedVerb.toLowerCase()}: ${value}`;
+      } else {
+        return `${translatedVerb}: ${translatedNoun}: ${value}`;
+      }
+    } else {
+      if (l === 'de' || l === 'en') {
+        return `${translatedNoun} ${translatedVerb.toLowerCase()}`;
+      } else {
+        return `${translatedVerb}: ${translatedNoun}`;
+      }
+    }
+  }
+
   return title;
 }
 
@@ -104,6 +288,17 @@ function translateLogDetail(detail, lang, t) {
     else if (label === 'Sljedeći pregled') transLabel = t('iduci') || 'Sljedeći pregled';
     else if (label === 'Trebalo') transLabel = t('trebaloLabel') || 'Trebalo';
     else if (label === 'Ističe') transLabel = t('istice') || 'Ističe';
+    else if (label === 'Isteklo') {
+      const expiredDict = {
+        en: 'Expired',
+        de: 'Abgelaufen',
+        sl: 'Poteklo',
+        sr: 'Isteklo',
+        hr: 'Isteklo',
+        bs: 'Isteklo'
+      };
+      transLabel = expiredDict[lang || 'bs'] || 'Isteklo';
+    }
     else if (label === 'Kol') transLabel = t('kol') || 'Kol';
     else if (label === 'Datum') transLabel = t('datum') || 'Datum';
     else if (label === 'OIB') transLabel = t('idBrojOib') || 'OIB';
