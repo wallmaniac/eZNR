@@ -727,13 +727,13 @@ function TrainingsInner() {
                 <div className="card">
                     <div className="card-body">
                         {loadingSessions ? (
-                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Učitavanje...</div>
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('ucitavanje')}...</div>
                         ) : sessions.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Još nema poslatih sesija za ovu obuku.</div>
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noSessionsYet')}</div>
                         ) : (
                             <div className="data-table-wrapper">
                                 <table className="data-table">
-                                    <thead><tr><th>Radnik</th><th>Email</th><th>Status</th><th>Rezultat</th><th>Datum</th><th>Akcije</th></tr></thead>
+                                    <thead><tr><th>{t('radnik1')}</th><th>Email</th><th>{t('status')}</th><th>{t('rezultat')}</th><th>{t('datum')}</th><th>{t('actions')}</th></tr></thead>
                                     <tbody>
                                         {sessions.map(s => {
                                             const matchedWorker = findWorkerBySession(s);
@@ -884,10 +884,10 @@ function TrainingsInner() {
                                         fontWeight: 700, fontSize: '0.9rem', marginRight: 'auto',
                                         color: answerDetail.session.grade.passed ? '#22c55e' : '#f05252',
                                     }}>
-                                        Rezultat: {answerDetail.session.grade.percentage}% — {answerDetail.session.grade.passed ? 'Prošao/la' : 'Nije prošao/la'}
+                                        {t('rezultat')}: {answerDetail.session.grade.percentage}% — {answerDetail.session.grade.passed ? t('passed') : t('notPassed')}
                                     </span>
                                 )}
-                                <button className="btn btn-ghost" onClick={() => setAnswerDetail(null)}>Zatvori</button>
+                                <button className="btn btn-ghost" onClick={() => setAnswerDetail(null)}>{t('zatvori')}</button>
                             </div>
                         </div>
                     </div>
@@ -1007,7 +1007,7 @@ function TrainingsInner() {
                         </div>
                     ))}
                     <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="btn btn-outline" onClick={addSlide} title={t('dodajNoviSlajd')}>+ Dodaj slajd</button>
+                        <button className="btn btn-outline" onClick={addSlide} title={t('dodajNoviSlajd')}>+ {t('dodajNoviSlajd')}</button>
                     </div>
                 </div>
             )}
@@ -1031,7 +1031,7 @@ function TrainingsInner() {
                                     <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />Generišem...</>
                                 ) : '✨ Generiraj test iz prezentacije'}
                             </button>
-                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={t('dodajPitanjeRucno')}>+ Dodaj ručno</button>
+                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={t('dodajPitanjeRucno')}>+ {t('dodajPitanjeRucno')}</button>
                         </div>
                     </div>
 
@@ -1142,7 +1142,7 @@ function TrainingsInner() {
                     <button className="btn btn-ghost" onClick={handleCancel}>{t('cancel')}</button>
                     {editingId && (
                         <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}
-                            onClick={() => handleDelete(editingId)}>🗑️ Obriši</button>
+                            onClick={() => handleDelete(editingId)}>{t('obrisi')}</button>
                     )}
                 </div>
             </div>
@@ -1352,16 +1352,16 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                 <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-light,rgba(255,255,255,0.06))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     {step === 'select' && (
                         <>
-                            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted,#94a3b8)' }}>{totalRecipients} primatelja</span>
+                            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted,#94a3b8)' }}>{totalRecipients} {t('recipients')}</span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={{ padding: '9px 20px', fontSize: '0.88rem', fontWeight: 600, borderRadius: 8, border: '1px solid var(--border,rgba(255,255,255,0.1))', background: 'transparent', color: 'var(--text,#e2e8f0)', cursor: 'pointer' }}>{t('cancel')}</button>
                                 <button onClick={handleSend} disabled={totalRecipients === 0} style={{ ...sendBtnSt, opacity: totalRecipients === 0 ? 0.4 : 1, cursor: totalRecipients === 0 ? 'not-allowed' : 'pointer' }}>
-                                    📤 Pošalji ({totalRecipients})
+                                    📤 {t('posalji')} ({totalRecipients})
                                 </button>
                             </div>
                         </>
                     )}
-                    {step === 'done' && <button onClick={onClose} style={{ ...sendBtnSt, marginLeft: 'auto' }}>Zatvori</button>}
+                    {step === 'done' && <button onClick={onClose} style={{ ...sendBtnSt, marginLeft: 'auto' }}>{t('zatvori')}</button>}
                 </div>
             </div>
         </>
@@ -1370,7 +1370,7 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
 
 export default function TrainingsPage() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje / Loading...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
             <TrainingsInner />
         </Suspense>
     );

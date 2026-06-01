@@ -136,7 +136,7 @@ export default function EKPPEPage() {
                       <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} />
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{idx + 1}</td>
-                    <td style={{ fontWeight: 600 }}>🦺 {t(p.naziv) || p.naziv}</td>
+                    <td style={{ fontWeight: 600 }}>🦺 {t(p.naziv?.trim()) || p.naziv}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                         <button
@@ -199,7 +199,7 @@ export default function EKPPEPage() {
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ padding: '10px 14px', background: 'rgba(var(--primary-rgb, 99,102,241),0.08)', borderRadius: 'var(--radius-md)', fontWeight: 600 }}>
-                🦺 {t(assignFor.naziv) || assignFor.naziv}
+                🦺 {t(assignFor.naziv?.trim()) || assignFor.naziv}
               </div>
               <div className="form-group">
                 <label className="form-label">👤 {t('radnik')}</label>

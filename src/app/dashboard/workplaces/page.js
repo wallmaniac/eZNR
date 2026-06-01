@@ -135,27 +135,27 @@ export default function WorkplacesPage() {
             return `<div style="page-break-after:always;font-family:Arial,sans-serif;padding:30px">
                 <h1 style="border-bottom:2px solid #333;padding-bottom:8px">${wp.naziv}</h1>
                 <table style="width:100%;margin-bottom:20px;font-size:14px">
-                    <tr><td style="padding:4px 12px 4px 0;font-weight:700;width:200px">Oznaka:</td><td>${wp.oznaka || '-'}</td></tr>
-                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Stru\u010dna sprema:</td><td>${wp.strucnaSprema || '-'}</td></tr>
-                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Grupa RM:</td><td>${wp.grupaRM || '-'}</td></tr>
-                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Org. jedinica:</td><td>${ouName}</td></tr>
-                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Rad na ra\u010dunalu:</td><td>${wp.radNaRacunalu ? 'Da' : 'Ne'}</td></tr>
-                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Posebni uvjeti rada:</td><td>${wp.posebniUvjetiRada ? 'Da' : 'Ne'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700;width:200px">${t('oznaka')}:</td><td>${wp.oznaka || '-'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">${t('strucnaSprema')}:</td><td>${wp.strucnaSprema || '-'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">${t('grupaRm')}:</td><td>${wp.grupaRM || '-'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">${t('orgUnit')}:</td><td>${ouName}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">${t('radNaRacunalu')}:</td><td>${wp.radNaRacunalu ? t('yes') : t('no')}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">${t('posebniUvjetiRada')}:</td><td>${wp.posebniUvjetiRada ? t('yes') : t('no')}</td></tr>
                 </table>
-                <h3>Zaposlenici (${wpWorkers.length})</h3>
-                ${wpWorkers.length === 0 ? '<p style="color:#888">Nema zaposlenika na ovom radnom mjestu.</p>' : 
+                <h3>${t('radnici')} (${wpWorkers.length})</h3>
+                ${wpWorkers.length === 0 ? `<p style="color:#888">${t('nemaRadnikaNaOvomRadnom')}</p>` : 
                     `<table style="width:100%;border-collapse:collapse;font-size:13px">
-                        <tr style="background:#f0f0f0"><th style="text-align:left;padding:6px;border:1px solid #ddd">R.br.</th><th style="text-align:left;padding:6px;border:1px solid #ddd">Ime i prezime</th><th style="text-align:left;padding:6px;border:1px solid #ddd">Ev. broj</th><th style="text-align:left;padding:6px;border:1px solid #ddd">Org. jedinica</th></tr>
+                        <tr style="background:#f0f0f0"><th style="text-align:left;padding:6px;border:1px solid #ddd">${t('br')}</th><th style="text-align:left;padding:6px;border:1px solid #ddd">${t('worker')}</th><th style="text-align:left;padding:6px;border:1px solid #ddd">${t('evBroj')}</th><th style="text-align:left;padding:6px;border:1px solid #ddd">${t('orgUnit')}</th></tr>
                         ${wpWorkers.map((wk, i) => {
                             const wkOu = allOrgUnits.find(o => o.id === wk.orgJedinicaId)?.naziv || '-';
                             return `<tr><td style="padding:4px 6px;border:1px solid #ddd">${i+1}</td><td style="padding:4px 6px;border:1px solid #ddd">${wk.ime} ${wk.prezime}</td><td style="padding:4px 6px;border:1px solid #ddd">${wk.evidencijskiBroj || '-'}</td><td style="padding:4px 6px;border:1px solid #ddd">${wkOu}</td></tr>`;
                         }).join('')}
                     </table>`}
-                ${ppeForWP.length> 0 ? `<h3 style="margin-top:20px">Za\u0161titna oprema</h3>
-                    <ul>${ppeForWP.map(p => `<li>${p.naziv || p.name || '-'}</li>`).join('')}</ul>` : ''}
+                ${ppeForWP.length> 0 ? `<h3 style="margin-top:20px">${t('zastitnaOpremaOzo1')}</h3>
+                    <ul>${ppeForWP.map(p => `<li>${t(p.naziv?.trim()) || p.naziv || p.name || '-'}</li>`).join('')}</ul>` : ''}
             </div>`;
         }).join('');
-        win.document.write(`<html><head><title>Radna mjesta - dokumenti</title></head><body>${html}</body></html>`);
+        win.document.write(`<html><head><title>${t('workplaces')} - ${t('digitalArchive')}</title></head><body>${html}</body></html>`);
         win.document.close();
         win.print();
     };

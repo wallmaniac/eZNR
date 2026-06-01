@@ -556,7 +556,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>{t('nemaOzoZaduzenja')}</div>
                         ) : ppeAssign.map(p => (
                             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                                <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>🦺 {t(p.naziv) || p.naziv}</span>
+                                <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>🦺 {t(p.naziv?.trim()) || p.naziv}</span>
                                 {p.kolicina && p.kolicina > 1 && <span style={{ fontSize: '0.72rem', padding: '1px 7px', borderRadius: 10, background: 'rgba(0,191,166,0.1)', color: 'var(--primary)', fontWeight: 700 }}>×{p.kolicina}</span>}
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('zaduz')}: {formatDate(p.datumZaduzenja) || '—'}</span>
                                 {p.datumRazduzenja && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('razduz')}: {formatDate(p.datumRazduzenja)}</span>}

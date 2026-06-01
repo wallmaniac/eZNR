@@ -162,7 +162,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                     <input className="form-input" placeholder={t('searchWorkers')} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId: '', workerIme: ''})); }} onFocus={() => setShowW(true)} />
                                     {showW && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
-                                            {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : filteredWorkers.slice(0, 10).map(w => (
+                                            {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : filteredWorkers.slice(0, 10).map(w => (
                                                 <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} onClick={() => { setForm(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setSearch(`${w.ime} ${w.prezime}`); setShowW(false); }}>
                                                     {w.ime} {w.prezime}
                                                 </div>

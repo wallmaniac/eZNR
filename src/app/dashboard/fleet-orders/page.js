@@ -71,9 +71,9 @@ function FleetOrdersInner() {
         const w = workers.find(x => x.id === o.vozacId);
         return {
             ...o,
-            vehicleReg: v ? v.registracija : 'Nepoznato',
+            vehicleReg: v ? v.registracija : t('nepoznato'),
             vehicleMarka: v ? `${v.marka || ''} ${v.model || ''}`.trim() : '',
-            workerName: w ? `${w.ime} ${w.prezime}` : (o.vozacIme || 'Nepoznato'),
+            workerName: w ? `${w.ime} ${w.prezime}` : (o.vozacIme || t('nepoznato')),
         };
     });
 
@@ -133,7 +133,7 @@ function FleetOrdersInner() {
     const handlePrint = (o) => {
         const v = vehicles.find(x => x.id === o.vehicleId) || {};
         const win = window.open('', '_blank');
-        win.document.write(`<html><head><title>Putni Nalog ${o.brojNaloga}</title><style>body{font-family:sans-serif;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #333;padding:8px;text-align:left}.header{text-align:center;margin-bottom:30px}</style></head><body><div class="header"><h2>PUTNI NALOG ZA VOZILO</h2><h3>Broj: ${o.brojNaloga}</h3></div><p><strong>Vozilo:</strong> ${v.marka || ''} ${v.model || ''} (${v.registracija || ''})</p><p><strong>Vozač:</strong> ${o.vozacIme || o.workerName || ''}</p><p><strong>Relacija:</strong> ${o.relacija || ''}</p><p><strong>Datum polaska:</strong> ${formatDate(o.datumPolaska)}</p><p><strong>Datum povratka:</strong> ${formatDate(o.datumPovratka) || '—'}</p><p><strong>Svrha:</strong> ${o.svrha || ''}</p><h4 style="margin-top:40px">EVIDENCIJA O KRETANJU VOZILA</h4><table><tr><th>Datum</th><th>Polazak iz</th><th>Stigao u</th><th>Vrijeme polaska</th><th>Vrijeme dolaska</th><th>Početno KM</th><th>Završno KM</th><th>Potpis</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table><p style="margin-top:50px">Potpis ovlaštenog lica: ___________________________</p></body></html>`);
+        win.document.write(`<html><head><title>${t('travelOrderForVehicle')} ${o.brojNaloga}</title><style>body{font-family:sans-serif;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #333;padding:8px;text-align:left}.header{text-align:center;margin-bottom:30px}</style></head><body><div class="header"><h2>${t('travelOrderForVehicleTitle')}</h2><h3>${t('orderNo')}: ${o.brojNaloga}</h3></div><p><strong>${t('vozilo1')}:</strong> ${v.marka || ''} ${v.model || ''} (${v.registracija || ''})</p><p><strong>${t('driver7')}:</strong> ${o.vozacIme || o.workerName || ''}</p><p><strong>${t('route2')}:</strong> ${o.relacija || ''}</p><p><strong>${t('dateOut')}:</strong> ${formatDate(o.datumPolaska)}</p><p><strong>${t('dateIn')}:</strong> ${formatDate(o.datumPovratka) || '—'}</p><p><strong>${t('purpose')}:</strong> ${o.svrha || ''}</p><h4 style="margin-top:40px">${t('vehicleMovementLog')}</h4><table><tr><th>${t('datum')}</th><th>${t('departureFrom')}</th><th>${t('arrivedAt')}</th><th>${t('departureTime')}</th><th>${t('arrivalTime')}</th><th>${t('startKm')}</th><th>${t('endKm')}</th><th>${t('potpis')}</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table><p style="margin-top:50px">${t('authorizedPersonSignature')}: ___________________________</p></body></html>`);
         win.document.close(); win.focus(); setTimeout(() => { win.print(); }, 500);
     };
 
@@ -189,12 +189,12 @@ function FleetOrdersInner() {
                                 <div className="form-grid-2">
                                     <div className="form-group" ref={vRef} style={{ position: 'relative' }}>
                                         <label className="form-label">{t('vozilo1')}</label>
-                                        <input className="form-input" placeholder="🔍 Pretraži..." value={vehicleSearch} 
+                                        <input className="form-input" placeholder={`🔍 ${t('pretrazi')}...`} value={vehicleSearch} 
                                             onChange={e => { setVehicleSearch(e.target.value); setShowVSearch(true); setFormData(f => ({...f, vehicleId: ''})); }} 
                                             onFocus={() => setShowVSearch(true)} />
                                         {showVSearch && (
                                             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-                                                {fv.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fv.slice(0, 10).map(v => (
+                                                {fv.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : fv.slice(0, 10).map(v => (
                                                     <div key={v.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
                                                         onClick={() => { setFormData(f => ({...f, vehicleId: v.id})); setVehicleSearch(v.registracija); setShowVSearch(false); }}>
                                                         <strong>{v.registracija}</strong> - {v.marka}
@@ -202,17 +202,17 @@ function FleetOrdersInner() {
                                                 ))}
                                             </div>
                                         )}
-                                        {formData.vehicleId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ Odabrano</div>}
+                                        {formData.vehicleId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {t('odabrano')}</div>}
                                     </div>
 
                                     <div className="form-group" ref={wRef} style={{ position: 'relative' }}>
                                         <label className="form-label">{t('driver7')}</label>
-                                        <input className="form-input" placeholder="🔍 Pretraži..." value={workerSearch} 
+                                        <input className="form-input" placeholder={`🔍 ${t('pretrazi')}...`} value={workerSearch} 
                                             onChange={e => { setWorkerSearch(e.target.value); setShowWSearch(true); setFormData(f => ({...f, vozacId: '', vozacIme: ''})); }} 
                                             onFocus={() => setShowWSearch(true)} />
                                         {showWSearch && (
                                             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-                                                {fw.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fw.slice(0, 10).map(w => (
+                                                {fw.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : fw.slice(0, 10).map(w => (
                                                     <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
                                                         onClick={() => { setFormData(f => ({...f, vozacId: w.id, vozacIme: `${w.ime} ${w.prezime}`})); setWorkerSearch(`${w.ime} ${w.prezime}`); setShowWSearch(false); }}>
                                                         {w.ime} {w.prezime}
@@ -336,7 +336,7 @@ function FleetOrdersInner() {
 
 export default function FleetOrders() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
             <FleetOrdersInner />
         </Suspense>
     );

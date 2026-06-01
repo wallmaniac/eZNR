@@ -258,7 +258,7 @@ function FleetDocumentsInner() {
                                         onFocus={() => setShowVSearch(true)} />
                                     {showVSearch && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-                                            {fv.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fv.slice(0, 10).map(v => (
+                                            {fv.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : fv.slice(0, 10).map(v => (
                                                 <div key={v.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
                                                     onClick={() => { setFormData(f => ({...f, vehicleId: v.id})); setVehicleSearch(`${v.registracija} - ${v.marka || ''}`); setShowVSearch(false); }}>
                                                     <strong>{v.registracija}</strong> - {v.marka} {v.model}
@@ -390,7 +390,7 @@ function FleetDocumentsInner() {
 
 export default function FleetDocuments() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
             <FleetDocumentsInner />
         </Suspense>
     );

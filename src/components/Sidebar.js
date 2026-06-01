@@ -665,9 +665,9 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', gap: 5,
                                 whiteSpace: 'nowrap',
-                            }}
+                             }}
                         >
-                            🚪 Odjava
+                            🚪 {t('odjava')}
                         </button>
                     </div>
                 </div>

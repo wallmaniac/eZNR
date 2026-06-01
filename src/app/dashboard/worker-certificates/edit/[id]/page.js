@@ -108,7 +108,7 @@ function EditCertPageInner() {
         return () => document.removeEventListener('mousedown', h);
     }, []);
 
-    if (!formData) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>;
+    if (!formData) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>{t('ucitavanje')}...</div>;
 
     const getExaminerLabel = (ex) => {
         const company = authorizedCompanies.find(c => c.id === ex.ovlaštenaTvrtkaId);

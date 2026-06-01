@@ -211,7 +211,7 @@ function ServiceRecordsInner() {
                                         onFocus={() => setShowEqSearch(true)} />
                                     {showEqSearch && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-                                            {fEq.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fEq.slice(0, 10).map(e => (
+                                            {fEq.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : fEq.slice(0, 10).map(e => (
                                                 <div key={e.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
                                                     onClick={() => { setFormData(f => ({...f, equipmentId: e.id})); setEqSearch(e.naziv); setShowEqSearch(false); }}>
                                                     <strong>{e.naziv}</strong> {e.invBroj ? `- ${e.invBroj}` : ''}
@@ -358,7 +358,7 @@ function ServiceRecordsInner() {
 
 export default function ServiceRecords() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
             <ServiceRecordsInner />
         </Suspense>
     );

@@ -101,10 +101,10 @@ function EmployerDocsInner() {
     
     const handleCopy = async (doc) => {
         setOpenMenuId(null);
-        if (!await confirm(`Kopirati dokument "${doc.naziv || 'Bez naziva'}"?`)) return;
+        if (!await confirm(`${t('copyDocument')} "${doc.naziv || t('bezNaziva')}"?`)) return;
         const copyData = { ...doc };
         delete copyData.id;
-        copyData.naziv = (copyData.naziv || '') + ' (Kopija)';
+        copyData.naziv = (copyData.naziv || '') + ` (${t('kopija')})`;
         copyData.status = 'aktivan';
         create(COLLECTIONS.EMPLOYER_DOCS, copyData);
         loadData(); showFlash();
@@ -112,19 +112,21 @@ function EmployerDocsInner() {
     
     const handlePrintSingle = (doc) => {
         setOpenMenuId(null);
+        const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+        const locale = localeMap[lang] || 'bs-BA';
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${doc.naziv}</title>
 <style>body{font-family:'Segoe UI',Arial,sans-serif;font-size:11pt;color:#1a1a1a;padding:20px}h1{font-size:18pt;color:#1a237e}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10pt}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#e8eaf6;font-weight:700;color:#283593;width:200px}@media print{button{display:none!important}}</style></head><body>
 <h1>📋 ${doc.naziv}</h1>
 <table>
-<tr><th>Naziv</th><td>${doc.naziv || '—'}</td></tr>
-<tr><th>Kategorija</th><td>${doc.kategorija === 'obavezna' ? 'Obavezna dokumentacija' : doc.kategorija === 'periodicni' ? 'Periodični pregledi' : 'Dodatne evidencije'}</td></tr>
-<tr><th>Status</th><td>${doc.status === 'aktivan' ? '✓ Aktivan' : '✕ Istekao'}</td></tr>
-<tr><th>Datum izdavanja</th><td>${doc.datumIzdavanja ? new Date(doc.datumIzdavanja).toLocaleDateString('hr-HR') : '—'}</td></tr>
-<tr><th>Datum isteka</th><td>${doc.datumIsteka ? new Date(doc.datumIsteka).toLocaleDateString('hr-HR') : '—'}</td></tr>
-<tr><th>Napomena</th><td>${doc.napomena || '—'}</td></tr>
-<tr><th>Datoteka</th><td>${doc.docName || '—'}</td></tr>
+<tr><th>${t('name')}</th><td>${doc.naziv || '—'}</td></tr>
+<tr><th>${t('kategorija')}</th><td>${doc.kategorija === 'obavezna' ? t('mandatoryDocs') : doc.kategorija === 'periodicni' ? t('periodicReviews') : t('additionalRecords')}</td></tr>
+<tr><th>${t('status')}</th><td>${doc.status === 'aktivan' ? '✓ ' + t('active') : '✕ ' + t('expired')}</td></tr>
+<tr><th>${t('datumIzdavanja')}</th><td>${doc.datumIzdavanja ? new Date(doc.datumIzdavanja).toLocaleDateString(locale) : '—'}</td></tr>
+<tr><th>${t('expiryDate')}</th><td>${doc.datumIsteka ? new Date(doc.datumIsteka).toLocaleDateString(locale) : '—'}</td></tr>
+<tr><th>${t('note')}</th><td>${doc.napomena || '—'}</td></tr>
+<tr><th>${t('file')}</th><td>${doc.docName || '—'}</td></tr>
 </table>
-<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">🖨️ Print</button>
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">🖨️ ${t('printSaveAsPdf')}</button>
 <script>setTimeout(()=>window.print(),500);</script>
 </body></html>`;
         const w = window.open('', '_blank');
@@ -189,7 +191,9 @@ function EmployerDocsInner() {
     };
     const bulkPrint = () => {
         const toPrint = sorted.filter(d => selected.has(d.id));
-        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Dokumenti</title>
+        const localeMapBulk = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+        const localeBulk = localeMapBulk[lang] || 'bs-BA';
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('employerDocs')}</title>
 <style>
 body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1a1a1a; }
 h1 { font-size: 18pt; color: #1a237e; margin-bottom: 12px; }
@@ -199,18 +203,18 @@ th { background: #e8eaf6; font-weight: 700; color: #283593; }
 tr:nth-child(even) { background: #fafafa; }
 @media print { button { display: none !important; } }
 </style></head><body>
-<h1>📋 Dokumentacija za poslodavca</h1>
+<h1>📋 ${t('employerDocs')}</h1>
 <table>
-<thead><tr><th>#</th><th>Naziv</th><th>Status</th><th>Datum izdavanja</th><th>Datum isteka</th><th>Napomena</th></tr></thead>
+<thead><tr><th>#</th><th>${t('name')}</th><th>${t('status')}</th><th>${t('datumIzdavanja')}</th><th>${t('expiryDate')}</th><th>${t('note')}</th></tr></thead>
 <tbody>
 ${toPrint.map((d, i) => `<tr>
 <td>${i + 1}</td><td>${d.naziv || '—'}</td>
-<td>${d.status === 'aktivan' ? '✓ Aktivan' : '✕ Istekao'}</td>
-<td>${d.datumIzdavanja ? new Date(d.datumIzdavanja).toLocaleDateString('hr-HR') : '—'}</td>
-<td>${d.datumIsteka ? new Date(d.datumIsteka).toLocaleDateString('hr-HR') : '—'}</td>
+<td>${d.status === 'aktivan' ? '✓ ' + t('active') : '✕ ' + t('expired')}</td>
+<td>${d.datumIzdavanja ? new Date(d.datumIzdavanja).toLocaleDateString(localeBulk) : '—'}</td>
+<td>${d.datumIsteka ? new Date(d.datumIsteka).toLocaleDateString(localeBulk) : '—'}</td>
 <td>${d.napomena || '—'}</td></tr>`).join('')}
 </tbody></table>
-<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">🖨️ Print</button>
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">🖨️ ${t('printSaveAsPdf')}</button>
 <script>setTimeout(() => window.print(), 500);</script>
 </body></html>`;
         const w = window.open('', '_blank');
@@ -347,13 +351,13 @@ ${toPrint.map((d, i) => `<tr>
                                                     <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }} title={t('showDocumentActions')}>{t('actions1')}</button>
                                                     {openMenuId === doc.id && (
                                                         <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                            <button onClick={() => handleEdit(doc)} className="dropdown-item">✏️ Otvori</button>
-                                                            <button onClick={() => handleCopy(doc)} className="dropdown-item">📋 Kopiraj</button>
+                                                            <button onClick={() => handleEdit(doc)} className="dropdown-item">✏️ {t('otvori')}</button>
+                                                            <button onClick={() => handleCopy(doc)} className="dropdown-item">📋 {t('kopiraj')}</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handlePrintSingle(doc)} className="dropdown-item">🖨️ Isprintaj</button>
-                                                            <button onClick={() => { setOpenMenuId(null); handleDownloadFile(doc); }} className="dropdown-item">📗 Preuzmi</button>
+                                                            <button onClick={() => handlePrintSingle(doc)} className="dropdown-item">🖨️ {t('isprintaj')}</button>
+                                                            <button onClick={() => { setOpenMenuId(null); handleDownloadFile(doc); }} className="dropdown-item">📗 {t('preuzmi')}</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handleDelete(doc.id)} className="dropdown-item text-danger">🗑️ Izbriši</button>
+                                                            <button onClick={() => handleDelete(doc.id)} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -379,7 +383,7 @@ ${toPrint.map((d, i) => `<tr>
 
 export default function EmployerDocsPage() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
             <EmployerDocsInner />
         </Suspense>
     );

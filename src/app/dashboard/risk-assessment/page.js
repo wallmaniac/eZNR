@@ -1223,13 +1223,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                     minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                 }}>
-                                                    <button onClick={() => { setOpenMenuId(null); handleEdit(r); }} className="dropdown-item">✏️ Otvori</button>
-                                                    <button onClick={() => { setOpenMenuId(null); handleCopy(r); }} className="dropdown-item">📋 Kopiraj</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleEdit(r); }} className="dropdown-item">{t('otvori')}</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleCopy(r); }} className="dropdown-item">{t('kopiraj')}</button>
                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                    <button onClick={() => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); handleGenerateReport(r, items, true); }} className="dropdown-item">🖨️ Isprintaj (PDF)</button>
-                                                    <button onClick={async () => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); await handleGenerateDocx(true, r, items); }} className="dropdown-item">📗 Preuzmi Word (.docx)</button>
+                                                    <button onClick={() => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); handleGenerateReport(r, items, true); }} className="dropdown-item">🖨️ {t('isprintaj')} (PDF)</button>
+                                                    <button onClick={async () => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); await handleGenerateDocx(true, r, items); }} className="dropdown-item">📗 {t('preuzmiWordDocx')}</button>
                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                    <button onClick={() => { setOpenMenuId(null); handleDelete(r.id); }} className="dropdown-item text-danger">🗑️ Izbriši</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleDelete(r.id); }} className="dropdown-item text-danger">{t('izbrisi')}</button>
                                                 </div>
                                             )}
                                         </div>
@@ -1479,7 +1479,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             else { create(COLLECTIONS.SISTEMATIZACIJE, sistEditData); }
                                             loadData(); setSistEditData(null); showFlash();
                                         }}>💾 {t('save')}</button>
-                                        <button className="btn btn-ghost" onClick={() => setSistEditData(null)}>Zatvori</button>
+                                        <button className="btn btn-ghost" onClick={() => setSistEditData(null)}>{t('zatvori')}</button>
                                     </div>
                                 </div>
                             </div>
@@ -1726,7 +1726,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
                                             {/* Custom workplace input */}
                                             <div style={{ marginBottom: 16 }}>
-                                                <div style={labelSt}>Dodaj vlastito radno mjesto (opciono)</div>
+                                                <div style={labelSt}>{t('dodajVlastitoRadnoMjestoOpciono')}</div>
                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                     <input className="form-input" value={aiGenCustomWp} onChange={e => setAiGenCustomWp(e.target.value)}
                                                         placeholder="Npr. Zavarivač, Monter, Čistačica..." disabled={aiGenLoading}
@@ -2021,7 +2021,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             })}
                                         </div>
                                     )}
-                                    <button className="btn btn-ghost" onClick={() => setShowImportModal(false)} disabled={importLoadingId !== null}>Zatvori</button>
+                                    <button className="btn btn-ghost" onClick={() => setShowImportModal(false)} disabled={importLoadingId !== null}>{t('zatvori')}</button>
                                 </div>
                             </div>
                         )}
@@ -2063,7 +2063,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         <button className="btn btn-primary" onClick={handleBulkAdd} disabled={!bulkWpId || bulkSelected.length === 0}>
                                             ✔ Dodaj {bulkSelected.length} stavk{bulkSelected.length === 1 ? 'u' : bulkSelected.length < 5 ? 'e' : 'i'}
                                         </button>
-                                        <button className="btn btn-ghost" onClick={() => setShowBulkModal(false)}>Zatvori</button>
+                                        <button className="btn btn-ghost" onClick={() => setShowBulkModal(false)}>{t('zatvori')}</button>
                                     </div>
                                 </div>
                             </div>

@@ -135,12 +135,12 @@ function daysUntil(dateStr) {
 }
 
 // ─── Helper: status badge HTML ───────────────────────────────────────────────
-function statusBadge(days, bs) {
-  if (days === null) return `<span class="badge badge-neutral">${t('na')}</span>`;
-  if (days < 0) return `<span class="badge badge-danger">${t('isteklo')}</span>`;
-  if (days <= 30) return `<span class="badge badge-danger">${t('days').replace('{0}', days)}</span>`;
-  if (days <= 90) return `<span class="badge badge-warn">${t('days1').replace('{0}', days)}</span>`;
-  return `<span class="badge badge-ok">${t('vrijedi')}</span>`;
+function statusBadge(days, lang = 'bs') {
+  if (days === null) return `<span class="badge badge-neutral">${t('na', lang)}</span>`;
+  if (days < 0) return `<span class="badge badge-danger">${t('isteklo', lang)}</span>`;
+  if (days <= 30) return `<span class="badge badge-danger">${t('days', lang).replace('{0}', days)}</span>`;
+  if (days <= 90) return `<span class="badge badge-warn">${t('days1', lang).replace('{0}', days)}</span>`;
+  return `<span class="badge badge-ok">${t('vrijedi', lang)}</span>`;
 }
 
 // ─── Build the branded header ────────────────────────────────────────────────
@@ -202,12 +202,14 @@ function buildHeader(title, subtitle, company) {
 }
 
 // ─── Build footer ────────────────────────────────────────────────────────────
-function buildFooter(bs, company) {
+function buildFooter(lang = 'bs', company = {}) {
   const companyName = company?.naziv || company?.name || '';
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
   return `
     <div class="report-footer">
       <span>${companyName}</span>
-      <span>${new Date().toLocaleDateString('bs-BA')} · ${new Date().toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' })}</span>
+      <span>${new Date().toLocaleDateString(locale)} · ${new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</span>
     </div>
   `;
 }
@@ -225,7 +227,7 @@ function openPrintWindow(html, title) {
 }
 
 // ─── Wrap content in full HTML document ──────────────────────────────────────
-function wrapDocument(content, title, landscape = false, bs = true, accentColor = EZNR_DEFAULTS.accentColor, company = {}) {
+function wrapDocument(content, title, landscape = false, lang = 'bs', accentColor = EZNR_DEFAULTS.accentColor, company = {}) {
   const accentVar = `--accent: ${accentColor};`;
   const companyName = company.naziv || company.name || '';
   const wmEnabled = company.watermarkEnabled ?? true;
@@ -248,7 +250,7 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
   }
 
   return `<!DOCTYPE html>
-<html lang="${t('en1')}">
+<html lang="${t('en1', lang)}">
 <head>
   <meta charset="UTF-8"/>
   <title>${title} — ${companyName || 'Report'}</title>
@@ -262,7 +264,7 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
   <div class="page">
     ${content}
   </div>
-  <button class="print-btn" onclick="window.print()">🖨️ ${t('printSaveAsPdf')}</button>
+  <button class="print-btn" onclick="window.print()">🖨️ ${t('printSaveAsPdf', lang)}</button>
 </body>
 </html>`;
 }
@@ -276,7 +278,6 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
  * 1. WORKERS REPORT — Summary of selected workers
  */
 export function generateWorkersReport(workerIds = [], lang = 'bs') {
-  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allWorkers = getAll(COLLECTIONS.WORKERS);
   const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
@@ -289,8 +290,10 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
 
-  const title = t('workerRegistry');
-  const subtitle = t('workersPrintDate').replace('{0}', workers.length).replace('{1}', new Date().toLocaleDateString('bs-BA')).replace('{2}', new Date().toLocaleDateString('en-GB'));
+  const title = t('workerRegistry', lang);
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
+  const subtitle = t('workersPrintDate', lang).replace('{0}', workers.length).replace('{1}', new Date().toLocaleDateString(locale)).replace('{2}', new Date().toLocaleDateString(locale));
 
   const activeCount = workers.filter(w => w.aktivan !== false).length;
   const certsExpiring = allCerts.filter(c => {
@@ -303,9 +306,9 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   // Stats
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${workers.length}</div><div class="stat-lbl">${t('totalWorkers')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${activeCount}</div><div class="stat-lbl">${t('aktivni')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#e65100">${certsExpiring}</div><div class="stat-lbl">${t('certsExpiring')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${workers.length}</div><div class="stat-lbl">${t('totalWorkers', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${activeCount}</div><div class="stat-lbl">${t('aktivni', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#e65100">${certsExpiring}</div><div class="stat-lbl">${t('certsExpiring', lang)}</div></div>
     </div>
   `;
 
@@ -313,13 +316,13 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${t('imeIPrezime1')}</th>
-      <th>${t('jmbg')}</th>
-      <th>${t('radnoMjesto')}</th>
-      <th>${t('orgJedinica1')}</th>
-      <th style="text-align:center">${t('certs')}</th>
-      <th style="text-align:center">${t('ozoOprema')}</th>
-      <th>${t('status')}</th>
+      <th>${t('imeIPrezime1', lang)}</th>
+      <th>${t('jmbg', lang)}</th>
+      <th>${t('radnoMjesto', lang)}</th>
+      <th>${t('orgJedinica1', lang)}</th>
+      <th style="text-align:center">${t('certs', lang)}</th>
+      <th style="text-align:center">${t('ozoOprema', lang)}</th>
+      <th>${t('status', lang)}</th>
     </tr></thead>
     <tbody>`;
 
@@ -335,14 +338,14 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
       <td>${orgUnits.find(ou => ou.id === w.orgJedinicaId)?.naziv || '—'}</td>
       <td style="text-align:center;font-weight:600">${wCerts.length}</td>
       <td style="text-align:center;font-weight:600">${wPPE.length}</td>
-      <td><span class="badge ${aktivan ? 'badge-ok' : 'badge-neutral'}">${aktivan ? (t('aktivan')) : (t('neaktivan'))}</span></td>
+      <td><span class="badge ${aktivan ? 'badge-ok' : 'badge-neutral'}">${aktivan ? (t('aktivan', lang)) : (t('neaktivan', lang))}</span></td>
     </tr>`;
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs, company);
+  html += buildFooter(lang, company);
 
-  const doc = wrapDocument(html, title, false, bs, company.accentColor, company);
+  const doc = wrapDocument(html, title, false, lang, company.accentColor, company);
   openPrintWindow(doc, title);
 }
 
@@ -350,7 +353,6 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
  * 2. CERTIFICATES REPORT — Certificate status overview
  */
 export function generateCertificatesReport(certIds = [], lang = 'bs') {
-  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const workers = getAll(COLLECTIONS.WORKERS);
@@ -359,35 +361,37 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
     ? uniqueCertIds.map(id => allCerts.find(c => c.id === id)).filter(Boolean)
     : allCerts;
 
-  const title = t('certificateStatusReport');
+  const title = t('certificateStatusReport', lang);
   const expired = certs.filter(c => daysUntil(c.vrijediDo) !== null && daysUntil(c.vrijediDo) < 0).length;
   const expiring = certs.filter(c => {
     const d = daysUntil(c.vrijediDo);
     return d !== null && d >= 0 && d <= 30;
   }).length;
   const valid = certs.length - expired - expiring;
-  const subtitle = `${certs.length} ${t('zapisa')} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
+  const subtitle = `${certs.length} ${t('zapisa', lang)} · ${new Date().toLocaleDateString(locale)}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${certs.length}</div><div class="stat-lbl">${t('ukupno1')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${valid}</div><div class="stat-lbl">${t('vazeca')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#e65100">${expiring}</div><div class="stat-lbl">${t('istice30d')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${t('istekla')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${certs.length}</div><div class="stat-lbl">${t('ukupno1', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${valid}</div><div class="stat-lbl">${t('vazeca', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#e65100">${expiring}</div><div class="stat-lbl">${t('istice30d', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${t('istekla', lang)}</div></div>
     </div>
   `;
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${t('radnik1')}</th>
-      <th>${t('nazivUvjerenja1')}</th>
-      <th>${t('oznaka')}</th>
-      <th>${t('issued')}</th>
-      <th>${t('vrijediDo')}</th>
-      <th>${t('status')}</th>
+      <th>${t('radnik1', lang)}</th>
+      <th>${t('nazivUvjerenja1', lang)}</th>
+      <th>${t('oznaka', lang)}</th>
+      <th>${t('issued', lang)}</th>
+      <th>${t('vrijediDo', lang)}</th>
+      <th>${t('status', lang)}</th>
     </tr></thead>
     <tbody>`;
 
@@ -401,21 +405,20 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
       <td>${c.oznaka || '—'}</td>
       <td>${fmtDate(c.datum)}</td>
       <td style="font-weight:600">${fmtDate(c.vrijediDo)}</td>
-      <td>${statusBadge(days, bs)}</td>
+      <td>${statusBadge(days, lang)}</td>
     </tr>`;
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs, company);
+  html += buildFooter(lang, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
+  openPrintWindow(wrapDocument(html, title, false, lang, company.accentColor, company), title);
 }
 
 /**
  * 3. PPE REPORT — Personal Protective Equipment assignments
  */
 export function generatePPEReport(assignmentIds = [], lang = 'bs') {
-  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
   const workers = getAll(COLLECTIONS.WORKERS);
@@ -423,118 +426,124 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
     ? assignmentIds.map(id => allPPE.find(p => p.id === id)).filter(Boolean)
     : allPPE;
 
-  const title = t('personalProtectiveEquipmentPpeReport');
-  const subtitle = `${assignments.length} ${t('fleetAssignments')} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('personalProtectiveEquipmentPpeReport', lang);
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
+  const subtitle = `${assignments.length} ${t('fleetAssignments', lang)} · ${new Date().toLocaleDateString(locale)}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${t('radnik1')}</th>
-      <th>${t('equipmentName')}</th>
-      <th style="text-align:center">${t('kolicina')}</th>
-      <th>${t('datumZaduzenja')}</th>
-      <th>${t('replaceBy')}</th>
-      <th>${t('status')}</th>
+      <th>${t('radnik1', lang)}</th>
+      <th>${t('equipmentName', lang)}</th>
+      <th style="text-align:center">${t('kolicina', lang)}</th>
+      <th>${t('datumZaduzenja', lang)}</th>
+      <th>${t('replaceBy', lang)}</th>
+      <th>${t('status', lang)}</th>
     </tr></thead>
     <tbody>`;
 
   assignments.forEach((p, i) => {
     const w = workers.find(x => x.id === p.workerId);
     const days = daysUntil(p.rokZamjene || p.vrijediDo);
+    const ppeName = t((p.naziv || p.oprema || '').trim(), lang) || p.naziv || p.oprema || '—';
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${w ? `${w.ime} ${w.prezime}` : '—'}</td>
-      <td>${p.naziv || p.oprema || '—'}</td>
+      <td>${ppeName}</td>
       <td style="text-align:center">${p.kolicina || p.quantity || 1}</td>
       <td>${fmtDate(p.datumZaduzenja || p.datum)}</td>
       <td style="font-weight:600">${fmtDate(p.rokZamjene || p.vrijediDo)}</td>
-      <td>${statusBadge(days, bs)}</td>
+      <td>${statusBadge(days, lang)}</td>
     </tr>`;
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs, company);
+  html += buildFooter(lang, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
+  openPrintWindow(wrapDocument(html, title, false, lang, company.accentColor, company), title);
 }
 
 /**
  * 4. EQUIPMENT REPORT — Work equipment & inspection status
  */
 export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
-  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allEquip = getAll(COLLECTIONS.EQUIPMENT);
   let items = equipmentIds.length > 0
     ? equipmentIds.map(id => allEquip.find(e => e.id === id)).filter(Boolean)
     : allEquip;
 
-  const title = t('workEquipmentInspectionReport');
-  const subtitle = `${items.length} ${t('stavke')} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('workEquipmentInspectionReport', lang);
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
+  const subtitle = `${items.length} ${t('stavke', lang)} · ${new Date().toLocaleDateString(locale)}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${t('naziv')}</th>
-      <th>${t('tip')}</th>
-      <th>${t('serialNumber')}</th>
-      <th>${t('lokacija')}</th>
-      <th>${t('lastInspected')}</th>
-      <th>${t('nextExam')}</th>
-      <th>${t('status')}</th>
+      <th>${t('naziv', lang)}</th>
+      <th>${t('tip', lang)}</th>
+      <th>${t('serialNumber', lang)}</th>
+      <th>${t('lokacija', lang)}</th>
+      <th>${t('lastInspected', lang)}</th>
+      <th>${t('nextExam', lang)}</th>
+      <th>${t('status', lang)}</th>
     </tr></thead>
     <tbody>`;
 
   items.forEach((e, i) => {
     const days = daysUntil(e.iduci || e.sljedeciPregled || e.datumIsteka);
+    const translatedType = t((e.tip || '').trim(), lang) || t((e.vrsta || '').trim(), lang) || e.tip || e.vrsta || '—';
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${e.naziv || '—'}</td>
-      <td>${e.tip || e.vrsta || '—'}</td>
+      <td>${translatedType}</td>
       <td>${e.tvBroj || e.serijskiBroj || e.invBroj || '—'}</td>
       <td>${e.lokacija || '—'}</td>
       <td>${fmtDate(e.posljednji || e.zadnjiPregled || e.datumPregleda)}</td>
       <td style="font-weight:600">${fmtDate(e.iduci || e.sljedeciPregled || e.datumIsteka)}</td>
-      <td>${statusBadge(days, bs)}</td>
+      <td>${statusBadge(days, lang)}</td>
     </tr>`;
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs, company);
+  html += buildFooter(lang, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
+  openPrintWindow(wrapDocument(html, title, false, lang, company.accentColor, company), title);
 }
 
 /**
  * 5. FLEET REPORT — Vehicle fleet status
  */
 export function generateFleetReport(vehicleIds = [], lang = 'bs') {
-  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allVehicles = getAll(COLLECTIONS.VEHICLES);
   let vehicles = vehicleIds.length > 0
     ? vehicleIds.map(id => allVehicles.find(v => v.id === id)).filter(Boolean)
     : allVehicles;
 
-  const title = t('fleetRegistryReport');
-  const subtitle = `${vehicles.length} ${t('vozila')} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('fleetRegistryReport', lang);
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
+  const subtitle = `${vehicles.length} ${t('vozila', lang)} · ${new Date().toLocaleDateString(locale)}`;
 
   let html = buildHeader(title, subtitle, company);
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${t('makeModel')}</th>
-      <th>${t('plateNo')}</th>
-      <th>${t('godina')}</th>
-      <th>${t('driver9')}</th>
-      <th>${t('regUntil')}</th>
-      <th>${t('techUntil')}</th>
-      <th>${t('insUntil')}</th>
+      <th>${t('makeModel', lang)}</th>
+      <th>${t('plateNo', lang)}</th>
+      <th>${t('godina', lang)}</th>
+      <th>${t('driver9', lang)}</th>
+      <th>${t('regUntil', lang)}</th>
+      <th>${t('techUntil', lang)}</th>
+      <th>${t('insUntil', lang)}</th>
     </tr></thead>
     <tbody>`;
 
@@ -552,23 +561,24 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs, company);
+  html += buildFooter(lang, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
+  openPrintWindow(wrapDocument(html, title, false, lang, company.accentColor, company), title);
 }
 
 /**
  * 6. FIRE PROTECTION REPORT — Fire extinguishers & equipment
  */
 export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = 'extinguishers') {
-  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allFE = getAll(type === 'hydrants' ? COLLECTIONS.HYDRANTS : COLLECTIONS.FIRE_EXTINGUISHERS);
   let items = itemIds.length > 0
     ? itemIds.map(id => allFE.find(f => f.id === id)).filter(Boolean)
     : allFE;
-  const title = t('fireProtectionEquipmentReport');
-  const subtitle = `${items.length} ${t('stavke')} · ${new Date().toLocaleDateString('bs-BA')}`;
+  const title = t('fireProtectionEquipmentReport', lang);
+  const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+  const locale = localeMap[lang] || 'bs-BA';
+  const subtitle = `${items.length} ${t('stavke', lang)} · ${new Date().toLocaleDateString(locale)}`;
 
   const expired = items.filter(f => {
     const d = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
@@ -579,41 +589,47 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = '
 
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-lbl">${t('ukupno1')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${items.length - expired}</div><div class="stat-lbl">${t('serviced')}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${t('overdue')}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-lbl">${t('ukupno1', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${items.length - expired}</div><div class="stat-lbl">${t('serviced', lang)}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${t('overdue', lang)}</div></div>
     </div>
   `;
 
   html += `<table>
     <thead><tr>
       <th style="width:3%">#</th>
-      <th>${t('lokacija')}</th>
-      <th>${t('tip')}</th>
-      <th>${t('serialNumber')}</th>
-      <th>${t('lastActivity')}</th>
-      <th>${t('nextActivity')}</th>
-      <th>${t('status')}</th>
+      <th>${t('lokacija', lang)}</th>
+      <th>${t('tip', lang)}</th>
+      <th>${t('serialNumber', lang)}</th>
+      <th>${t('lastActivity', lang)}</th>
+      <th>${t('nextActivity', lang)}</th>
+      <th>${t('status', lang)}</th>
     </tr></thead>
     <tbody>`;
 
   items.forEach((f, i) => {
     const days = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
+    let typeLabel = f.tip || f.vrsta || '—';
+    if (type === 'hydrants') {
+      typeLabel = f.tip === 'unutarnji' ? t('indoor1', lang) : (f.tip === 'vanjski' ? t('outdoor1', lang) : typeLabel);
+    } else {
+      typeLabel = t('extType_' + f.tip, lang) || f.tip || f.vrsta || '—';
+    }
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${f.lokacija || '—'}</td>
-      <td>${f.tip || f.vrsta || '—'}</td>
+      <td>${typeLabel}</td>
       <td>${f.serijskiBroj || f.oznaka || '—'}</td>
       <td>${fmtDate(f.zadnjiPregled || f.zadnjiServis || f.datumZadnjegPregleda || f.datumPregleda)}</td>
       <td style="font-weight:600">${fmtDate(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka)}</td>
-      <td>${statusBadge(days, bs)}</td>
+      <td>${statusBadge(days, lang)}</td>
     </tr>`;
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs, company);
+  html += buildFooter(lang, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
+  openPrintWindow(wrapDocument(html, title, false, lang, company.accentColor, company), title);
 }
 
 
@@ -629,15 +645,17 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
     // Removed sort to preserve input order
 
     doc.setFontSize(16);
-    doc.text(t('observations'), 14, 20);
+    doc.text(t('observations', lang), 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${t('generatedOn')}: ${new Date().toLocaleDateString()}`, 14, 28);
+    const localeMap = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', en: 'en-GB', de: 'de-DE', sl: 'sl-SI' };
+    const locale = localeMap[lang] || 'bs-BA';
+    doc.text(`${t('generatedOn', lang)}: ${new Date().toLocaleDateString(locale)}`, 14, 28);
     
     const tableData = obsList.map((o, i) => [
         i + 1,
-        o.datum ? new Date(o.datum).toLocaleDateString() : '',
+        o.datum ? new Date(o.datum).toLocaleDateString(locale) : '',
         o.lokacija || '',
         o.opis || '',
         o.ime || '',
@@ -648,10 +666,10 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
         startY: 35,
         head: [[
             '#', 
-            t('datum'), 
-            t('lokacija'), 
-            t('opis'), 
-            t('reporter'),
+            t('datum', lang), 
+            t('lokacija', lang), 
+            t('opis', lang), 
+            t('reporter', lang),
             'Status'
         ]],
         body: tableData,

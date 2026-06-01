@@ -218,7 +218,7 @@ export default function WorkerPPEPage() {
                     </td>
                     <td>
                       <button style={clickableNaziv} onClick={() => handleEditModal(r)}>
-                        🦺 {t(r.naziv) || r.naziv}
+                        🦺 {t(r.naziv?.trim()) || r.naziv}
                       </button>
                     </td>
                     <td>{formatDate(r.datumZaduzenja)}</td>
@@ -263,7 +263,7 @@ export default function WorkerPPEPage() {
                   style={{ marginBottom: 6 }}>
                   <option value="__custom__">{t('odaberiIzKatalogaIliUnesi')}</option>
                   {ppeTypes.sort((a, b) => (a.naziv || '').localeCompare(b.naziv || '')).map(p => (
-                    <option key={p.id} value={p.naziv}>{t(p.naziv) || p.naziv}</option>
+                    <option key={p.id} value={p.naziv}>{t(p.naziv?.trim()) || p.naziv}</option>
                   ))}
                 </select>
                 {/* Manual entry fallback */}

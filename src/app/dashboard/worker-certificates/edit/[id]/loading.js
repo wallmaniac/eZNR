@@ -11,7 +11,7 @@ export default function Loading() {
                 borderRadius: '50%',
                 animation: 'spin 0.7s linear infinite',
             }} />
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Učitavanje...</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('ucitavanje')}...</span>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );

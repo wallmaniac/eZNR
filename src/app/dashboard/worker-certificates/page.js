@@ -13,7 +13,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useCountry } from '@/contexts/CountryContext';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
-function buildBulkPrintHtml(selectedRows, workers, lang) {
+function buildBulkPrintHtml(selectedRows, workers, lang, t) {
   const bs = lang !== 'en';
   const pages = selectedRows.map((r, idx) => {
     const w = workers.find(x => x.id === r.workerId) || {};
@@ -210,7 +210,7 @@ function WorkerCertificatesInner() {
   const handleBulkPrint = useCallback(() => {
     const selectedRows = rows.filter(r => selectedIds.has(r.id));
     if (selectedRows.length === 0) return;
-    const html = buildBulkPrintHtml(selectedRows, workers, lang);
+    const html = buildBulkPrintHtml(selectedRows, workers, lang, t);
     const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) { alert('Dozvolite popup prozore za print funkciju.'); return; }
     win.document.write(html);
@@ -453,7 +453,7 @@ function WorkerCertificatesInner() {
                                             <button style={_miSt} className="action-menu-item"
                                                 onClick={() => {
                                                     setActionMenuId(null);
-                                                    const html = buildBulkPrintHtml([r], workers, lang);
+                                                    const html = buildBulkPrintHtml([r], workers, lang, t);
                                                     const win = window.open('', '_blank', 'width=900,height=700');
                                                     if (win) { win.document.write(html); win.document.close(); }
                                                 }}>🖨️ {t('isprintaj')}</button>
@@ -573,7 +573,7 @@ function WorkerCertificatesInner() {
 
 export default function WorkerCertificatesPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
       <WorkerCertificatesInner />
     </Suspense>
   );

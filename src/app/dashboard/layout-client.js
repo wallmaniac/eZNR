@@ -145,9 +145,6 @@ export default function DashboardLayout({ children }) {
                         animation: 'spin 0.8s linear infinite',
                         margin: '0 auto 16px',
                     }} />
-                    <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-heading)' }}>
-                        Učitavanje...
-                    </p>
                 </div>
             </div>
         );

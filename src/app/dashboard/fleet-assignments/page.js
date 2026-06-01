@@ -182,7 +182,7 @@ function FleetAssignmentsInner() {
                                         onFocus={() => setShowVSearch(true)} />
                                     {showVSearch && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
-                                            {fv.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fv.slice(0, 10).map(v => (
+                                            {fv.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : fv.slice(0, 10).map(v => (
                                                 <div key={v.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
                                                     onClick={() => { setFormData(f => ({...f, vehicleId: v.id})); setVehicleSearch(`${v.registracija} - ${v.marka || ''}`); setShowVSearch(false); }}>
                                                     <strong>{v.registracija}</strong> - {v.marka} {v.model}
@@ -200,7 +200,7 @@ function FleetAssignmentsInner() {
                                         onFocus={() => setShowWSearch(true)} />
                                     {showWSearch && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
-                                            {fw.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fw.slice(0, 10).map(w => (
+                                            {fw.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : fw.slice(0, 10).map(w => (
                                                 <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
                                                     onClick={() => { setFormData(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setWorkerSearch(`${w.ime} ${w.prezime}`); setShowWSearch(false); }}>
                                                     {w.ime} {w.prezime}
@@ -307,7 +307,7 @@ function FleetAssignmentsInner() {
 
 export default function FleetAssignments() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
             <FleetAssignmentsInner />
         </Suspense>
     );

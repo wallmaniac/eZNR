@@ -36,7 +36,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
     const handleDelete = async (orderId) => { if (await confirm(t('deleteThisTravelOrder'))) { remove(COLLECTIONS.TRAVEL_ORDERS, orderId); reloadData(); } };
     const handlePrint = (order) => {
         const win = window.open('', '_blank');
-        win.document.write(`<html><head><title>Putni Nalog ${order.brojNaloga}</title><style>body{font-family:sans-serif;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #333;padding:8px;text-align:left}.header{text-align:center;margin-bottom:30px}</style></head><body><div class="header"><h2>PUTNI NALOG ZA VOZILO (${order.tipObrasca})</h2><h3>Broj: ${order.brojNaloga}</h3></div><p><strong>Vozilo:</strong> ${vehicle.marka} ${vehicle.model} (${vehicle.registracija})</p><p><strong>Vozač:</strong> ${order.vozacIme||order.workerIme}</p><p><strong>Relacija:</strong> ${order.relacija}</p><p><strong>Datum izdavanja:</strong> ${formatDate(order.datumIzdavanja)} u ${order.mjestoIzdavanja}</p><h4 style="margin-top:40px">EVIDENCIJA O KRETANJU VOZILA</h4><table><tr><th>Datum</th><th>Polazak iz</th><th>Stigao u</th><th>Vrijeme polaska</th><th>Vrijeme dolaska</th><th>Početno KM</th><th>Završno KM</th><th>Potpis</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table><h4 style="margin-top:40px">EVIDENCIJA UTROŠKA GORIVA</h4><table><tr><th>Datum</th><th>Mjesto točenja</th><th>Količina (L)</th><th>Iznos (KM)</th><th>Potpis</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr></table><p style="margin-top:50px">Potpis ovlaštenog lica: ___________________________</p></body></html>`);
+        win.document.write(`<html><head><title>${t('travelOrderForVehicle')} ${order.brojNaloga}</title><style>body{font-family:sans-serif;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #333;padding:8px;text-align:left}.header{text-align:center;margin-bottom:30px}</style></head><body><div class="header"><h2>${t('travelOrderForVehicleTitle')} (${order.tipObrasca})</h2><h3>${t('brojNaloga')}: ${order.brojNaloga}</h3></div><p><strong>${t('vehicleReg')}:</strong> ${vehicle.marka} ${vehicle.model} (${vehicle.registracija})</p><p><strong>${t('driver7')}:</strong> ${order.vozacIme||order.workerIme}</p><p><strong>${t('relacija')}:</strong> ${order.relacija}</p><p><strong>${t('datumIzdavanja')}:</strong> ${formatDate(order.datumIzdavanja)} ${t('u')} ${order.mjestoIzdavanja}</p><h4 style="margin-top:40px">${t('vehicleMovementLog')}</h4><table><tr><th>${t('datum')}</th><th>${t('departureFrom')}</th><th>${t('arrivedAt')}</th><th>${t('departureTime')}</th><th>${t('arrivalTime')}</th><th>${t('startKm')}</th><th>${t('endKm')}</th><th>${t('potpis')}</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table><h4 style="margin-top:40px">${t('fuelLog')}</h4><table><tr><th>${t('datum')}</th><th>${t('fuelStation')}</th><th>${t('fuelQty')}</th><th>${t('fuelAmt')}</th><th>${t('potpis')}</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr></table><p style="margin-top:50px">${t('authorizedPersonSignature')}: ___________________________</p></body></html>`);
         win.document.close(); win.focus(); setTimeout(() => { win.print(); }, 500);
     };
 
@@ -77,8 +77,8 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                                     <div className="form-group">
                                         <label className="form-label">{t('formType')}</label>
                                         <select className="form-select" value={form.tipObrasca} onChange={e => setForm(f => ({...f, tipObrasca: e.target.value}))}>
-                                            <option value="PN-4">PN-4 (Putničko)</option>
-                                            <option value="PN-3">PN-3 (Teretno)</option>
+                                            <option value="PN-4">PN-4 ({t('vehicleType_osobno') || 'Putničko'})</option>
+                                            <option value="PN-3">PN-3 ({t('vehicleType_teretno') || 'Teretno'})</option>
                                         </select>
                                     </div>
                                 </div>
@@ -87,7 +87,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                                     <input className="form-input" placeholder={t('searchWorkers1')} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId: '', workerIme: ''})); }} onFocus={() => setShowW(true)} />
                                     {showW && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
-                                            {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : filteredWorkers.slice(0, 10).map(w => (
+                                            {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>{t('nemaRezultata')}</div> : filteredWorkers.slice(0, 10).map(w => (
                                                 <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} onClick={() => { setForm(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setSearch(`${w.ime} ${w.prezime}`); setShowW(false); }}>
                                                     {w.ime} {w.prezime}
                                                 </div>
@@ -98,7 +98,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{t('route')}</label>
-                                    <input className="form-input" value={form.relacija} onChange={e => setForm(f => ({...f, relacija: e.target.value}))} placeholder="npr. Sarajevo - Zenica" />
+                                    <input className="form-input" value={form.relacija} onChange={e => setForm(f => ({...f, relacija: e.target.value}))} placeholder={lang === 'en' ? 'e.g. Sarajevo - Zenica' : lang === 'de' ? 'z.B. Sarajevo - Zenica' : 'npr. Sarajevo - Zenica'} />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">

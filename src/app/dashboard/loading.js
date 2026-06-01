@@ -11,9 +11,6 @@ export default function DashboardLoading() {
                     borderTopColor: 'var(--primary)', borderRadius: '50%',
                     animation: 'spin 0.8s linear infinite', margin: '0 auto 16px',
                 }} />
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 500 }}>
-                    Učitavanje...
-                </div>
             </div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
