@@ -191,7 +191,7 @@ export default function WorkerPPEPage() {
                           );
                           setActionMenuId(r.id);
                         }} title={t('prikaziAkcijeZaOzo')}>
-                          Akcije ▼
+                          {t('actions1')}
                         </button>
                         {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                             <>

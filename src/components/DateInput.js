@@ -11,6 +11,7 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function isoToDisplay(iso) {
@@ -42,11 +43,38 @@ function autoFormat(prev, next) {
 function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
 function firstWeekday(y, m) { return (new Date(y, m, 1).getDay() + 6) % 7; } // Mon=0
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
-const MONTHS_FULL = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni',
-    'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
-const DAYS = ['Po', 'Ut', 'Sr', 'Če', 'Pe', 'Su', 'Ne'];
+const LOCALIZED_DATA = {
+    bs: {
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+        monthsFull: ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'],
+        days: ['Po', 'Ut', 'Sr', 'Če', 'Pe', 'Su', 'Ne']
+    },
+    hr: {
+        months: ['Jan', 'Feb', 'Ožu', 'Tra', 'Svi', 'Lip', 'Srp', 'Kol', 'Ruj', 'Lis', 'Stu', 'Pro'],
+        monthsFull: ['Siječanj', 'Veljača', 'Ožujak', 'Travanj', 'Svibanj', 'Lipanj', 'Srpanj', 'Kolovoz', 'Rujan', 'Listopad', 'Studeni', 'Prosinac'],
+        days: ['Po', 'Ut', 'Sr', 'Če', 'Pe', 'Su', 'Ne']
+    },
+    sr: {
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'],
+        monthsFull: ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'],
+        days: ['Po', 'Ut', 'Sr', 'Če', 'Pe', 'Su', 'Ne']
+    },
+    en: {
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        monthsFull: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+        days: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+    },
+    de: {
+        months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+        monthsFull: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+        days: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+    },
+    sl: {
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'],
+        monthsFull: ['Januar', 'Februar', 'Marec', 'April', 'Maj', 'Junij', 'Julij', 'Avgust', 'September', 'Oktober', 'November', 'December'],
+        days: ['Po', 'To', 'Sr', 'Če', 'Pe', 'So', 'Ne']
+    }
+};
 
 // Year-decade: show 12 years starting at decadeStart (e.g. 2020)
 function decadeStart(year) { return Math.floor(year / 12) * 12; }
@@ -78,6 +106,12 @@ export default function DateInput({
     id,
     tooltip,
 }) {
+    const { t, lang } = useLanguage();
+    const locale = LOCALIZED_DATA[lang] || LOCALIZED_DATA.bs;
+    const MONTHS = locale.months;
+    const MONTHS_FULL = locale.monthsFull;
+    const DAYS = locale.days;
+
     const [text, setText] = useState(() => isoToDisplay(value));
     const [prev, setPrev] = useState(() => isoToDisplay(value));
     const [open, setOpen] = useState(false);
@@ -248,7 +282,7 @@ export default function DateInput({
                 padding: '10px 12px', borderBottom: '1px solid var(--border-light)',
                 background: 'var(--bg-input)',
             }}>
-                <button style={navBtn} onClick={prevNav} title="Prethodni">‹</button>
+                <button style={navBtn} onClick={prevNav} title={t('previous')}>‹</button>
                 <button
                     onClick={headerClick}
                     style={{
@@ -257,11 +291,11 @@ export default function DateInput({
                         fontFamily: 'var(--font-body)', padding: '2px 4px', borderRadius: 4,
                         textAlign: 'center',
                     }}
-                    title={view === 'years' ? '' : 'Promijeni pregled'}
+                    title={view === 'years' ? '' : t('changeView')}
                 >
                     {headerText} {view !== 'years' && <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>▾</span>}
                 </button>
-                <button style={navBtn} onClick={nextNav} title="Sljedeći">›</button>
+                <button style={navBtn} onClick={nextNav} title={t('next')}>›</button>
             </div>
 
             {/* ── YEAR VIEW: decade grid ── */}
@@ -340,7 +374,7 @@ export default function DateInput({
                                 onClick={() => { onChange?.(''); setText(''); setPrev(''); setOpen(false); }}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.73rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}
                             >
-                                ✕ Obriši datum
+                                ✕ {t('clearDate')}
                             </button>
                         </div>
                     )}
@@ -381,7 +415,7 @@ export default function DateInput({
                             fontSize: '0.95rem', lineHeight: 1, padding: 2,
                             display: 'flex', alignItems: 'center',
                         }}
-                        title="Odaberi datum"
+                        title={t('selectDate')}
                         tabIndex={-1}
                     >📅</button>
                 )}

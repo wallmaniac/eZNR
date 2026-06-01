@@ -364,7 +364,7 @@ export default function MedicalExamsPage() {
                                                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                         );
                                                         setActionMenuId(exam.id);
-                                                    }} title={t('showExamActions')}>Akcije ▼</button>
+                                                    }} title={t('showExamActions')}>{t('actions1')}</button>
                                                     {actionMenuId === exam.id && (
                                                         <>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />

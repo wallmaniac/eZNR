@@ -454,7 +454,7 @@ export default function ReferralRA1Page() {
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                               );
                               setActionMenuId(r.id);
-                            }} title={t('prikaziAkcijeZaObrazac')}>Akcije ▼</button>
+                            }} title={t('prikaziAkcijeZaObrazac')}>{t('actions1')}</button>
                             {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                             <>
                               <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />

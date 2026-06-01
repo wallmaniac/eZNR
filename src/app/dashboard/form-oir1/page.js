@@ -313,7 +313,7 @@ export default function FormOIR1Page() {
                           );
                           setActionMenuId(r.id);
                         }} title={t('prikaziAkcijeZaObrazac')}>
-                          Akcije ▼
+                          {t('actions1')}
                         </button>
                         {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                             <>

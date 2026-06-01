@@ -314,7 +314,7 @@ export default function DiseasesPage() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                             );
                             setActionMenuId(d.id);
-                          }}>Akcije ▼</button>
+                          }}>{t('actions1')}</button>
                           {actionMenuId === d.id && (
                             <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
