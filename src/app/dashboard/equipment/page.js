@@ -470,7 +470,7 @@ function EquipmentPageInner() {
                                         <label className="form-label">{t('orgUnit')}</label>
                                         <select className="form-select" value={formData.orgJedinicaId} onChange={e => updateField('orgJedinicaId', e.target.value)}>
                                             <option value="">-</option>
-                                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{t(ou.naziv?.trim()) || ou.naziv}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group">
@@ -696,7 +696,7 @@ function EquipmentPageInner() {
                         <SavedFlash />
                         <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }}  title={t('filtrirajPoOdjelu')} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
                             <option value="">{t('sviOdjeliSektori')}</option>
-                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{t(ou.naziv?.trim()) || ou.naziv}</option>)}
                         </select>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
                             <input type="checkbox" checked={showOutOfUse} onChange={e => setShowOutOfUse(e.target.checked)} />
@@ -780,7 +780,7 @@ function EquipmentPageInner() {
                                             <td style={{ fontWeight: 600 }}>{eq.naziv}</td>
                                             <td><code>{eq.tvBroj}</code></td>
                                             <td>{eq.invBroj}</td>
-                                            <td>{eq.orgName}</td>
+                                            <td>{t(eq.orgName?.trim()) || eq.orgName}</td>
                                             <td>{formatDate(eq.posljednji)}</td>
                                             <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>
                                                 {formatDate(eq.iduci)} {isExpired && '⚠️'}

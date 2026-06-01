@@ -617,9 +617,9 @@ function WorkersPageInner() {
                                     }
                                 }
                             }}
-                                options={workplaces.map(wp => ({ value: wp.id, label: wp.naziv }))} />
+                                options={workplaces.map(wp => ({ value: wp.id, label: t(wp.naziv?.trim()) || wp.naziv }))} />
                             <SelectField label={t('orgUnit')} value={formData.orgJedinicaId} onChange={v => updateField('orgJedinicaId', v)}
-                                options={orgUnits.map(ou => ({ value: ou.id, label: ou.naziv }))} />
+                                options={orgUnits.map(ou => ({ value: ou.id, label: t(ou.naziv?.trim()) || ou.naziv }))} />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'end', marginBottom: 20 }}>
@@ -737,7 +737,7 @@ function WorkersPageInner() {
                         <Field label={t('street')} value={formData.ulica} onChange={v => updateField('ulica', v)} />
                         <Field label={t('houseNumber')} value={formData.kucniBroj} onChange={v => updateField('kucniBroj', v)} />
                         <SelectField label={t('place')} value={formData.mjestoId} onChange={v => updateField('mjestoId', v)}
-                            options={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj})` }))} placeholder={t('odaberiteMjesto')} />
+                            options={places.map(p => ({ value: p.id, label: `${t(p.naziv?.trim()) || p.naziv} (${p.postBroj})` }))} placeholder={t('odaberiteMjesto')} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
                         <Field label={t('municipality')} value={formData.opcina} onChange={v => updateField('opcina', v)} />
@@ -1018,7 +1018,7 @@ function WorkersPageInner() {
                                                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(t('obrisatiZaduzenje')); if (ok) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); setPpeAssign(getWorkerPPE(editingWorker)); } }}>🗑️</button>
                                                 </div>
                                             </td>
-                                            <td style={{ fontWeight: 600 }}>{p.naziv}</td>
+                                            <td style={{ fontWeight: 600 }}>{t(p.naziv?.trim()) || p.naziv}</td>
                                             <td>{formatDate(p.datumZaduzenja)}</td>
                                             <td>{p.datumRazduzenja ? formatDate(p.datumRazduzenja) : '-'}</td>
                                         </tr>
@@ -1065,7 +1065,7 @@ function WorkersPageInner() {
                                             const days = me.vrijediDo ? Math.ceil((new Date(me.vrijediDo) - new Date()) / 86400000) : null;
                                             const badgeCls = days === null ? '' : days < 0 ? 'badge-danger' : days <= 90 ? 'badge-warning' : 'badge-success';
                                             const badgeLabel = days === null ? (t('bezRoka')) : days < 0 ? (t('isteklo')) : formatDate(me.vrijediDo);
-                                            const TMAP = { prethodni: 'Prethodni', 'periodicni': 'Periodički', vanredni: 'Vanredni', nocniRad: 'Noćni rad', ostalo: 'Ostalo' };
+                                            const TMAP = { prethodni: t('prethodniPregled'), 'periodicni': t('periodicniPregled'), vanredni: t('vanredniPregled'), nocniRad: t('pregledNocniRad'), ostalo: t('ostalo') };
                                             const RCOL = { 'Sposoban': 'var(--success)', 'Uvjetno Sposoban': 'var(--warning)', 'Nesposoban': 'var(--danger)' };
                                             const openExamEdit = () => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); };
                                             return (
@@ -1354,7 +1354,7 @@ function WorkersPageInner() {
                                     <div className="form-group">
                                         <label className="form-label">{t('tipUvjerenja')}</label>
                                         <select className="form-select" value={certFormData.tipUvjerenja} onChange={e => setCertFormData({ ...certFormData, tipUvjerenja: e.target.value })}>
-                                            {certTypes.filter((ct, i, a) => a.findIndex(x => x.naziv === ct.naziv) === i).map(ct => <option key={ct.id} value={ct.oznaka}>{ct.naziv}</option>)}
+                                            {certTypes.filter((ct, i, a) => a.findIndex(x => x.naziv === ct.naziv) === i).map(ct => <option key={ct.id} value={ct.oznaka}>{t(ct.naziv?.trim()) || ct.naziv}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -1495,7 +1495,7 @@ function WorkersPageInner() {
                                     }}>
                                         <option value="">-- {t('odaberiteOzo')} --</option>
                                         <option value="NEW_OZO" style={{ fontWeight: 'bold', color: 'var(--primary)' }}>+ {t('dodajNovuOzo1')}</option>
-                                        {ppeTypes.filter((pt, i, a) => a.findIndex(x => x.naziv === pt.naziv) === i).map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
+                                        {ppeTypes.filter((pt, i, a) => a.findIndex(x => x.naziv === pt.naziv) === i).map(pt => <option key={pt.id} value={pt.naziv}>{t(pt.naziv?.trim()) || pt.naziv}</option>)}
                                     </select>
                                 </div>
                                 <div className="form-grid-2">
@@ -1920,14 +1920,14 @@ function WorkersPageInner() {
                                                 <td>
                                                     {w.orgJedinicaId ? (
                                                         <button onClick={() => router.push('/dashboard/org-units')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={t('otvoriOrganizacijskuJedinicu')}>
-                                                            {getOrgUnitName(w.orgJedinicaId)}
+                                                            {t(getOrgUnitName(w.orgJedinicaId)?.trim()) || getOrgUnitName(w.orgJedinicaId)}
                                                         </button>
                                                     ) : '—'}
                                                 </td>
                                                 <td>
                                                     {w.radnoMjestoId ? (
                                                         <button onClick={() => router.push('/dashboard/workplaces')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={t('otvoriRadnoMjesto')}>
-                                                            {getWorkplaceName(w.radnoMjestoId)}
+                                                            {t(getWorkplaceName(w.radnoMjestoId)?.trim()) || getWorkplaceName(w.radnoMjestoId)}
                                                         </button>
                                                     ) : '—'}
                                                 </td>

@@ -703,7 +703,7 @@ function TrainingsInner() {
                 {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }} title={t('nazad')}>←</button>
-                    <h1 style={{ margin: 0, flex: 1 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
+                    <h1 style={{ margin: 0, flex: 1 }}>📊 {t('trainingResultsTitle').replace('{0}', resultsTraining.naziv)}</h1>
                     <button 
                         className="btn btn-outline btn-sm" 
                         onClick={() => { setReminderTraining(resultsTraining); setReminderOpen(true); }}
@@ -714,7 +714,7 @@ function TrainingsInner() {
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
-                    {[{ label: 'Prošli ✅', value: passed, color: '#22c55e' }, { label: 'Nisu prošli ❌', value: failed, color: '#f05252' }, { label: 'Na čekanju ⏳', value: pending, color: '#f59e0b' }].map(s => (
+                    {[{ label: t('passedStats') + ' ✅', value: passed, color: '#22c55e' }, { label: t('failedStats') + ' ❌', value: failed, color: '#f05252' }, { label: t('pendingStats') + ' ⏳', value: pending, color: '#f59e0b' }].map(s => (
                         <div key={s.label} className="card">
                             <div className="card-body" style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: '2rem', fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -763,13 +763,13 @@ function TrainingsInner() {
                                                         background: s.status === 'completed' ? 'rgba(34,197,94,0.12)' : s.status === 'opened' ? 'rgba(245,158,11,0.12)' : 'rgba(148,163,184,0.12)',
                                                         color: s.status === 'completed' ? '#22c55e' : s.status === 'opened' ? '#f59e0b' : 'var(--text-muted)',
                                                     }}>
-                                                        {s.status === 'completed' ? 'Završeno' : s.status === 'opened' ? 'Otvoreno' : 'Poslano'}
+                                                        {s.status === 'completed' ? t('completed') : s.status === 'opened' ? t('opened') : t('sent')}
                                                     </span>
                                                 </td>
                                                 <td>
                                                     {s.grade != null ? (
                                                         <span style={{ fontWeight: 700, color: s.grade.passed ? '#22c55e' : '#f05252' }}>
-                                                            {s.grade.percentage}% — {s.grade.passed ? 'Prošao/la' : 'Nije prošao/la'}
+                                                            {s.grade.percentage}% — {s.grade.passed ? t('passedResult') : t('failedResult')}
                                                         </span>
                                                     ) : '—'}
                                                 </td>
@@ -781,11 +781,11 @@ function TrainingsInner() {
                                                         {s.status === 'completed' && (
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem' }}
                                                                 onClick={() => viewSessionAnswers(s)}
-                                                                disabled={loadingAnswers}>📝 Odgovori</button>
+                                                                disabled={loadingAnswers}>📝 {t('answers')}</button>
                                                         )}
                                                         {s.grade?.passed && (
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem', color: 'var(--success)' }}
-                                                                onClick={() => autoCreateCertificate(s)}>📜 Uvjerenje</button>
+                                                                onClick={() => autoCreateCertificate(s)}>📜 {t('certificate')}</button>
                                                         )}
                                                         {s.grade?.passed && (
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem' }}
@@ -874,7 +874,7 @@ function TrainingsInner() {
                                     </div>
                                 ) : (
                                     <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>
-                                        Odgovori nisu pronađeni za ovu sesiju.
+                                        {t('answersNotFound')}
                                     </div>
                                 )}
                             </div>
@@ -909,9 +909,9 @@ function TrainingsInner() {
             <div className="card" style={{ marginBottom: 16 }}>
                 <div className="card-body" style={{ display: 'flex', gap: 8, padding: '12px 16px' }}>
                     {[
-                        { key: 'slides', label: `🖼️ Slajdovi (${(formData.slides || []).length})` },
-                        { key: 'quiz', label: `❓ Test (${(formData.questions || []).length})` },
-                        { key: 'settings', label: '⚙️ Postavke' },
+                        { key: 'slides', label: `🖼️ ${t('slidesTab')} (${(formData.slides || []).length})` },
+                        { key: 'quiz', label: `❓ ${t('quizTab')} (${(formData.questions || []).length})` },
+                        { key: 'settings', label: `⚙️ ${t('settings')}` },
                     ].map(tab => (
                         <button key={tab.key} style={tabSt(activeFormTab === tab.key)} onClick={() => setActiveFormTab(tab.key)}>
                             {tab.label}
@@ -929,12 +929,12 @@ function TrainingsInner() {
                 <div className="card-body">
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
                         <div>
-                            <div style={lbl}>Naziv obuke *</div>
-                            <input className="form-input" value={formData.naziv} onChange={e => setF('naziv', e.target.value)} placeholder="npr. Osnove zaštite na radu" />
+                            <div style={lbl}>{t('trainingName')} *</div>
+                            <input className="form-input" value={formData.naziv} onChange={e => setF('naziv', e.target.value)} placeholder={t('nprOsnoveZastiteNaRadu')} />
                         </div>
                         <div>
-                            <div style={lbl}>Kratki opis</div>
-                            <input className="form-input" value={formData.opis} onChange={e => setF('opis', e.target.value)} placeholder="Kratki opis sadržaja obuke..." />
+                            <div style={lbl}>{t('shortDescription')}</div>
+                            <input className="form-input" value={formData.opis} onChange={e => setF('opis', e.target.value)} placeholder={t('shortDescriptionPlaceholder')} />
                         </div>
                     </div>
                 </div>
@@ -952,7 +952,7 @@ function TrainingsInner() {
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '16px 20px' }}>
                             <div style={{ fontSize: '1.8rem' }}>{uploadingFile ? '⏳' : '📂'}</div>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 600, marginBottom: 2 }}>Uvezi iz PowerPoint ili PDF dokumenta</div>
+                                <div style={{ fontWeight: 600, marginBottom: 2 }}>{t('importFromDoc')}</div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                     <b>.pptx</b> → slajdovi se uvaze direktno &nbsp;·&nbsp; <b>.pdf</b> → 🤖 Gemini AI kreira slajdove iz teksta
                                 </div>
@@ -966,7 +966,7 @@ function TrainingsInner() {
                             </div>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <button className="btn btn-outline btn-sm" disabled={uploadingFile} onClick={() => fileInputRef.current?.click()}>
-                                    📂 Odaberi dokument
+                                    📂 {t('selectDocument')}
                                 </button>
                                 <input ref={fileInputRef} type="file" accept=".pdf,.pptx" style={{ display: 'none' }}
                                     onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />
@@ -978,7 +978,7 @@ function TrainingsInner() {
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '2rem', marginBottom: 8 }}>🖼️</div>
-                                Nema slajdova. Kliknite &quot;+ Dodaj slajd&quot; da počnete.
+                                {t('noSlidesYet')}
                             </div>
                         </div>
                     )}
@@ -986,21 +986,21 @@ function TrainingsInner() {
                         <div key={slide.id} className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
                             <div className="card-body">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                    <span style={{ fontWeight: 800, fontSize: '0.75rem', color: 'var(--primary)', background: 'rgba(99,102,241,0.1)', padding: '2px 8px', borderRadius: 6 }}>SLAJD {idx + 1}</span>
+                                    <span style={{ fontWeight: 800, fontSize: '0.75rem', color: 'var(--primary)', background: 'rgba(99,102,241,0.1)', padding: '2px 8px', borderRadius: 6 }}>{t('slideWordCaps')} {idx + 1}</span>
                                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => moveSlide(idx, -1)} disabled={idx === 0} title="Pomakni gore">↑</button>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => moveSlide(idx, 1)} disabled={idx === (formData.slides.length - 1)} title="Pomakni dolje">↓</button>
-                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => removeSlide(idx)} title="Obriši slajd">🗑️</button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => moveSlide(idx, -1)} disabled={idx === 0} title={t('pomakniGore')}>↑</button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => moveSlide(idx, 1)} disabled={idx === (formData.slides.length - 1)} title={t('pomakniDolje')}>↓</button>
+                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => removeSlide(idx)} title={t('obrisiSlajd')}>🗑️</button>
                                     </div>
                                 </div>
                                 <div style={{ marginBottom: 10 }}>
-                                    <div style={lbl}>Naslov slajda</div>
-                                    <input className="form-input" value={slide.naslov} onChange={e => updateSlide(idx, 'naslov', e.target.value)} placeholder={`Naslov slajda ${idx + 1}...`} />
+                                    <div style={lbl}>{t('slideTitle')}</div>
+                                    <input className="form-input" value={slide.naslov} onChange={e => updateSlide(idx, 'naslov', e.target.value)} placeholder={`${t('slideTitle')} ${idx + 1}...`} />
                                 </div>
                                 <div>
-                                    <div style={lbl}>Sadržaj slajda</div>
+                                    <div style={lbl}>{t('slideContent')}</div>
                                     <textarea className="form-input" rows={6} value={slide.sadrzaj} onChange={e => updateSlide(idx, 'sadrzaj', e.target.value)}
-                                        placeholder="Unesite tekst sadržaja slajda... Koristite novi red za odvajanje tačaka. Što više sadržaja, to bolji AI generira test."
+                                        placeholder={t('slideContentPlaceholder')}
                                         style={{ resize: 'vertical', lineHeight: 1.7 }} />
                                 </div>
                             </div>
@@ -1019,8 +1019,8 @@ function TrainingsInner() {
                     <div className="card">
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 600, marginBottom: 4 }}>🤖 AI generisanje testa</div>
-                                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Gemini AI čita vaše slajdove i automatski kreira pitanja višestrukog izbora za provjeru znanja radnika.</div>
+                                <div style={{ fontWeight: 600, marginBottom: 4 }}>🤖 {t('aiGenerateQuiz')}</div>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('aiGenerateQuizDesc')}</div>
                             </div>
                             <button
                                 className="btn btn-primary"
@@ -1039,7 +1039,7 @@ function TrainingsInner() {
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '2rem', marginBottom: 8 }}>❓</div>
-                                Nema pitanja. Kliknite &quot;Generiraj test&quot; ili &quot;+ Dodaj ručno&quot;.
+                                {t('noQuestionsYet')}
                             </div>
                         </div>
                     )}
@@ -1048,12 +1048,12 @@ function TrainingsInner() {
                         <div key={q.id} className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
                             <div className="card-body">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                    <span style={{ fontWeight: 800, fontSize: '0.75rem', color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 6 }}>PITANJE {qIdx + 1}</span>
+                                    <span style={{ fontWeight: 800, fontSize: '0.75rem', color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 6 }}>{t('questionWord')} {qIdx + 1}</span>
                                     <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', color: 'var(--danger)' }} onClick={() => removeQuestion(qIdx)}>🗑️</button>
                                 </div>
                                 <div style={{ marginBottom: 12 }}>
-                                    <div style={lbl}>Tekst pitanja</div>
-                                    <input className="form-input" value={q.pitanje} onChange={e => updateQuestion(qIdx, 'pitanje', e.target.value)} placeholder="Unesite pitanje..." />
+                                    <div style={lbl}>{t('questionText')}</div>
+                                    <input className="form-input" value={q.pitanje} onChange={e => updateQuestion(qIdx, 'pitanje', e.target.value)} placeholder={t('questionText') + '...'} />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                                     {(q.opcije || ['', '', '', '']).map((opt, oIdx) => (
@@ -1067,18 +1067,18 @@ function TrainingsInner() {
                                                     color: q.tacno === oIdx ? '#fff' : 'var(--text-muted)',
                                                     cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0,
                                                 }}
-                                                title="Klikni da premjestiš tačan odgovor ovdje">
+                                                title={t('clickToSetCorrectAnswer')}>
                                                 {String.fromCharCode(65 + oIdx)}
                                             </button>
                                             <input className="form-input" style={{ flex: 1, fontSize: '0.85rem' }}
                                                 value={opt} onChange={e => updateOption(qIdx, oIdx, e.target.value)}
-                                                placeholder={`Opcija ${String.fromCharCode(65 + oIdx)}...`} />
+                                                placeholder={`${t('option')} ${String.fromCharCode(65 + oIdx)}...`} />
                                         </div>
                                     ))}
                                 </div>
                                 <div>
-                                    <div style={lbl}>Objašnjenje (opcionalno)</div>
-                                    <input className="form-input" style={{ fontSize: '0.85rem' }} value={q.objasnjenje || ''} onChange={e => updateQuestion(qIdx, 'objasnjenje', e.target.value)} placeholder="Kratko objašnjenje tačnog odgovora..." />
+                                    <div style={lbl}>{t('explanationOptional')}</div>
+                                    <input className="form-input" style={{ fontSize: '0.85rem' }} value={q.objasnjenje || ''} onChange={e => updateQuestion(qIdx, 'objasnjenje', e.target.value)} placeholder={t('explanationPlaceholder')} />
                                 </div>
                             </div>
                         </div>
@@ -1091,7 +1091,7 @@ function TrainingsInner() {
                 <div className="card">
                     <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div>
-                            <div style={lbl}>Prag prolaza (%)</div>
+                            <div style={lbl}>{t('passingScore')}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                 <input className="form-input" type="number" min={0} max={100} value={formData.prolazniPrag ?? 70}
                                     onChange={e => setF('prolazniPrag', Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
@@ -1106,8 +1106,8 @@ function TrainingsInner() {
                                 <input type="checkbox" className="form-checkbox" checked={formData.prikaziRezultate ?? true}
                                     onChange={e => setF('prikaziRezultate', e.target.checked)} />
                                 <div>
-                                    <div style={{ fontWeight: 600 }}>Prikaži rezultate radniku odmah po završetku</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik vidi postotak i prolaz/pad odmah</div>
+                                    <div style={{ fontWeight: 600 }}>{t('showResultsToWorker')}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('showResultsToWorkerDesc')}</div>
                                 </div>
                             </label>
                         </div>
@@ -1116,8 +1116,8 @@ function TrainingsInner() {
                                 <input type="checkbox" className="form-checkbox" checked={formData.dozvoliPovratak ?? false}
                                     onChange={e => setF('dozvoliPovratak', e.target.checked)} />
                                 <div>
-                                    <div style={{ fontWeight: 600 }}>Dozvoli povratak na prezentaciju tokom testa</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik može otvoriti prezentaciju tokom testa — odgovori se čuvaju</div>
+                                    <div style={{ fontWeight: 600 }}>{t('allowReturnToPresentation')}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('allowReturnToPresentationDesc')}</div>
                                 </div>
                             </label>
                         </div>
@@ -1126,8 +1126,8 @@ function TrainingsInner() {
                                 <input type="checkbox" className="form-checkbox" checked={formData.prikaziHintove ?? true}
                                     onChange={e => setF('prikaziHintove', e.target.checked)} />
                                 <div>
-                                    <div style={{ fontWeight: 600 }}>Prikaži objašnjenja (hints) nakon odgovora</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik vidi objašnjenje tačnog odgovora nakon što odgovori na pitanje</div>
+                                    <div style={{ fontWeight: 600 }}>{t('showExplanations')}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('showExplanationsDesc')}</div>
                                 </div>
                             </label>
                         </div>

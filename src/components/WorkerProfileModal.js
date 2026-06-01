@@ -494,11 +494,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             return (
                                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: `1px solid ${isExpired ? 'var(--danger)' : 'var(--border-light)'}` }}>
                                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', minWidth: 55 }}>{c.oznaka}</span>
-                                    <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>{c.ime}</span>
+                                    <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>{t(c.ime?.trim()) || c.ime}</span>
                                     <span style={{ fontSize: '0.75rem', color: isExpired ? 'var(--danger)' : 'var(--text-muted)' }}>
                                         {isExpired ? '⚠️ ' : ''}{t('do')}: {formatDate(c.vrijediDo) || '—'}
                                     </span>
-                                    <span className={`badge ${c.sposobnost === 'Sposoban' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>{c.sposobnost}</span>
+                                    <span className={`badge ${c.sposobnost === 'Sposoban' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>{t(c.sposobnost?.toLowerCase()) || c.sposobnost}</span>
                                     <div style={{ display: 'flex', gap: 4 }}>
                                         <button className="btn btn-ghost btn-sm btn-icon" title={t('brzaIzmjena')}
                                             onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
@@ -597,7 +597,14 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                 >
                                     <span style={{ fontSize: '1.2rem' }}>🩺</span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.tipPregleda || (t('pregled1'))}</div>
+                                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                                            {m.tipPregleda === 'prethodni' ? t('prethodniPregled') :
+                                             m.tipPregleda === 'periodicni' ? t('periodicniPregled') :
+                                             m.tipPregleda === 'vanredni' ? t('vanredniPregled') :
+                                             m.tipPregleda === 'nocniRad' ? t('pregledNocniRad') :
+                                             m.tipPregleda === 'ostalo' ? t('ostalo') :
+                                             (m.tipPregleda || t('pregled1'))}
+                                        </div>
                                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                                             {m.datumPregleda ? `${t('datum')}: ${formatDate(m.datumPregleda)}` : ''}
                                             {m.vrijediDo ? ` · ${t('vrijediDo')}: ${formatDate(m.vrijediDo)}` : ''}

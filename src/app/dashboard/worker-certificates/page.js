@@ -489,7 +489,7 @@ function WorkerCertificatesInner() {
                             onClick={() => handleEdit(r.id)}
                             disabled={isNavigating}
                             style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
-                            title={t('urediUvjerenje')}>{r.naziv || r.ime || '—'}</button>
+                            title={t('urediUvjerenje')}>{t(r.naziv?.trim()) || t(r.ime?.trim()) || r.naziv || r.ime || '—'}</button>
                         </td>
                         <td><span className="badge badge-info">{r.oznaka}</span></td>
                         <td>{formatDate(r.datum)}</td>

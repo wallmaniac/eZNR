@@ -431,7 +431,7 @@ function UvjerenjeFormPage() {
                                 {filteredWorkers.map(w => (
                                     <div key={w.id} onClick={() => { setSelectedWorkerIds(new Set([w.id])); setShowWorkerDropdown(false); setWorkerSearch(''); }} style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ fontWeight: 600 }}>{w.ime} {w.prezime}</div>
-                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getWorkplaceName(w.radnoMjestoId)} • {getOrgUnitName(w.orgJedinicaId)}</div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t(getWorkplaceName(w.radnoMjestoId)?.trim()) || getWorkplaceName(w.radnoMjestoId)} • {t(getOrgUnitName(w.orgJedinicaId)?.trim()) || getOrgUnitName(w.orgJedinicaId)}</div>
                                     </div>
                                 ))}
                                 {filteredWorkers.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('nemaRezultata')}</div>}
@@ -501,7 +501,7 @@ function UvjerenjeFormPage() {
                                                 background: formData.tipUvjerenjaId === ct.id ? 'var(--primary)' : undefined,
                                                 color: formData.tipUvjerenjaId === ct.id ? 'white' : undefined,
                                             }}>
-                                            {ct.naziv}
+                                            {t(ct.naziv?.trim()) || ct.naziv}
                                         </div>
                                     ))}
                                     {filteredTips.length === 0 && (
@@ -643,7 +643,7 @@ function UvjerenjeFormPage() {
                                             <select className="form-select" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
                                                 value={newExaminerData.ovlaštenaTvrtkaId} onChange={e => setNewExaminerData(d => ({ ...d, ovlaštenaTvrtkaId: e.target.value }))}>
                                                 <option value="">-</option>
-                                                {authorizedCompanies.map(c => <option key={c.id} value={c.id}>{c.naziv}</option>)}
+                                                {authorizedCompanies.map(c => <option key={c.id} value={c.id}>{t(c.naziv?.trim()) || c.naziv}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -688,7 +688,7 @@ function UvjerenjeFormPage() {
                             <div style={labelStyle}>{t('izdanoZaRadnoMjesto')}</div>
                             <select className="form-select" value={formData.vydanoZaRadnoMjesto || ''} onChange={e => set('vydanoZaRadnoMjesto', e.target.value)}>
                                 <option value="">{t('odaberiteRadnoMjesto1')}</option>
-                                {workplaces.map(wp => <option key={wp.id} value={wp.naziv}>{wp.naziv}</option>)}
+                                {workplaces.map(wp => <option key={wp.id} value={wp.naziv}>{t(wp.naziv?.trim()) || wp.naziv}</option>)}
                             </select>
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>

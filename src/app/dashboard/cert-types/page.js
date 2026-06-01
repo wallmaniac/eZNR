@@ -131,7 +131,7 @@ export default function CertTypesPage() {
                     )}
                   </div>
                 </td>
-                <td style={{ fontWeight: 600 }}>{i.naziv}</td>
+                <td style={{ fontWeight: 600 }}>{t(i.naziv?.trim()) || i.naziv}</td>
                 <td><span className="badge badge-info">{i.oznaka}</span></td>
                 <td>{i.trajanjeMjeseci} {t('mj')}</td>
               </tr>

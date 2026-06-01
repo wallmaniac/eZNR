@@ -239,7 +239,7 @@ function EditCertPageInner() {
                                         <div key={ct.id}
                                             onClick={() => { set('tipUvjerenjaId', ct.id); set('tipUvjerenjaIme', ct.naziv); setShowTipDropdown(false); setTipSearch(''); }}
                                             style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', background: formData.tipUvjerenjaId === ct.id ? 'var(--primary)' : undefined, color: formData.tipUvjerenjaId === ct.id ? 'white' : undefined }}>
-                                            {ct.naziv}
+                                            {t(ct.naziv?.trim()) || ct.naziv}
                                         </div>
                                     ))}
                                     {filteredTips.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('nemaRezultata')}</div>}

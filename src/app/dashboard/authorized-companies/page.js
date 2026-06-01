@@ -77,13 +77,13 @@ export default function AuthorizedCompaniesPage() {
               <td onClick={e => e.stopPropagation()}><div style={{ position: 'relative' }}>
                 <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (actionMenuId === i.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(i.id); }}>{t('actions1')}</button>
                 {actionMenuId === i.id && (<><div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} /><div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}><span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{i.naziv}</span><button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}><span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t(i.naziv?.trim()) || i.naziv}</span><button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button></div>
                   <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ {t('uredi')}</button>
                   <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                   <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                 </div></>)}
               </div></td>
-              <td style={{ fontWeight: 600 }}>{i.naziv}</td>
+              <td style={{ fontWeight: 600 }}>{t(i.naziv?.trim()) || i.naziv}</td>
               <td><code>{i.rješenjeBroj}</code></td>
               <td>{i.adresa}</td>
               <td>{i.tel}</td>

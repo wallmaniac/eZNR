@@ -125,7 +125,7 @@ export default function EquipmentTypesPage() {
                     )}
                   </div>
                 </td>
-                <td style={{ fontWeight: 600 }}>⚙️ {i.naziv}</td>
+                <td style={{ fontWeight: 600 }}>⚙️ {t(i.naziv?.trim()) || i.naziv}</td>
               </tr>
             ))}</tbody></table></div>
         </div></div>

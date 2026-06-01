@@ -148,28 +148,28 @@ export default function TestsZopZnrPage() {
                             </p>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-                                {tests.map(t => (
-                                    <div key={t.title} style={{ 
+                                {tests.map(test => (
+                                    <div key={test.title} style={{ 
                                         padding: 20, 
                                         borderRadius: 'var(--radius-md)', 
-                                        background: t.bg, 
-                                        border: `1px solid ${t.border}`,
+                                        background: test.bg, 
+                                        border: `1px solid ${test.border}`,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: 16
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                            <span style={{ fontSize: '2rem' }}>{t.icon}</span>
+                                            <span style={{ fontSize: '2rem' }}>{test.icon}</span>
                                             <div>
-                                                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t.title}</h3>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{t.desc}</div>
+                                                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{test.title}</h3>
+                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{test.desc}</div>
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                                            <button onClick={() => handleDownload(t)} disabled={loading === t.title} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                                                {loading === t.title ? '🔄...' : `📥 ${t('downloadDocx')}`}
+                                            <button onClick={() => handleDownload(test)} disabled={loading === test.title} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
+                                                {loading === test.title ? '🔄...' : `📥 ${t('downloadDocx')}`}
                                             </button>
-                                            <a href={generateEmailObject(t)} className="btn btn-outline btn-sm btn-icon" title={t('sendViaEmail')}>
+                                            <a href={generateEmailObject(test)} className="btn btn-outline btn-sm btn-icon" title={t('sendViaEmail')}>
                                                 ✉️
                                             </a>
                                         </div>
