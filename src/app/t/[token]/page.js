@@ -2,6 +2,7 @@
 import { useState, useEffect, use } from 'react';
 import { getTrainingSession, markTrainingSessionOpened, saveTrainingResponse } from '@/lib/firebaseSync';
 import { generateTrainingCertificate } from '@/lib/trainingCertificate';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /* ═══════════════════════════════════════════════════════
    Public Training Page — /t/[token]
@@ -10,7 +11,17 @@ import { generateTrainingCertificate } from '@/lib/trainingCertificate';
    Phase 3: Result
    ═══════════════════════════════════════════════════════ */
 
+const LANGUAGES = [
+    { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
+    { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
+    { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' },
+    { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png', title: 'Deutsch' },
+    { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png', title: 'Slovenščina' },
+    { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png', title: 'Srpski' }
+];
+
 export default function PublicTrainingPage({ params }) {
+    const { t, lang, setLang } = useLanguage();
     const resolvedParams = use(params);
     const token = resolvedParams.token;
 
@@ -31,17 +42,17 @@ export default function PublicTrainingPage({ params }) {
 
     useEffect(() => {
         async function load() {
-            if (!token) { setError('Nevažeći link.'); setLoading(false); return; }
+            if (!token) { setError('invalidLink'); setLoading(false); return; }
             try {
                 const data = await getTrainingSession(token);
-                if (!data) { setError('Obuka nije pronađena ili je link nevažeći.'); setLoading(false); return; }
+                if (!data) { setError('trainingNotFound'); setLoading(false); return; }
                 if (data.status === 'completed') { setSubmitted(true); setSession(data); setLoading(false); return; }
-                if (data.deadline && new Date(data.deadline) < new Date()) { setError('Rok za ovu obuku je istekao.'); setLoading(false); return; }
+                if (data.deadline && new Date(data.deadline) < new Date()) { setError('trainingExpired'); setLoading(false); return; }
                 if (data.status === 'sent') await markTrainingSessionOpened(data.id);
                 setSession(data);
             } catch (err) {
                 console.error(err);
-                setError('Greška pri učitavanju obuke. Pokušajte ponovo.');
+                setError('errorLoadingTraining');
             } finally { setLoading(false); }
         }
         load();
@@ -78,7 +89,7 @@ export default function PublicTrainingPage({ params }) {
             setPhase('result');
         } catch (err) {
             console.error(err);
-            alert('Greška pri slanju odgovora: ' + (err?.message || 'Nepoznata greška'));
+            alert(t('errorLoadingTraining') + ': ' + (err?.message || ''));
         } finally { setSubmitting(false); }
     };
 
@@ -97,7 +108,7 @@ export default function PublicTrainingPage({ params }) {
             <div style={containerStyle}>
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                     <Spinner size={52} />
-                    <p style={{ color: '#94a3b8', marginTop: 20 }}>Učitavanje obuke...</p>
+                    <p style={{ color: '#94a3b8', marginTop: 20 }}>{t('loadingTraining')}</p>
                 </div>
             </div>
         </div>
@@ -110,8 +121,8 @@ export default function PublicTrainingPage({ params }) {
             <div style={containerStyle}>
                 <div style={{ textAlign: 'center', padding: '60px 0', maxWidth: 480, margin: '0 auto' }}>
                     <div style={iconBox('rgba(239,68,68,0.1)', 72)}>❌</div>
-                    <h2 style={{ color: '#e2e8f0', marginBottom: 8 }}>Obuka nije dostupna</h2>
-                    <p style={{ color: '#94a3b8', lineHeight: 1.6 }}>{error}</p>
+                    <h2 style={{ color: '#e2e8f0', marginBottom: 8 }}>{t('trainingNotAvailable')}</h2>
+                    <p style={{ color: '#94a3b8', lineHeight: 1.6 }}>{t(error)}</p>
                 </div>
                 <Footer />
             </div>
@@ -126,7 +137,7 @@ export default function PublicTrainingPage({ params }) {
                 <div style={{ textAlign: 'center', padding: '60px 0', maxWidth: 480, margin: '0 auto' }}>
                     <div style={{ ...iconBox('rgba(16,185,129,0.1)', 80), animation: 'popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)', fontSize: '2.5rem' }}>✅</div>
                     <style>{`@keyframes popIn { from { transform:scale(0.5);opacity:0; } to { transform:scale(1);opacity:1; } }`}</style>
-                    <h2 style={{ color: '#10b981', marginBottom: 8 }}>Obuka završena!</h2>
+                    <h2 style={{ color: '#10b981', marginBottom: 8 }}>{t('trainingCompleted')}</h2>
                     <p style={{ color: '#94a3b8', lineHeight: 1.6 }}>Vaši odgovori su uspješno primljeni. Možete zatvoriti ovu stranicu.</p>
                 </div>
                 <Footer />
@@ -149,6 +160,33 @@ export default function PublicTrainingPage({ params }) {
                 <BgGlow />
                 <MobileStyles />
                 <div style={{ ...containerStyle, maxWidth: 860 }} className="t-container">
+                    {/* Floating Premium Language Switcher */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 12 }}>
+                        {LANGUAGES.map(l => (
+                            <button
+                                key={l.code}
+                                onClick={() => setLang(l.code)}
+                                title={l.title}
+                                style={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: '50%',
+                                    border: lang === l.code ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.15)',
+                                    background: lang === l.code ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 0,
+                                    transition: 'all 0.15s',
+                                    boxShadow: lang === l.code ? '0 0 8px rgba(99,102,241,0.4)' : 'none'
+                                }}
+                            >
+                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                            </button>
+                        ))}
+                    </div>
+
 
                     {/* Company header */}
                     {(companyLogo || companyName) && (
@@ -161,15 +199,15 @@ export default function PublicTrainingPage({ params }) {
                     {/* Header */}
                     <div style={{ textAlign: 'center', marginBottom: 24 }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 20, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', marginBottom: 12 }}>
-                            <span style={{ fontSize: '0.8rem', color: '#6366f1', fontWeight: 700 }}>🎬 PREZENTACIJA</span>
+                            <span style={{ fontSize: '0.8rem', color: '#6366f1', fontWeight: 700 }}>🎬 {t('presentationLabel')}</span>
                         </div>
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e2e8f0', margin: '0 0 8px' }}>
-                            {session.trainingName || 'Obuka'}
+                            {session.trainingName || t('obuka')}
                         </h1>
-                        {assignedBy && <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 4px' }}>👤 Dodijelio/la: <strong style={{ color: '#e2e8f0' }}>{assignedBy}</strong></p>}
+                        {assignedBy && <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 4px' }}>👤 {t('ispitivac')}: <strong style={{ color: '#e2e8f0' }}>{assignedBy}</strong></p>}
                         {session.deadline && (
                             <p style={{ color: '#f59e0b', fontSize: '0.85rem', fontWeight: 600, margin: 0 }}>
-                                ⏰ Rok: {new Date(session.deadline).toLocaleDateString('hr-HR')}
+                                ⏰ {t('vrijediDo')}: {new Date(session.deadline).toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'de' ? 'de-DE' : lang === 'sl' ? 'sl-SI' : 'hr-HR')}
                             </p>
                         )}
                     </div>
@@ -177,8 +215,8 @@ export default function PublicTrainingPage({ params }) {
                     {/* Progress bar */}
                     <div style={{ marginBottom: 20 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.78rem', color: '#94a3b8' }}>
-                            <span>Slajd {slideIdx + 1} od {slides.length}</span>
-                            <span>{Math.round(progress)}% pregledano</span>
+                            <span>{t('slideWord')} {slideIdx + 1} {t('ofWord')} {slides.length}</span>
+                            <span>{t('viewedPct').replace('{0}', Math.round(progress))}</span>
                         </div>
                         <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${progress}%`, borderRadius: 3, background: 'linear-gradient(90deg,#6366f1,#8b5cf6)', transition: 'width 0.4s ease' }} />
@@ -203,7 +241,7 @@ export default function PublicTrainingPage({ params }) {
                             </h2>
                         )}
                         <div className="t-slide-content" style={{ color: '#cbd5e1', fontSize: '1rem', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                            {currentSlide.sadrzaj || <span style={{ color: '#475569', fontStyle: 'italic' }}>(Slajd nema sadržaja)</span>}
+                            {currentSlide.sadrzaj || <span style={{ color: '#475569', fontStyle: 'italic' }}>({t('noContent')})</span>}
                         </div>
                     </div>
 
@@ -214,7 +252,7 @@ export default function PublicTrainingPage({ params }) {
                             onClick={() => setSlideIdx(i => Math.max(0, i - 1))}
                             disabled={slideIdx === 0}
                             style={{ ...navBtnStyle, opacity: slideIdx === 0 ? 0.3 : 1, minWidth: 110 }}>
-                            ← Prethodni
+                            ← {t('prevBtn')}
                         </button>
 
                         <span style={{ fontSize: '0.88rem', color: '#64748b', fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -227,15 +265,15 @@ export default function PublicTrainingPage({ params }) {
                                 onClick={() => { setPhase('quiz'); setQuizIdx(0); }}
                                 style={{ minWidth: 110, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 20px rgba(34,197,94,0.3)', whiteSpace: 'nowrap' }}>
                                 {questions.length > 0
-                                    ? (Object.keys(answers).length > 0 ? '▶️ Nastavi test →' : '✅ Počni test →')
-                                    : '✅ Završi'}
+                                    ? (Object.keys(answers).length > 0 ? '▶️ ' + t('continueTest') + ' →' : '✅ ' + t('startTest') + ' →')
+                                    : '✅ ' + t('finishBtn')}
                             </button>
                         ) : (
                             <button
                                 className="t-nav-btn"
                                 onClick={() => setSlideIdx(i => Math.min(slides.length - 1, i + 1))}
                                 style={{ ...navBtnStyle, minWidth: 110 }}>
-                                Sljedeći →
+                                {t('nextBtn')} →
                             </button>
                         )}
                     </div>
@@ -282,7 +320,7 @@ export default function PublicTrainingPage({ params }) {
                     <div style={containerStyle}>
                         <div style={{ textAlign: 'center', padding: '60px 0' }}>
                             <Spinner size={52} />
-                            <p style={{ color: '#94a3b8', marginTop: 20 }}>Završavanje obuke...</p>
+                            <p style={{ color: '#94a3b8', marginTop: 20 }}>{t('submittingBtn')}</p>
                         </div>
                     </div>
                 </div>
@@ -301,30 +339,57 @@ export default function PublicTrainingPage({ params }) {
                 <style>{`@keyframes spin { to { transform:rotate(360deg); } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
                 <MobileStyles />
                 <div style={{ ...containerStyle, maxWidth: 720 }} className="t-container">
+                    {/* Floating Premium Language Switcher */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 12 }}>
+                        {LANGUAGES.map(l => (
+                            <button
+                                key={l.code}
+                                onClick={() => setLang(l.code)}
+                                title={l.title}
+                                style={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: '50%',
+                                    border: lang === l.code ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.15)',
+                                    background: lang === l.code ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 0,
+                                    transition: 'all 0.15s',
+                                    boxShadow: lang === l.code ? '0 0 8px rgba(99,102,241,0.4)' : 'none'
+                                }}
+                            >
+                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                            </button>
+                        ))}
+                    </div>
+
 
                     {/* Header — back button only if officer enabled it */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                         <div>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 20, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', marginBottom: 4 }}>
-                                <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>❓ TEST ZNANJA</span>
+                                <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>❓ {t('quizLabel')}</span>
                             </div>
                             <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#e2e8f0', margin: 0 }}>{session.trainingName}</h1>
                         </div>
                         {dozvoliPovratak ? (
                             <button onClick={() => setPhase('slides')}
                                 style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                ← Vrati se na prezentaciju
+                                ← {t('backToSlides')}
                             </button>
                         ) : (
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>Test se ne može prekinuti</div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>{t('cannotInterrupt')}</div>
                         )}
                     </div>
 
                     {/* Progress */}
                     <div style={{ marginBottom: 20 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.78rem', color: '#94a3b8' }}>
-                            <span>Pitanje {quizIdx + 1} od {questions.length}</span>
-                            <span>{answered} odgovoreno</span>
+                            <span>{t('questionWord')} {quizIdx + 1} {t('ofWord')} {questions.length}</span>
+                            <span>{answered} {t('answeredWord')}</span>
                         </div>
                         <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${progress}%`, borderRadius: 3, background: 'linear-gradient(90deg,#f59e0b,#f97316)', transition: 'width 0.4s' }} />
@@ -333,7 +398,7 @@ export default function PublicTrainingPage({ params }) {
 
                     {/* Question card */}
                     <div key={quizIdx} className="t-q-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '32px 36px', marginBottom: 20, animation: 'fadeSlide 0.25s ease' }}>
-                        <div style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 800, letterSpacing: '0.08em', marginBottom: 12 }}>PITANJE {quizIdx + 1}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 800, letterSpacing: '0.08em', marginBottom: 12 }}>{t('questionWordUpper')} {quizIdx + 1}</div>
                         <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0', lineHeight: 1.5, margin: '0 0 24px' }}>
                             {currentQ?.pitanje || ''}
                         </p>
@@ -403,16 +468,16 @@ export default function PublicTrainingPage({ params }) {
                     {/* Quiz nav row: Prev | answered/total | Next/Submit — always horizontal */}
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
                         <button className="t-nav-btn" onClick={() => setQuizIdx(i => Math.max(0, i - 1))} disabled={quizIdx === 0}
-                            style={{ ...navBtnStyle, opacity: quizIdx === 0 ? 0.3 : 1, minWidth: 110 }}>← Prethodno</button>
+                            style={{ ...navBtnStyle, opacity: quizIdx === 0 ? 0.3 : 1, minWidth: 110 }}>← {t('prevBtn')}</button>
 
                         <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                            {answered}/{questions.length} odg.
+                            {answered}/{questions.length} {t('answeredWord')}
                         </span>
 
                         {isLastQ ? (
                             <button className="t-nav-btn-green" onClick={handleSubmitQuiz} disabled={submitting}
                                 style={{ minWidth: 110, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: submitting ? 0.7 : 1, whiteSpace: 'nowrap' }}>
-                                {submitting ? <><Spinner size={14} /> Šaljem...</> : '✅ Predaj test'}
+                                {submitting ? <><Spinner size={14} /> {t('submittingBtn')}</> : '✅ ' + t('submitTest')}
                             </button>
                         ) : (
                             <button className="t-nav-btn" onClick={() => setQuizIdx(i => Math.min(questions.length - 1, i + 1))} style={{ ...navBtnStyle, minWidth: 110 }}>
@@ -426,7 +491,7 @@ export default function PublicTrainingPage({ params }) {
                         <div style={{ textAlign: 'center', marginTop: 20 }}>
                             <button onClick={handleSubmitQuiz} disabled={submitting}
                                 style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>
-                                ✅ Predaj test ({Object.keys(answers).length}/{questions.length} odgovoreno)
+                                ✅ {t('submitTest')} ({Object.keys(answers).length}/{questions.length} {t('answeredWord')})
                             </button>
                         </div>
                     )}
@@ -448,6 +513,33 @@ export default function PublicTrainingPage({ params }) {
                 <BgGlow />
                 <style>{`@keyframes popIn { from { transform:scale(0.5);opacity:0; } to { transform:scale(1);opacity:1; } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 640 }}>
+                    {/* Floating Premium Language Switcher */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 12 }}>
+                        {LANGUAGES.map(l => (
+                            <button
+                                key={l.code}
+                                onClick={() => setLang(l.code)}
+                                title={l.title}
+                                style={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: '50%',
+                                    border: lang === l.code ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.15)',
+                                    background: lang === l.code ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 0,
+                                    transition: 'all 0.15s',
+                                    boxShadow: lang === l.code ? '0 0 8px rgba(99,102,241,0.4)' : 'none'
+                                }}
+                            >
+                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                            </button>
+                        ))}
+                    </div>
+
 
                     {/* Result hero */}
                     <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -455,7 +547,7 @@ export default function PublicTrainingPage({ params }) {
                             {grade.passed ? '🏆' : '📚'}
                         </div>
                         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: grade.passed ? '#22c55e' : '#f05252', margin: '0 0 8px' }}>
-                            {grade.passed ? 'Čestitamo! Prošli ste test!' : 'Niste prošli test'}
+                            {grade.passed ? t('congratsPassed') : t('failedTest')}
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: '1rem', margin: 0 }}>
                             {session.trainingName}
@@ -468,7 +560,7 @@ export default function PublicTrainingPage({ params }) {
                             <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${grade.passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`, borderRadius: 20, padding: 28, marginBottom: 24, textAlign: 'center' }}>
                                 <div style={{ fontSize: '3.5rem', fontWeight: 900, color: grade.passed ? '#22c55e' : '#f05252', lineHeight: 1 }}>{grade.percentage}%</div>
                                 <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: 8 }}>
-                                    {grade.correct} od {grade.total} tačnih odgovora · Prag prolaza: {prolazniPrag}%
+                                    {t('correctAnswersOf').replace('{0}', grade.correct).replace('{1}', grade.total)} · {t('pragProlaza')}: {prolazniPrag}%
                                 </div>
                                 <div style={{ marginTop: 16, height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                                     <div style={{ height: '100%', width: `${grade.percentage}%`, borderRadius: 4, background: grade.passed ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f05252,#dc2626)', transition: 'width 1s ease' }} />
@@ -485,9 +577,9 @@ export default function PublicTrainingPage({ params }) {
                                                 <p style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: 600, margin: '0 0 6px' }}>{d.question}</p>
                                                 {!d.isCorrect && questions[i] && (
                                                     <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                                                        <span style={{ color: '#f05252' }}>Vaš odgovor: {d.userAnswer >= 0 ? (questions[i].opcije?.[d.userAnswer] || `Opcija ${d.userAnswer + 1}`) : '(nije odgovoreno)'}</span>
+                                                        <span style={{ color: '#f05252' }}>{t('yourAnswer')} {d.userAnswer >= 0 ? (questions[i].opcije?.[d.userAnswer] || String.fromCharCode(65 + d.userAnswer)) : `(${t('nijePostavljeno')})`}</span>
                                                         <br />
-                                                        <span style={{ color: '#22c55e' }}>Tačan odgovor: {questions[i].opcije?.[d.correctAnswer] || `Opcija ${d.correctAnswer + 1}`}</span>
+                                                        <span style={{ color: '#22c55e' }}>{t('correctAnswerLabel')} {questions[i].opcije?.[d.correctAnswer] || String.fromCharCode(65 + d.correctAnswer)}</span>
                                                     </div>
                                                 )}
                                                 {d.isCorrect && prikaziHintove && questions[i]?.objasnjenje && (
@@ -518,9 +610,10 @@ export default function PublicTrainingPage({ params }) {
                                 companyName: companyName || '',
                                 companyLogo: companyLogo || '',
                                 officerName: assignedBy || '',
+                                lang: lang,
                             })}
                                 style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 16px rgba(99,102,241,0.3)' }}>
-                                📄 Preuzmi certifikat
+                                📄 {t('downloadCert')}
                             </button>
                         </div>
                     )}
@@ -530,13 +623,13 @@ export default function PublicTrainingPage({ params }) {
                         <div style={{ textAlign: 'center', marginTop: 24 }}>
                             <button onClick={() => { setPhase('slides'); setSlideIdx(0); }}
                                 style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
-                                📖 Pregledaj prezentaciju ponovo
+                                📖 {t('reviewSlides')}
                             </button>
                         </div>
                     )}
 
                     <div style={{ textAlign: 'center', marginTop: 24, color: '#475569', fontSize: '0.85rem' }}>
-                        Možete zatvoriti ovu stranicu.
+                        {t('closePageNotice')}
                     </div>
 
                     <Footer />

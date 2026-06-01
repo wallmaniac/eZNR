@@ -794,7 +794,7 @@ function UvjerenjeFormPage() {
                                         date: formData.datum || new Date().toISOString(),
                                         certOznaka: formData.oznaka || `ZOS-${Date.now().toString(36).toUpperCase()}`,
                                         testResult: formData.rezultatTesta || '',
-                                    });
+                                    }, lang);
                                 }}>
                                     🖨️ {t('ispisiZos')}
                                 </button>

@@ -913,7 +913,7 @@ function WorkersPageInner() {
                                                                             const wps = getAll(COLLECTIONS.ORG_UNITS);
                                                                             const wpN = wps.find(wp => wp.id === wk.radnoMjestoId)?.naziv || c.izdanoZaRadnoMjesto || '';
                                                                             const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
-                                                                            printZosPdf({ company: companyFull, worker: wk, workplaceName: wpN, training: { naziv: c.izdanoIzObuke || c.ime }, officer: c.strucnjakZNR || c.upisao || '', date: c.datum || new Date().toISOString(), certOznaka: c.oznaka, testResult: c.rezultatTesta || '' });
+                                                                            printZosPdf({ company: companyFull, worker: wk, workplaceName: wpN, training: { naziv: c.izdanoIzObuke || c.ime }, officer: c.strucnjakZNR || c.upisao || '', date: c.datum || new Date().toISOString(), certOznaka: c.oznaka, testResult: c.rezultatTesta || '' }, lang);
                                                                         }}>
                                                                         🖨️ <span>{t('ispisiZosDokument')}</span>
                                                                     </button>
@@ -1863,7 +1863,19 @@ function WorkersPageInner() {
                                                                     return (
                                                                         <button style={_miSt} onClick={() => {
                                                                             setActionMenuId(null);
-                                                                            printZosPdf(w, zosCerts[0], { orgUnits, workplaces });
+                                                                            const c = zosCerts[0];
+                                                                            const wpN = workplaces.find(wp => wp.id === w.radnoMjestoId)?.naziv || c.izdanoZaRadnoMjesto || '';
+                                                                            const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                                                            printZosPdf({
+                                                                                company: companyFull,
+                                                                                worker: w,
+                                                                                workplaceName: wpN,
+                                                                                training: { naziv: c.izdanoIzObuke || c.ime },
+                                                                                officer: c.strucnjakZNR || c.upisao || '',
+                                                                                date: c.datum || new Date().toISOString(),
+                                                                                certOznaka: c.oznaka,
+                                                                                testResult: c.rezultatTesta || '',
+                                                                            }, lang);
                                                                         }}>
                                                                             🖨️ {t('isprintajZos')}
                                                                         </button>

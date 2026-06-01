@@ -442,7 +442,7 @@ function EditCertPageInner() {
                                     date: formData.datum || new Date().toISOString(),
                                     certOznaka: formData.oznaka,
                                     testResult: formData.rezultatTesta || '',
-                                });
+                                }, lang);
                             }}>
                                 🖨️ {t('ispisiZos')}
                             </button>

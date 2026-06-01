@@ -477,7 +477,7 @@ function TrainingsInner() {
                 date: today,
                 certOznaka: certData.oznaka,
                 testResult: certData.rezultatTesta,
-            });
+            }, lang);
         }
     };
 
@@ -524,7 +524,7 @@ function TrainingsInner() {
 
         return (
             <div className="animate-fadeIn">
-                <PageHeader icon="🎬" title="Obuke i prezentacije" subtitle="Kreirajte prezentacije s automatski generiranim testovima i šaljite radnicima" />
+                <PageHeader icon="🎬" title={t('obukeIPrezentacije')} subtitle={t('kreirajtePrezentacije')} />
                 <DialogRenderer />
 
                 <div className="card" style={{ marginBottom: 16 }}>
@@ -535,7 +535,7 @@ function TrainingsInner() {
                             <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
                             <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
                                 <span style={{ opacity: 0.5 }}>🔍</span>
-                                <input placeholder="Pretraži obuke..." value={search} onChange={e => setSearch(e.target.value)}
+                                <input placeholder={t('pretraziObuke')} value={search} onChange={e => setSearch(e.target.value)}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             </div>
                             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{filtered.length} {t('records')}</span>
@@ -549,21 +549,21 @@ function TrainingsInner() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Akcije</th>
-                                        <th>Naziv obuke</th>
-                                        <th>Slajdova</th>
-                                        <th>Pitanja</th>
+                                        <th>{t('akcije')}</th>
+                                        <th>{t('nazivObuke')}</th>
+                                        <th>{t('slajdova')}</th>
+                                        <th>{t('pitanja')}</th>
                                         <th>{t('ispunjenost')}</th>
-                                        <th>Prag prolaza</th>
-                                        <th>Kreirano</th>
+                                        <th>{t('pragProlaza')}</th>
+                                        <th>{t('kreirano')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filtered.length === 0 ? (
                                         <tr><td colSpan={7} style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
                                             <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🎬</div>
-                                            <div style={{ fontWeight: 600 }}>Nema kreiranih obuka</div>
-                                            <div style={{ fontSize: '0.85rem', marginTop: 4 }}>Kliknite &quot;+ Nova obuka&quot; da kreirate prvu</div>
+                                            <div style={{ fontWeight: 600 }}>{t('nemaKreiranihObuka')}</div>
+                                            <div style={{ fontSize: '0.85rem', marginTop: 4 }}>{t('klikniteNovaObuka')}</div>
                                         </td></tr>
                                     ) : pagedTrainings.map(r => (
                                         <tr key={r.id} onClick={() => handleEdit(r)} style={{ background: lastEditedId === r.id ? 'rgba(102,126,234,0.15)' : undefined, transition: 'background 0.5s ease', cursor: 'pointer' }}>
@@ -597,20 +597,19 @@ function TrainingsInner() {
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                             minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                         }}>
-                                                            <button onClick={() => handleEdit(r)} className="dropdown-item">📝 Uredi</button>
-                                                            <button onClick={() => handleDuplicate(r)} className="dropdown-item">📋 Dupliciraj</button>
+                                                            <button onClick={() => handleEdit(r)} className="dropdown-item">📝 {t('edit')}</button>
+                                                            <button onClick={() => handleDuplicate(r)} className="dropdown-item">📋 {t('dupliciraj')}</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} className="dropdown-item">📧 Pošalji radnicima</button>
-                                                            <button onClick={() => { setOpenMenuId(null); setReminderTraining(r); setReminderOpen(true); }} className="dropdown-item">📩 Pošalji podsjetnik</button>
-                                                            <button onClick={() => openResults(r)} className="dropdown-item">📊 Rezultati</button>
+                                                            <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} className="dropdown-item">📧 {t('posaljiRadnicima')}</button>
+                                                            <button onClick={() => { setOpenMenuId(null); setReminderTraining(r); setReminderOpen(true); }} className="dropdown-item">📩 {t('posaljiPodsjetnik')}</button>
+                                                            <button onClick={() => openResults(r)} className="dropdown-item">📊 {t('results')}</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handleDelete(r.id)} className="dropdown-item text-danger">🗑️ Obriši</button>
-                                                            {/* Print sub-options — last */}
+                                                            <button onClick={() => handleDelete(r.id)} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <div style={{ padding: '5px 14px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🖨️ Isprintaj</div>
-                                                            {(r.slides?.length> 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} className="dropdown-item" style={{ paddingLeft: 24 }}>🎬 Prezentaciju</button>}
-                                                            {(r.questions?.length> 0) && <button onClick={() => handlePrintTraining(r, 'test')} className="dropdown-item" style={{ paddingLeft: 24 }}>📝 Test</button>}
-                                                            {(r.slides?.length> 0 && r.questions?.length> 0) && <button onClick={() => handlePrintTraining(r, 'both')} className="dropdown-item" style={{ paddingLeft: 24 }}>📚 Prezentaciju + Test</button>}
+                                                            <div style={{ padding: '5px 14px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🖨️ {t('isprintaj')}</div>
+                                                            {(r.slides?.length> 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} className="dropdown-item" style={{ paddingLeft: 24 }}>🎬 {t('prezentaciju')}</button>}
+                                                            {(r.questions?.length> 0) && <button onClick={() => handlePrintTraining(r, 'test')} className="dropdown-item" style={{ paddingLeft: 24 }}>📝 {t('test')}</button>}
+                                                            {(r.slides?.length> 0 && r.questions?.length> 0) && <button onClick={() => handlePrintTraining(r, 'both')} className="dropdown-item" style={{ paddingLeft: 24 }}>📚 {t('prezentacijuITest')}</button>}
                                                         </div>
                                                     )}
                                                 </div>
@@ -623,8 +622,8 @@ function TrainingsInner() {
                                                 </span>
                                                 {r.opis && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>{r.opis}</div>}
                                             </td>
-                                            <td><span style={{ fontWeight: 600 }}>{(r.slides || []).length}</span> slajdova</td>
-                                            <td><span style={{ fontWeight: 600 }}>{(r.questions || []).length}</span> pitanja</td>
+                                            <td><span style={{ fontWeight: 600 }}>{(r.slides || []).length}</span> {t('slajdova')}</td>
+                                            <td><span style={{ fontWeight: 600 }}>{(r.questions || []).length}</span> {t('pitanja')}</td>
                                             <td>
                                                 {completionStats[r.id] ? (() => {
                                                     const cs = completionStats[r.id];
@@ -633,8 +632,6 @@ function TrainingsInner() {
                                                         <div 
                                                             onClick={(e) => { e.stopPropagation(); openResults(r); }}
                                                             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
-                                                            
-                                                            
                                                             title={t('klikniZaPregledRezultata')}>
                                                             <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
@@ -807,7 +804,7 @@ function TrainingsInner() {
                                                                         date: s.completedAt || new Date().toISOString(),
                                                                         certOznaka: `ZOS-${Date.now().toString(36).toUpperCase()}`,
                                                                         testResult: s.grade ? `${s.grade.percentage}%` : '',
-                                                                    });
+                                                                    }, lang);
                                                                 }}>🖨️ ZOS</button>
                                                         )}
                                                     </div>

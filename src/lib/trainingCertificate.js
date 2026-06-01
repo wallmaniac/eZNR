@@ -3,6 +3,81 @@
 // Opens in a new window, auto-triggers print dialog for PDF save.
 // ============================================================================
 
+const CERT_T = {
+    bs: {
+        docTitle: 'Certifikat',
+        label: 'Potvrda o završenoj obuci',
+        awarded: 'Ovim se potvrđuje da je',
+        desc: 'uspješno završio/la obuku<br><strong>„{0}“</strong><br>dana <strong>{1}</strong>',
+        passed: '✅ Rezultat: {0}% — POLOŽIO/LA',
+        authPerson: 'Ovlaštena osoba za ZNR',
+        employer: 'Poslodavac / Direktor',
+        certNo: 'Br. certifikata:',
+        issueDate: 'Datum izdavanja:',
+        printBtn: '📄 Preuzmi PDF (Print)'
+    },
+    hr: {
+        docTitle: 'Certifikat',
+        label: 'Potvrda o završenom osposobljavanju',
+        awarded: 'Ovim se potvrđuje da je',
+        desc: 'uspješno završio/la osposobljavanje<br><strong>„{0}“</strong><br>dana <strong>{1}</strong>',
+        passed: '✅ Rezultat: {0}% — POLOŽIO/LA',
+        authPerson: 'Ovlaštena osoba za ZNR',
+        employer: 'Poslodavac / Direktor',
+        certNo: 'Br. certifikata:',
+        issueDate: 'Datum izdavanja:',
+        printBtn: '📄 Preuzmi PDF (Tisak)'
+    },
+    sr: {
+        docTitle: 'Sertifikat',
+        label: 'Potvrda o završenoj obuci',
+        awarded: 'Ovim se potvrđuje da je',
+        desc: 'uspešno završio/la obuku<br><strong>„{0}“</strong><br>dana <strong>{1}</strong>',
+        passed: '✅ Rezultat: {0}% — POLOŽIO/LA',
+        authPerson: 'Ovlašćeno lice za BZN',
+        employer: 'Poslodavac / Direktor',
+        certNo: 'Br. sertifikata:',
+        issueDate: 'Datum izdavanja:',
+        printBtn: '📄 Preuzmi PDF (Print)'
+    },
+    en: {
+        docTitle: 'Certificate',
+        label: 'Confirmation of Completed Training',
+        awarded: 'This is to certify that',
+        desc: 'has successfully completed the training<br><strong>"{0}"</strong><br>on <strong>{1}</strong>',
+        passed: '✅ Score: {0}% — PASSED',
+        authPerson: 'Authorized Safety Officer',
+        employer: 'Employer / Director',
+        certNo: 'Cert No:',
+        issueDate: 'Issue Date:',
+        printBtn: '📄 Download PDF (Print)'
+    },
+    de: {
+        docTitle: 'Zertifikat',
+        label: 'Bestätigung über die abgeschlossene Schulung',
+        awarded: 'Hiermit wird bestätigt, dass',
+        desc: 'die Schulung<br><strong>"{0}"</strong><br>am <strong>{1}</strong><br>erfolgreich abgeschlossen hat',
+        passed: '✅ Ergebnis: {0}% — BESTANDEN',
+        authPerson: 'Sicherheitsfachkraft',
+        employer: 'Arbeitgeber / Geschäftsführer',
+        certNo: 'Zertifikatsnr.:',
+        issueDate: 'Ausstellungsdatum:',
+        printBtn: '📄 PDF herunterladen (Drucken)'
+    },
+    sl: {
+        docTitle: 'Certifikat',
+        label: 'Potrdilo o opravljenem usposabljanju',
+        awarded: 'S tem se potrjuje, da je delavec/ka',
+        desc: 'uspešno opravil/a usposabljanje<br><strong>"{0}"</strong><br>dne <strong>{1}</strong>',
+        passed: '✅ Rezultat: {0}% — OPRAVIL/A',
+        authPerson: 'Strokovni delavec za varnost',
+        employer: 'Delodajalec / Direktor',
+        certNo: 'Št. certifikata:',
+        issueDate: 'Datum izdaje:',
+        printBtn: '📄 Prenesi PDF (Natisni)'
+    }
+};
+
 /**
  * Generate and display a training completion certificate in a new print window.
  *
@@ -14,6 +89,7 @@
  * @param {string} opts.companyName    — Company name
  * @param {string} opts.companyLogo    — Company logo URL (optional)
  * @param {string} opts.officerName    — Name of the officer/instructor
+ * @param {string} opts.lang           — Language code (bs, hr, sr, en, de, sl)
  */
 export function generateTrainingCertificate({
     workerName = '',
@@ -23,19 +99,34 @@ export function generateTrainingCertificate({
     companyName = '',
     companyLogo = '',
     officerName = '',
+    lang = 'bs',
 }) {
+    const activeLang = CERT_T[lang] ? lang : 'bs';
+    const tDict = CERT_T[activeLang];
+
+    // Select date formatter based on language
+    const localeMap = { bs: 'hr-HR', hr: 'hr-HR', sr: 'sr-Latn-RS', en: 'en-US', de: 'de-DE', sl: 'sl-SI' };
+    const localeCode = localeMap[activeLang] || 'hr-HR';
+    const dateFormatOpts = activeLang === 'en' || activeLang === 'de'
+        ? { day: '2-digit', month: '2-digit', year: 'numeric' }
+        : { day: '2-digit', month: 'long', year: 'numeric' };
+
     const displayDate = date
-        ? new Date(date).toLocaleDateString('hr-HR', { day: '2-digit', month: 'long', year: 'numeric' })
-        : new Date().toLocaleDateString('hr-HR', { day: '2-digit', month: 'long', year: 'numeric' });
+        ? new Date(date).toLocaleDateString(localeCode, dateFormatOpts)
+        : new Date().toLocaleDateString(localeCode, dateFormatOpts);
 
     const certNumber = `eZNR-CERT-${Date.now().toString(36).toUpperCase()}`;
 
+    // Interpolations
+    const descText = tDict.desc.replace('{0}', trainingName).replace('{1}', displayDate);
+    const passedText = tDict.passed.replace('{0}', score);
+
     const html = `<!DOCTYPE html>
-<html lang="bs">
+<html lang="${activeLang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certifikat \u2014 ${workerName}</title>
+    <title>${tDict.docTitle} \u2014 ${workerName}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -240,46 +331,44 @@ export function generateTrainingCertificate({
                 </div>
             ` : ''}
 
-            <div class="cert-label">Potvrda o zavr\u0161enoj obuci</div>
-            <h1 class="cert-title">CERTIFIKAT</h1>
+            <div class="cert-label">${tDict.label}</div>
+            <h1 class="cert-title">${tDict.docTitle.toUpperCase()}</h1>
 
-            <div class="awarded-to">Ovim se potvr\u0111uje da je</div>
+            <div class="awarded-to">${tDict.awarded}</div>
             <div class="worker-name">${workerName}</div>
 
             <div class="training-desc">
-                uspje\u0161no zavr\u0161io/la obuku<br>
-                <strong>\u201E${trainingName}\u201C</strong><br>
-                dana <strong>${displayDate}</strong>
+                ${descText}
             </div>
 
             ${score > 0 ? `
                 <div class="score-badge">
-                    \u2705 Rezultat: ${score}% \u2014 POLO\u017DIO/LA
+                    ${passedText}
                 </div>
             ` : ''}
 
             <div class="signatures">
                 <div class="sig-block">
                     <div style="height:40px"></div>
-                    <div class="sig-line">${officerName || 'Ovla\u0161tena osoba za ZNR'}</div>
+                    <div class="sig-line">${officerName || tDict.authPerson}</div>
                 </div>
                 <div class="sig-block">
                     <div style="height:40px"></div>
-                    <div class="sig-line">Poslodavac / Director</div>
+                    <div class="sig-line">${tDict.employer}</div>
                 </div>
             </div>
         </div>
 
         <div class="cert-footer">
-            <span>Br. certifikata: ${certNumber}</span>
+            <span>${tDict.certNo} ${certNumber}</span>
             <span>\u2022</span>
-            <span>Datum izdavanja: ${displayDate}</span>
+            <span>${tDict.issueDate} ${displayDate}</span>
             <span>\u2022</span>
             <span>eZNR Platform \u2014 zastitanaradu.ba</span>
         </div>
     </div>
 
-    <button class="print-btn" onclick="window.print()">\uD83D\uDCC4 Preuzmi PDF (Print)</button>
+    <button class="print-btn" onclick="window.print()">${tDict.printBtn}</button>
 </body>
 </html>`;
 
