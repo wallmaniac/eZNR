@@ -33,6 +33,7 @@ const EVENT_ROUTES = {
 };
 // ── Alerts Widget: collapsible per-category expander ─────────────────────────
 function AlertsWidget({ groups, total, lang, isMobile }) {
+    const { t } = useLanguage();
     const [openKey, setOpenKey] = useState(null);
     const ref = useRef(null);
 
