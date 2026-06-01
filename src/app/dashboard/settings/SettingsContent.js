@@ -33,6 +33,89 @@ import {
   getUIBranding, saveUIBranding, applyUIBranding, resetUIBranding,
 } from '@/lib/brandingService';
 
+// Render-time translation helpers for activity log
+function translateLogTitle(title, lang, t) {
+  if (!title) return '';
+  if (title === 'Prijavili ste se') return t('logLogin') || title;
+  if (title.startsWith('Dodan radnik:')) {
+    const name = title.replace('Dodan radnik:', '').trim();
+    return `${t('logWorkerCreated') || 'Dodan radnik'}: ${name}`;
+  }
+  if (title.startsWith('Ažuriran radnik:')) {
+    const name = title.replace('Ažuriran radnik:', '').trim();
+    return `${t('logWorkerUpdated') || 'Ažuriran radnik'}: ${name}`;
+  }
+  if (title.startsWith('Obrisan radnik:')) {
+    const name = title.replace('Obrisan radnik:', '').trim();
+    return `${t('logWorkerDeleted') || 'Obrisan radnik'}: ${name}`;
+  }
+  if (title.startsWith('Dodano uvjerenje:')) {
+    const cert = title.replace('Dodano uvjerenje:', '').trim();
+    return `${t('logCertCreated') || 'Dodano uvjerenje'}: ${cert}`;
+  }
+  if (title.startsWith('Isteklo uvjerenje:')) {
+    const cert = title.replace('Isteklo uvjerenje:', '').trim();
+    return `${t('logCertExpired') || 'Isteklo uvjerenje'}: ${cert}`;
+  }
+  if (title.startsWith('Dodana oprema:')) {
+    const eq = title.replace('Dodana oprema:', '').trim();
+    return `${t('logEquipmentCreated') || 'Dodana oprema'}: ${eq}`;
+  }
+  if (title.startsWith('Istekao pregled opreme:')) {
+    const eq = title.replace('Istekao pregled opreme:', '').trim();
+    return `${t('logEquipmentExpired') || 'Istekao pregled opreme'}: ${eq}`;
+  }
+  if (title.startsWith('Dodan dokument:')) {
+    const doc = title.replace('Dodan dokument:', '').trim();
+    return `${t('logDocumentCreated') || 'Dodan dokument'}: ${doc}`;
+  }
+  if (title.startsWith('Zadužena OZO:')) {
+    const ppe = title.replace('Zadužena OZO:', '').trim();
+    return `${t('logPpeAssigned') || 'Zadužena OZO'}: ${ppe}`;
+  }
+  if (title.startsWith('Nova kompanija:')) {
+    const comp = title.replace('Nova kompanija:', '').trim();
+    return `${t('logCompanyCreated') || 'Nova kompanija'}: ${comp}`;
+  }
+  if (title.startsWith('Kreirana firma:')) {
+    const comp = title.replace('Kreirana firma:', '').trim();
+    return `${t('logCompanyCreatedUser') || 'Kreirana firma'}: ${comp}`;
+  }
+  if (title.startsWith('Novi korisnik:')) {
+    const user = title.replace('Novi korisnik:', '').trim();
+    return `${t('logUserRegistered') || 'Novi korisnik'}: ${user}`;
+  }
+  return title;
+}
+
+function translateLogDetail(detail, lang, t) {
+  if (!detail) return '';
+  const parts = detail.split('|').map(p => p.trim());
+  const translated = parts.map(part => {
+    if (!part) return '';
+    const colonIdx = part.indexOf(':');
+    if (colonIdx === -1) return part;
+    const label = part.substring(0, colonIdx).trim();
+    const value = part.substring(colonIdx + 1).trim();
+    let transLabel = label;
+    if (label === 'Radnik') transLabel = t('radnik') ? t('radnik').replace('*', '').trim() : 'Radnik';
+    else if (label === 'Vrijedi do') transLabel = t('vrijediDo') || 'Vrijedi do';
+    else if (label === 'TV br') transLabel = t('tvBroj') || 'TV br';
+    else if (label === 'Sljedeći pregled') transLabel = t('iduci') || 'Sljedeći pregled';
+    else if (label === 'Trebalo') transLabel = t('trebaloLabel') || 'Trebalo';
+    else if (label === 'Ističe') transLabel = t('istice') || 'Ističe';
+    else if (label === 'Kol') transLabel = t('kol') || 'Kol';
+    else if (label === 'Datum') transLabel = t('datum') || 'Datum';
+    else if (label === 'OIB') transLabel = t('idBrojOib') || 'OIB';
+    else if (label === 'Kreirao') transLabel = t('kreiraoLabel') || 'Kreirao';
+    else if (label === 'Email') transLabel = t('email') || 'Email';
+    else if (label === 'Uloga') transLabel = t('uloga') || 'Uloga';
+    else if (label === 'Evidencijski br.') transLabel = t('evidencijskiBroj') || 'Evidencijski br.';
+    return `${transLabel}: ${value}`;
+  });
+  return translated.filter(Boolean).join(' | ');
+}
+
 export default function SettingsContent() {
   const { t, lang, setLang, toggleLang } = useLanguage();
   const { user, isAdmin, isSuperAdmin, activeCompanyId, logout, changePassword, reauthenticate, changeEmail, changeName, updateUserContext } = useAuth();
@@ -1897,14 +1980,14 @@ export default function SettingsContent() {
                       background: logFilter === cat ? 'var(--primary)' : 'var(--bg-input)',
                       color: logFilter === cat ? 'white' : 'var(--text)',
                     }}>
-                    {cat === null ? (t('sve')) :
-                      cat === 'worker' ? '👷 Radnici' :
-                        cat === 'certificate' ? '📋 Uvjerenja' :
-                          cat === 'equipment' ? '⚙️ Oprema' :
-                            cat === 'ppe' ? '🦺 OZO' :
-                              cat === 'document' ? '📄 Dokumenti' :
-                                cat === 'company' ? '🏢 Firme' :
-                                  cat === 'expiry' ? '⏰ Isteci' : '🔐 Prijave'}
+                    {cat === null ? (t('filterSve')) :
+                      cat === 'worker' ? t('filterRadnici') :
+                        cat === 'certificate' ? t('filterUvjerenja') :
+                          cat === 'equipment' ? t('filterOprema') :
+                            cat === 'ppe' ? t('filterOzo') :
+                              cat === 'document' ? t('filterDokumenti') :
+                                cat === 'company' ? t('filterFirme') :
+                                  cat === 'expiry' ? t('filterIsteci') : t('filterPrijave')}
                   </button>
                 ))}
               </div>
@@ -1932,8 +2015,8 @@ export default function SettingsContent() {
                         onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}>
                           <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
-                            {entry.detail && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{entry.detail}</div>}
+                            <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{translateLogTitle(entry.title, lang, t)}</div>
+                            {entry.detail && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{translateLogDetail(entry.detail, lang, t)}</div>}
                           </div>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{formatLogTime(entry.timestamp)}</div>
                         </div>
@@ -1969,8 +2052,8 @@ export default function SettingsContent() {
                   onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}>
                     <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
-                      {entry.detail && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{entry.detail}</div>}
+                      <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{translateLogTitle(entry.title, lang, t)}</div>
+                      {entry.detail && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{translateLogDetail(entry.detail, lang, t)}</div>}
                       {entry.userName && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>👤 {entry.userName}</div>}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{formatLogTime(entry.timestamp)}</div>

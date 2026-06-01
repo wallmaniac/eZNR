@@ -88,7 +88,6 @@ export default function EmptyDashboard({ onComplete }) {
     const { lang , t } = useLanguage();
     const { activeCompanyId } = useAuth();
     const { alert, confirm, DialogRenderer } = useDialog();
-    const bs = lang !== 'en';
 
     const [activeStep, setActiveStep] = useState(0);
     const [maxStep, setMaxStep] = useState(0);
@@ -434,7 +433,7 @@ export default function EmptyDashboard({ onComplete }) {
                 const medExams = parseSheet(wb, 'Ljekarski');
                 setExcelPreview({ ouRows, wpRows, workers, certs, ppe, medExams });
             } catch (err) {
-                alert(bs ? 'Greška pri čitanju Excela: ' + err.message : 'Error reading Excel: ' + err.message);
+                alert(`${t('errorReadingExcel')}: ${err.message}`);
             }
         };
         reader.readAsBinaryString(file);

@@ -13,8 +13,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { apiExtractQuestionsFromDocument } from '@/lib/testGeneratorAI';
 
 export default function TestGenerator() {
-    const { lang , t } = useLanguage();
-    const bs = lang !== 'en';
+    const { t } = useLanguage();
     const country = useCountry();
     const { activeCompanyId } = useAuth();
 
@@ -59,7 +58,7 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
             const startId = questions.length;
             const extracted = result.map((q, i) => ({ ...q, id: i + 1 + startId }));
             setQuestions(prev => [...prev, ...extracted]);
-            alert(bs ? "Uspješno uvezeno " + extracted.length + " pitanja." : "Successfully imported " + extracted.length + " questions.");
+            alert(t('successfullyImportedQuestions').replace('{0}', extracted.length));
         } catch (err) {
             console.error(err);
             alert('Greška pri parsiranju dokumenta: ' + err.message);

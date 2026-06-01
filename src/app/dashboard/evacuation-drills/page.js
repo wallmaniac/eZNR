@@ -35,7 +35,6 @@ const STATUS_MAP = {
 
 function EvacuationDrillsInner() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
     const hr = lang === 'hr';
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -293,7 +292,7 @@ function EvacuationDrillsInner() {
                                     <div className="form-group">
                                         <label className="form-label">{t('status')}</label>
                                         <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
-                                            {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
+                                            {Object.entries(STATUS_MAP).map(([k]) => <option key={k} value={k}>{t('status_' + k)}</option>)}
                                         </select>
                                     </div>
                                     
@@ -491,7 +490,7 @@ function EvacuationDrillsInner() {
                                                             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1.5px solid ${st.color}30`, cursor: 'pointer', outline: 'none', transition: 'all 0.15s', whiteSpace: 'nowrap' }}
                                                         >
                                                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
-                                                            {bs ? st.bs : st.en} ▾
+                                                            {t('status_' + d.status)} ▾
                                                         </button>
                                                         {actionMenuId === `status_${d.id}` && (<>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -503,7 +502,7 @@ function EvacuationDrillsInner() {
                                                                         onMouseLeave={e => e.currentTarget.style.background = (d.status || 'uspješno') === k ? 'rgba(255,255,255,0.06)' : 'transparent'}
                                                                     >
                                                                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: v.color, flexShrink: 0 }} />
-                                                                        {bs ? v.bs : v.en}
+                                                                        {t('status_' + k)}
                                                                         {(d.status || 'uspješno') === k && <span style={{ marginLeft: 'auto', fontSize: '0.9rem' }}>✓</span>}
                                                                     </button>
                                                                 ))}

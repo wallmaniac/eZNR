@@ -44,7 +44,6 @@ const STATUS_MAP = {
 
 export default function FireProtectionPage() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
@@ -337,7 +336,7 @@ export default function FireProtectionPage() {
                                         <div className="form-group">
                                             <label className="form-label">{t('vrstaPregleda')}</label>
                                             <select className="form-select" value={extForm.tip} onChange={e => setExt('tip', e.target.value)}>
-                                                {Object.entries(EXT_TYPES).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
+                                                {Object.entries(EXT_TYPES).map(([k]) => <option key={k} value={k}>{t('extType_' + k)}</option>)}
                                             </select>
                                         </div>
                                         <div className="form-group">
@@ -355,7 +354,7 @@ export default function FireProtectionPage() {
                                         <div className="form-group">
                                             <label className="form-label">{t('status')}</label>
                                             <select className="form-select" value={extForm.status} onChange={e => setExt('status', e.target.value)}>
-                                                {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
+                                                {Object.entries(STATUS_MAP).map(([k]) => <option key={k} value={k}>{t('status_' + k)}</option>)}
                                             </select>
                                         </div>
                                         <div className="form-group">
@@ -395,8 +394,8 @@ export default function FireProtectionPage() {
                                     ...(extSelectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
                                 ]} />
                                 <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); } },
-                                    ...(extSelectedIds.size> 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); } }] : []),
+                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } },
+                                    ...(extSelectedIds.size> 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } }] : []),
                                 ]} />
                                 <SavedFlash />
                                 {extSelectedIds.size> 0 ? (
@@ -436,10 +435,10 @@ export default function FireProtectionPage() {
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={ev => { ev.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEditExt(e); }} className="dropdown-item">✏️ {t('otvori')}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([{ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {t('printajQrKod')}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([{ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {t('printajQrKod')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...e }; delete copy.id; copy.serijskiBroj = copy.serijskiBroj + '-COPY'; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (t('copy2')); create(COLLECTIONS.FIRE_EXTINGUISHERS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {t('kopiraj')}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { ispravan: 'neispravan', neispravan: 'servis', servis: 'povucen', povucen: 'ispravan' }; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { status: cycle[e.status] || 'ispravan' }); loadData(); }} className="dropdown-item">🔄 {t('status')} → {STATUS_MAP[cycle[e.status]]?.[lang] || STATUS_MAP[cycle[e.status]]?.bs || 'Ispravan'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { ispravan: 'neispravan', neispravan: 'servis', servis: 'povucen', povucen: 'ispravan' }; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { status: cycle[e.status] || 'ispravan' }); loadData(); }} className="dropdown-item">🔄 {t('status')} → {t('status_' + (cycle[e.status] || 'ispravan'))}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const nextYear = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0]; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { sljedeciServis: nextYear, zadnjiServis: today }); loadData(); showFlash(); }} className="dropdown-item">📅 {t('scheduleService1yr')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDeleteExt(e.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
@@ -449,7 +448,7 @@ export default function FireProtectionPage() {
                                                     </div>
                                                 </td>
                                                 <td style={{ fontWeight: 700 }}>{e.serijskiBroj}</td>
-                                                <td><span className="badge badge-info">{bs ? EXT_TYPES[e.tip]?.bs : EXT_TYPES[e.tip]?.en || e.tip}</span></td>
+                                                <td><span className="badge badge-info">{t('extType_' + e.tip) || e.tip}</span></td>
                                                 <td>{e.tezina ? `${e.tezina} kg` : '—'}</td>
                                                 <td>{e.lokacija || '—'}</td>
                                                 <td>{formatDate(e.sljedeciServis)} {getExpiryBadge(e.sljedeciServis)}</td>
@@ -502,7 +501,7 @@ export default function FireProtectionPage() {
                                         <div className="form-group">
                                             <label className="form-label">{t('status')}</label>
                                             <select className="form-select" value={hydForm.status} onChange={e => setHyd('status', e.target.value)}>
-                                                {Object.entries(STATUS_MAP).filter(([k]) => k !== 'povucen').map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
+                                                {Object.entries(STATUS_MAP).filter(([k]) => k !== 'povucen').map(([k]) => <option key={k} value={k}>{t('status_' + k)}</option>)}
                                             </select>
                                         </div>
                                         <div className="form-group" style={{ gridColumn: '1 / -1' }}>

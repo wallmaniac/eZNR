@@ -19,24 +19,24 @@ import { getCitation, getMedicalPravilnik, getFullCitation } from '@/lib/lawConf
 // HR: Zakon o ZNR (NN 71/14) + Pravilnik (NN 5/84)
 // ──────────────────────────────────────────────────────────────────────────────
 
-const getExamTypes = (country) => {
+const getExamTypes = (t, country) => {
     const medCit = getCitation(country, 'medical');
     const nightCit = getCitation(country, 'medicalNight');
     const mp = getMedicalPravilnik(country);
     const mpRef = mp ? `${mp.name} (${mp.gazette})` : '';
     return [
-        { value: 'prethodni', labelBs: 'Prethodni pregled', labelEn: 'Pre-employment Exam', info: `${medCit} — prije raspoređivanja na radno mjesto` },
-        { value: 'periodični', labelBs: 'Periodični pregled', labelEn: 'Periodic Exam', info: mpRef ? `${mpRef} — rokovi po vrsti opasnosti` : '' },
-        { value: 'vanredni', labelBs: 'Vanredni pregled', labelEn: 'Extraordinary Exam', info: 'Nakon promjene zdravstvenog stanja, nesreće ili dugog bolovanja' },
-        { value: 'nocniRad', labelBs: 'Pregled - noćni rad', labelEn: 'Night-work Exam', info: `${nightCit} — min. svake 2 godine za noćne radnike` },
-        { value: 'ostalo', labelBs: 'Ostalo', labelEn: 'Other', info: '' },
+        { value: 'prethodni', label: t('examTypePreemployment') || 'Prethodni pregled', info: `${medCit} — ${t('infoPreemployment') || 'prije raspoređivanja na radno mjesto'}` },
+        { value: 'periodični', label: t('examTypePeriodic') || 'Periodični pregled', info: mpRef ? `${mpRef} — ${t('infoPeriodic') || 'rokovi po vrsti opasnosti'}` : '' },
+        { value: 'vanredni', label: t('examTypeExtraordinary') || 'Izvanredni pregled', info: t('infoExtraordinary') || 'Nakon promjene zdravstvenog stanja, nesreće ili dugog bolovanja' },
+        { value: 'nocniRad', label: t('examTypeNightWork') || 'Pregled - noćni rad', info: `${nightCit} — ${t('infoNightWork') || 'min. svake 2 godine za noćne radnike'}` },
+        { value: 'ostalo', label: t('examTypeOther') || 'Ostalo', info: '' },
     ];
 };
 
-const RESULTS = [
-    { value: 'Sposoban', labelBs: 'Sposoban', labelEn: 'Fit', color: 'var(--success)' },
-    { value: 'Uvjetno Sposoban', labelBs: 'Uvjetno Sposoban', labelEn: 'Conditionally Fit', color: 'var(--warning)' },
-    { value: 'Nesposoban', labelBs: 'Nesposoban', labelEn: 'Unfit', color: 'var(--danger)' },
+const getResults = (t) => [
+    { value: 'Sposoban', label: t('examResultFit') || 'Sposoban', color: 'var(--success)' },
+    { value: 'Uvjetno Sposoban', label: t('examResultConditional') || 'Uvjetno Sposoban', color: 'var(--warning)' },
+    { value: 'Nesposoban', label: t('examResultUnfit') || 'Nesposoban', color: 'var(--danger)' },
 ];
 
 const getDays = (dateStr) => {
@@ -44,13 +44,13 @@ const getDays = (dateStr) => {
     return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
 };
 
-const getStatusBadge = (exam) => {
+const getStatusBadge = (exam, t) => {
     const d = getDays(exam.vrijediDo);
-    if (d === null) return { label: 'Bez roka', color: 'var(--text-muted)', bg: 'var(--border-light)' };
-    if (d < 0) return { label: 'Isteklo', color: 'white', bg: 'var(--danger)' };
+    if (d === null) return { label: t('status_bezRoka') || 'Bez roka', color: 'var(--text-muted)', bg: 'var(--border-light)' };
+    if (d < 0) return { label: t('status_isteklo') || 'Isteklo', color: 'white', bg: 'var(--danger)' };
     if (d <= 30) return { label: `${d}d`, color: 'white', bg: '#E65100' };
     if (d <= 90) return { label: `${d}d`, color: 'white', bg: 'var(--warning)' };
-    return { label: 'Vrijedi', color: 'white', bg: 'var(--success)' };
+    return { label: t('status_vrijedi') || 'Vrijedi', color: 'white', bg: 'var(--success)' };
 };
 
 const emptyForm = {
@@ -60,13 +60,13 @@ const emptyForm = {
 };
 
 export default function MedicalExamsPage() {
-    const { t, lang } = useLanguage();
+    const { t } = useLanguage();
     const country = useCountry();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
-    const bs = lang !== 'en';
-    const EXAM_TYPES = useMemo(() => getExamTypes(country), [country]);
+    const EXAM_TYPES = useMemo(() => getExamTypes(t, country), [t, country]);
+    const RESULTS = useMemo(() => getResults(t), [t]);
     const medCitation = useMemo(() => getCitation(country, 'medical'), [country]);
     const medPravilnik = useMemo(() => getMedicalPravilnik(country), [country]);
 
@@ -249,9 +249,9 @@ export default function MedicalExamsPage() {
 
     const handleNew = () => { setEditingId(null); setForm({ ...emptyForm }); setShowForm(true); };
 
-    const examTypeLabel = (v) => EXAM_TYPES.find(t => t.value === v)?.[t('labelen')] || v;
+    const examTypeLabel = (v) => EXAM_TYPES.find(item => item.value === v)?.label || v;
     const resultColor = (v) => RESULTS.find(r => r.value === v)?.color || 'var(--text)';
-    const resultLabel = (v) => RESULTS.find(r => r.value === v)?.[t('labelen1')] || v;
+    const resultLabel = (v) => RESULTS.find(r => r.value === v)?.label || v;
 
     const tabs = [
         { key: 'all', label: t('all1').replace('{0}', stats.total) },
@@ -341,7 +341,7 @@ export default function MedicalExamsPage() {
                                     <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>{t('noMedicalExamsRecorded')}</td></tr>
                                 )}
                                 {paged.map(exam => {
-                                    const badge = getStatusBadge(exam);
+                                    const badge = getStatusBadge(exam, t);
                                     const days = getDays(exam.vrijediDo);
                                     const rowBg = days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
                                     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
@@ -410,9 +410,7 @@ export default function MedicalExamsPage() {
 
             {/* ── Periodicity note ── */}
             <div style={{ marginTop: 10, padding: '8px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                📋 {bs
-                    ? `Rokovi periodičnih pregleda${medPravilnik ? ` (${medPravilnik.gazette})` : ''} razlikuju se po vrsti opasnosti. Noćni radnici — min. svake 2 godine.`
-                    : `Periodic exam intervals${medPravilnik ? ` (${medPravilnik.gazette})` : ''} vary by hazard type. Night workers — min. every 2 years.`}
+                📋 {t('periodicExamIntervalsNote').replace('{0}', medPravilnik ? ` (${medPravilnik.gazette})` : '')}
             </div>
 
             {/* ── Form modal ── */}
@@ -445,7 +443,7 @@ export default function MedicalExamsPage() {
                                 <div className="form-group">
                                     <label className="form-label">{t('examType')}</label>
                                     <select className="form-select" value={form.tipPregleda} onChange={e => setField('tipPregleda', e.target.value)}>
-                                        {EXAM_TYPES.map(t => <option key={t.value} value={t.value}>{bs ? t.labelBs : t.labelEn}</option>)}
+                                        {EXAM_TYPES.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
                                     </select>
                                     {EXAM_TYPES.find(t => t.value === form.tipPregleda)?.info && (
                                         <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 3 }}>ℹ️ {EXAM_TYPES.find(t => t.value === form.tipPregleda).info}</div>
@@ -483,7 +481,7 @@ export default function MedicalExamsPage() {
                                     {RESULTS.map(r => (
                                         <button key={r.value} type="button" onClick={() => setField('rezultat', r.value)}
                                             style={{ flex: 1, padding: '9px 8px', borderRadius: 'var(--radius-md)', border: `2px solid ${form.rezultat === r.value ? r.color : 'var(--border)'}`, background: form.rezultat === r.value ? r.color + '18' : 'var(--bg-input)', color: form.rezultat === r.value ? r.color : 'var(--text)', fontWeight: form.rezultat === r.value ? 700 : 400, cursor: 'pointer', fontSize: '0.82rem', transition: 'all 0.15s' }}>
-                                            {form.rezultat === r.value ? '✓ ' : ''}{bs ? r.labelBs : r.labelEn}
+                                            {form.rezultat === r.value ? '✓ ' : ''}{r.label}
                                         </button>
                                     ))}
                                 </div>

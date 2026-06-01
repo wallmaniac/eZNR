@@ -51,7 +51,6 @@ const TYPE_MAP = {
 
 function FleetInner() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
     const searchParams = useSearchParams();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -360,7 +359,7 @@ function FleetInner() {
                                     <div className="form-group">
                                         <label className="form-label">{t('vehicleType')}</label>
                                         <select className="form-select" value={formData.tip} onChange={e => set('tip', e.target.value)}>
-                                            {Object.entries(TYPE_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
+                                            {Object.entries(TYPE_MAP).map(([k]) => <option key={k} value={k}>{t('vehicleType_' + k)}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group">
@@ -386,7 +385,7 @@ function FleetInner() {
                                     <div className="form-group">
                                         <label className="form-label">{t('status')}</label>
                                         <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
-                                            {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{bs ? v.bs : v.en}</option>)}
+                                            {Object.entries(STATUS_MAP).map(([k]) => <option key={k} value={k}>{t('vehicleStatus_' + k)}</option>)}
                                         </select>
                                     </div>
 
@@ -594,7 +593,7 @@ function FleetInner() {
                                                 </td>
                                                 <td style={{ fontWeight: 700, letterSpacing: 0.5 }}>{v.registracija || '—'}</td>
                                                 <td>{v.marka} {v.model}</td>
-                                                <td style={{ textAlign: 'center' }}><span className="badge badge-info" style={{ display: 'inline-block', textAlign: 'center', minWidth: 80 }}>{bs ? TYPE_MAP[v.tip]?.bs : TYPE_MAP[v.tip]?.en || v.tip}</span></td>
+                                                <td style={{ textAlign: 'center' }}><span className="badge badge-info" style={{ display: 'inline-block', textAlign: 'center', minWidth: 80 }}>{t('vehicleType_' + v.tip) || v.tip}</span></td>
                                                 <td>
                                                     <button onClick={e => { e.stopPropagation(); if (v.vozacId) setViewWorkerId(v.vozacId); }}
                                                         style={{ background: 'none', border: 'none', cursor: v.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: v.vozacId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>
@@ -619,7 +618,7 @@ function FleetInner() {
                                                         style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.color}33`, cursor: 'pointer', transition: 'all 0.15s', minWidth: 80 }}
                                                         onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
-                                                        title={t('clickToChangeStatus')}>{bs ? st.bs : st.en} ▾</button>
+                                                        title={t('clickToChangeStatus')}>{t('vehicleStatus_' + v.status)} ▾</button>
                                                     {statusDropdownId === v.id && (<>
                                                         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setStatusDropdownId(null); }} />
                                                         <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, padding: '4px 0 8px 0' }}>
@@ -627,7 +626,7 @@ function FleetInner() {
                                                                 <button key={key} onClick={(e) => { e.stopPropagation(); update(COLLECTIONS.VEHICLES, v.id, { status: key }); setStatusDropdownId(null); loadData(); }}
                                                                     style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: v.status === key ? s.bg : 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.82rem', fontWeight: v.status === key ? 700 : 500, color: v.status === key ? s.color : 'var(--text)', textAlign: 'left', transition: 'background 0.12s' }}>
                                                                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                                                                    {bs ? s.bs : s.en}
+                                                                    {t('vehicleStatus_' + key)}
                                                                     {v.status === key && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>}
                                                                 </button>
                                                             ))}

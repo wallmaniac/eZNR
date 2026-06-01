@@ -21,7 +21,6 @@ const EMPTY = {
 
 export default function EvacuationPage() {
     const { t, lang } = useLanguage();
-    const bs = lang !== 'en';
     const hr = lang === 'hr';
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
@@ -433,7 +432,7 @@ export default function EvacuationPage() {
                                                             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1.5px solid ${st.color}30`, cursor: 'pointer', outline: 'none', transition: 'all 0.15s', whiteSpace: 'nowrap' }}
                                                         >
                                                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
-                                                            {bs ? st.bs : st.en} ▾
+                                                            {t('status_' + p.status)} ▾
                                                         </button>
                                                         {actionMenuId === `status_${p.id}` && (<>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -445,7 +444,7 @@ export default function EvacuationPage() {
                                                                         onMouseLeave={e => e.currentTarget.style.background = (p.status || 'aktivan') === k ? 'rgba(255,255,255,0.06)' : 'transparent'}
                                                                     >
                                                                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: v.color, flexShrink: 0 }} />
-                                                                        {bs ? v.bs : v.en}
+                                                                        {t('status_' + k)}
                                                                         {(p.status || 'aktivan') === k && <span style={{ marginLeft: 'auto', fontSize: '0.9rem' }}>✓</span>}
                                                                     </button>
                                                                 ))}
