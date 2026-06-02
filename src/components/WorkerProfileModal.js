@@ -22,6 +22,7 @@ const labelStyle = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-mu
 const valueStyle = { fontSize: '0.88rem', color: 'var(--text)', fontWeight: 500 };
 
 function ModalField({ label, field, type = 'text', opts = null, editMode, formData, set, lang }) {
+    const { t } = useLanguage();
     return (
         <div className="form-group" style={{ marginBottom: 12 }}>
             <div style={labelStyle}>{label}</div>

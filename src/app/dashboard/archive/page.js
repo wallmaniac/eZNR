@@ -35,6 +35,141 @@ const formatSize = (bytes) => {
 
 const CATEGORIES = ['Sve', 'Obrasci', 'Zapisnici', 'Ugovori', 'Certifikati', 'Pravilnici', 'Izvješća', 'Upute', 'Ostalo'];
 
+const EXPORT_TRANSLATIONS = {
+    bs: {
+        title: 'LISTA RADNIKA SA SKENIRANOG TESTA',
+        docScanned: 'Dokument skeniranog testa',
+        genDate: 'Datum generisanja',
+        numWorkers: 'Broj radnika',
+        ime: 'Ime',
+        prezime: 'Prezime',
+        imeIPrezime: 'Ime i prezime',
+        imeOca: 'Ime roditelja',
+        jmbgOib: 'JMBG / OIB',
+        datumRodenja: 'Datum rođenja',
+        radnoMjesto: 'Radno mjesto',
+        odjel: 'Odjel',
+        tipTesta: 'Tip testa',
+        datumTesta: 'Datum testa',
+        status: 'Status',
+        polozio: 'Položio',
+        pao: 'Nije položio',
+        paoPdf: 'Pao',
+        generatedFrom: 'Generisano iz digitalne arhive eZNR',
+        pageOf: 'Stranica 1 od 1',
+    },
+    hr: {
+        title: 'POPIS RADNIKA SA SKENIRANOG TESTA',
+        docScanned: 'Dokument skeniranog testa',
+        genDate: 'Datum generiranja',
+        numWorkers: 'Broj radnika',
+        ime: 'Ime',
+        prezime: 'Prezime',
+        imeIPrezime: 'Ime i prezime',
+        imeOca: 'Ime roditelja',
+        jmbgOib: 'JMBG / OIB',
+        datumRodenja: 'Datum rođenja',
+        radnoMjesto: 'Radno mjesto',
+        odjel: 'Odjel',
+        tipTesta: 'Tip testa',
+        datumTesta: 'Datum testa',
+        status: 'Status',
+        polozio: 'Položio',
+        pao: 'Nije položio',
+        paoPdf: 'Pao',
+        generatedFrom: 'Generirano iz digitalne arhive eZNR',
+        pageOf: 'Stranica 1 od 1',
+    },
+    sr: {
+        title: 'ЛИСТА РАДНИКА СА СКЕНИРАНОГ ТЕСТА',
+        docScanned: 'Документ скенираног теста',
+        genDate: 'Датум генерисања',
+        numWorkers: 'Број радника',
+        ime: 'Име',
+        prezime: 'Презиме',
+        imeIPrezime: 'Име и презиме',
+        imeOca: 'Иme родитеља',
+        jmbgOib: 'ЈМБГ / ОИБ',
+        datumRodenja: 'Датум рођења',
+        radnoMjesto: 'Радно мјесто',
+        odjel: 'Одјел',
+        tipTesta: 'Тип testa',
+        datumTesta: 'Датум testa',
+        status: 'Статус',
+        polozio: 'Положио',
+        pao: 'Није положио',
+        paoPdf: 'Пао',
+        generatedFrom: 'Генерисано из дигиталне архиве eZNR',
+        pageOf: 'Страница 1 од 1',
+    },
+    en: {
+        title: 'WORKER LIST FROM SCANNED TEST',
+        docScanned: 'Scanned test document',
+        genDate: 'Generation date',
+        numWorkers: 'Number of workers',
+        ime: 'First Name',
+        prezime: 'Last Name',
+        imeIPrezime: 'Full Name',
+        imeOca: 'Parent Name',
+        jmbgOib: 'ID Number (JMBG/OIB)',
+        datumRodenja: 'Date of Birth',
+        radnoMjesto: 'Workplace',
+        odjel: 'Department',
+        tipTesta: 'Test Type',
+        datumTesta: 'Test Date',
+        status: 'Status',
+        polozio: 'Passed',
+        pao: 'Failed',
+        paoPdf: 'Failed',
+        generatedFrom: 'Generated from eZNR digital archive',
+        pageOf: 'Page 1 of 1',
+    },
+    de: {
+        title: 'MITARBEITERLISTE VOM GESCANNTEN TEST',
+        docScanned: 'Gescannte Testdokument',
+        genDate: 'Erstellungsdatum',
+        numWorkers: 'Mitarbeiteranzahl',
+        ime: 'Vorname',
+        prezime: 'Nachname',
+        imeIPrezime: 'Name, Vorname',
+        imeOca: 'Elternteil Name',
+        jmbgOib: 'Identifikationsnummer',
+        datumRodenja: 'Geburtsdatum',
+        radnoMjesto: 'Arbeitsplatz',
+        odjel: 'Abteilung',
+        tipTesta: 'Testtyp',
+        datumTesta: 'Testdatum',
+        status: 'Status',
+        polozio: 'Bestanden',
+        pao: 'Nicht bestanden',
+        paoPdf: 'Nicht bestanden',
+        generatedFrom: 'Generiert aus dem eZNR Digitalarchiv',
+        pageOf: 'Seite 1 von 1',
+    },
+    sl: {
+        title: 'SEZNAM DELAVCEV IZ SKENIRANEGA TESTA',
+        docScanned: 'Skeniran testni dokument',
+        genDate: 'Datum generiranja',
+        numWorkers: 'Število delavcev',
+        ime: 'Ime',
+        prezime: 'Priimek',
+        imeIPrezime: 'Ime in priimek',
+        imeOca: 'Ime starša',
+        jmbgOib: 'EMŠO / Davčna št.',
+        datumRodenja: 'Datum rojstva',
+        radnoMjesto: 'Delovno mesto',
+        odjel: 'Oddelek',
+        tipTesta: 'Tip testa',
+        datumTesta: 'Datum testa',
+        status: 'Status',
+        polozio: 'Opravil',
+        pao: 'Ni opravil',
+        paoPdf: 'Ni opravil',
+        generatedFrom: 'Generirano iz digitalnega arhiva eZNR',
+        pageOf: 'Stran 1 od 1',
+    }
+};
+
 // Form collections that contribute read-only attachments classified as Obrasci
 const FORM_SOURCES = [
   { col: 'requests',      label: 'Zahtjevnica', link: '/dashboard/requests' },
@@ -153,6 +288,7 @@ export default function ArchivePage() {
         const allWorkers = getAll(COLLECTIONS.WORKERS);
         const workplaces = getAll(COLLECTIONS.WORKPLACES);
         const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+        const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
 
         const dataRows = matchedRows.map((row, idx) => {
             const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
@@ -170,17 +306,17 @@ export default function ArchivePage() {
 
             return {
                 '#': idx + 1,
-                'Ime': firstName,
-                'Prezime': lastName,
-                'Ime oca': w.imeRoditelja || '—',
-                'JMBG / OIB': w.jmbg || w.oib || '—',
-                'Datum rođenja': w.datumRodjenja || '—',
-                'Radno mjesto': wp.naziv || w.radnoMjesto || '—',
-                'Odjel / Org. jedinica': ou.naziv || w.orgJedinica || '—',
-                'Ime iz skeniranog testa (AI)': row.extractedName,
-                'Datum testa': row.date || '—',
-                'Tip testa': row.type || '—',
-                'Status': row.passed ? 'Položio' : 'Nije položio'
+                [getExp('ime')]: firstName,
+                [getExp('prezime')]: lastName,
+                [getExp('imeOca')]: w.imeRoditelja || '—',
+                [getExp('jmbgOib')]: w.jmbg || w.oib || '—',
+                [getExp('datumRodenja')]: w.datumRodjenja || '—',
+                [getExp('radnoMjesto')]: wp.naziv || w.radnoMjesto || '—',
+                [getExp('odjel')]: ou.naziv || w.orgJedinica || '—',
+                [getExp('imeIPrezime') + ' (AI)']: row.extractedName,
+                [getExp('datumTesta')]: row.date || '—',
+                [getExp('tipTesta')]: row.type || '—',
+                [getExp('status')]: row.passed ? getExp('polozio') : getExp('pao')
             };
         });
 
@@ -202,6 +338,7 @@ export default function ArchivePage() {
         const allWorkers = getAll(COLLECTIONS.WORKERS);
         const workplaces = getAll(COLLECTIONS.WORKPLACES);
         const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+        const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
 
         const rowsHtml = matchedRows.map((row, idx) => {
             const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
@@ -225,13 +362,13 @@ export default function ArchivePage() {
                     <td>${deptName}</td>
                     <td>${row.type || 'ZNR/ZOP'}</td>
                     <td>${row.date || '—'}</td>
-                    <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? 'Položio' : 'Pao'}</span></td>
+                    <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? getExp('polozio') : getExp('paoPdf')}</span></td>
                 </tr>
             `;
         }).join('');
 
         const companyName = company.naziv || company.name || 'eZNR Firma';
-        const docTitle = `Lista radnika sa skeniranog testa`;
+        const docTitle = getExp('title');
 
         const html = `
             <!DOCTYPE html>
@@ -276,21 +413,21 @@ export default function ArchivePage() {
                 </div>
                 <div class="title">${docTitle}</div>
                 <div class="meta">
-                    Dokument skeniranog testa: <strong>${scanFile ? scanFile.name : '—'}</strong><br/>
-                    Datum generisanja: <strong>${new Date().toLocaleDateString('hr-HR')}</strong> · Broj radnika: <strong>${matchedRows.length}</strong>
+                    ${getExp('docScanned')}: <strong>${scanFile ? scanFile.name : '—'}</strong><br/>
+                    ${getExp('genDate')}: <strong>${new Date().toLocaleDateString('hr-HR')}</strong> · ${getExp('numWorkers')}: <strong>${matchedRows.length}</strong>
                 </div>
                 <table>
                     <thead>
                         <tr>
                             <th style="width: 4%">#</th>
-                            <th>Ime i prezime</th>
-                            <th>Ime oca</th>
-                            <th>JMBG / OIB</th>
-                            <th>Radno mjesto</th>
-                            <th>Odjel</th>
-                            <th>Tip testa</th>
-                            <th>Datum testa</th>
-                            <th>Status</th>
+                            <th>${getExp('imeIPrezime')}</th>
+                            <th>${getExp('imeOca')}</th>
+                            <th>${getExp('jmbgOib')}</th>
+                            <th>${getExp('radnoMjesto')}</th>
+                            <th>${getExp('odjel')}</th>
+                            <th>${getExp('tipTesta')}</th>
+                            <th>${getExp('datumTesta')}</th>
+                            <th>${getExp('status')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -298,10 +435,10 @@ export default function ArchivePage() {
                     </tbody>
                 </table>
                 <div class="footer">
-                    <span>Generisano iz digitalne arhive eZNR</span>
-                    <span>Stranica 1 od 1</span>
+                    <span>${getExp('generatedFrom')}</span>
+                    <span>${getExp('pageOf')}</span>
                 </div>
-                <button class="print-btn" onclick="window.print()">🖨️ Isprintaj / Save as PDF</button>
+                <button class="print-btn" onclick="window.print()">🖨️ ${lang === 'en' ? 'Print / Save as PDF' : 'Isprintaj / Save as PDF'}</button>
             </body>
             </html>
         `;

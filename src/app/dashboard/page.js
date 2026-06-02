@@ -1891,7 +1891,7 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (t('klikniZaPregledUvjerenjaRadnika')) : ''}>{c.naziv || c.ime || '—'}</button>
+                                                            title={worker ? (t('klikniZaPregledUvjerenjaRadnika')) : ''}>{t(c.naziv?.trim()) || t(c.ime?.trim()) || c.naziv || c.ime || '—'}</button>
                                                     </td>
                                                     <td><span className="badge badge-info">{c.oznaka}</span></td>
                                                     <td>{formatDate(c.datum)}</td>
@@ -1948,7 +1948,7 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (t('klikniZaPregledOzoZaduzenja')) : ''}>{p.naziv || '—'}</button>
+                                                            title={worker ? (t('klikniZaPregledOzoZaduzenja')) : ''}>{t(p.naziv?.trim()) || p.naziv || '—'}</button>
                                                     </td>
                                                     <td>{formatDate(p.datumZaduzenja)}</td>
                                                     <td>{p.kolicina}</td>
