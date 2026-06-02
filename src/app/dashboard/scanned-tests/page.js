@@ -7,7 +7,6 @@ import { getAll, COLLECTIONS, getActiveCompanyId } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
 import PageHeader from '@/components/PageHeader';
-import * as XLSX from 'xlsx';
 
 const EXPORT_TRANSLATIONS = {
     bs: {
@@ -393,7 +392,8 @@ export default function ScannedTestsPage() {
         setScanSearched(false);
     };
 
-    const handleDownloadExcel = () => {
+    const handleDownloadExcel = async () => {
+        const XLSX = await import('xlsx');
         const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
 
         const dataRows = matchedRows.map((row, idx) => {
