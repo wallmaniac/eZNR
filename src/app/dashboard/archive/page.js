@@ -94,13 +94,14 @@ export default function ArchivePage() {
                     const rows = result.workers.map((ext, idx) => {
                         const matches = matchWorkers(ext.extractedName, ext.date || '', allWorkers);
                         const bestMatch = matches[0]; // { worker, score, dobMatch }
+                        const hasGoodMatch = bestMatch && bestMatch.score >= 0.35;
                         return {
                             id: `row-${idx}-${Date.now()}`,
                             extractedName: ext.extractedName,
                             date: ext.date || '',
                             type: ext.type || '',
                             passed: ext.passed !== false,
-                            selectedWorkerId: bestMatch ? bestMatch.worker.id : '',
+                            selectedWorkerId: hasGoodMatch ? bestMatch.worker.id : '__NOT_IN_DB__',
                             score: bestMatch ? bestMatch.score : 0,
                             dobMatch: bestMatch ? bestMatch.dobMatch : false
                         };
@@ -125,11 +126,12 @@ export default function ArchivePage() {
         const w = allWorkers.find(x => x.id === workerId);
         setMatchedRows(prev => prev.map(r => {
             if (r.id !== rowId) return r;
+            const isNotInDb = workerId === '__NOT_IN_DB__';
             return {
                 ...r,
                 selectedWorkerId: workerId,
-                score: workerId ? 100 : 0,
-                dobMatch: w && r.date && w.datumRodjenja === r.date
+                score: isNotInDb ? 0 : (workerId ? 100 : 0),
+                dobMatch: !isNotInDb && w && r.date && w.datumRodjenja === r.date
             };
         }));
     };
@@ -150,18 +152,28 @@ export default function ArchivePage() {
         const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
 
         const dataRows = matchedRows.map((row, idx) => {
-            const w = allWorkers.find(x => x.id === row.selectedWorkerId) || {};
+            const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
+            const w = isNotInDb ? {} : (allWorkers.find(x => x.id === row.selectedWorkerId) || {});
             const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
             const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+
+            let firstName = w.ime || '';
+            let lastName = w.prezime || '';
+            if (isNotInDb && row.extractedName) {
+                const parts = row.extractedName.trim().split(/\s+/);
+                firstName = parts[0] || '';
+                lastName = parts.slice(1).join(' ') || '';
+            }
+
             return {
                 '#': idx + 1,
-                'Ime': w.ime || '',
-                'Prezime': w.prezime || '',
-                'Ime oca': w.imeOca || '—',
+                'Ime': firstName,
+                'Prezime': lastName,
+                'Ime oca': w.imeRoditelja || '—',
                 'JMBG / OIB': w.jmbg || w.oib || '—',
                 'Datum rođenja': w.datumRodjenja || '—',
-                'Radno mjesto': wp.naziv || '—',
-                'Odjel / Org. jedinica': ou.naziv || '—',
+                'Radno mjesto': wp.naziv || w.radnoMjesto || '—',
+                'Odjel / Org. jedinica': ou.naziv || w.orgJedinica || '—',
                 'Ime iz skeniranog testa (AI)': row.extractedName,
                 'Datum testa': row.date || '—',
                 'Tip testa': row.type || '—',
@@ -189,17 +201,25 @@ export default function ArchivePage() {
         const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
 
         const rowsHtml = matchedRows.map((row, idx) => {
-            const w = allWorkers.find(x => x.id === row.selectedWorkerId) || {};
+            const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
+            const w = isNotInDb ? {} : (allWorkers.find(x => x.id === row.selectedWorkerId) || {});
             const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
             const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+
+            const fullName = isNotInDb ? row.extractedName : `${w.ime || ''} ${w.prezime || ''}`.trim();
+            const parentName = w.imeRoditelja || '—';
+            const nationalId = w.jmbg || w.oib || '—';
+            const workplaceName = wp.naziv || w.radnoMjesto || '—';
+            const deptName = ou.naziv || w.orgJedinica || '—';
+
             return `
                 <tr>
                     <td style="color:#aaa; text-align:center">${idx + 1}</td>
-                    <td style="font-weight:600">${w.ime || ''} ${w.prezime || ''}</td>
-                    <td>${w.imeOca || '—'}</td>
-                    <td>${w.jmbg || w.oib || '—'}</td>
-                    <td>${wp.naziv || '—'}</td>
-                    <td>${ou.naziv || '—'}</td>
+                    <td style="font-weight:600">${fullName}</td>
+                    <td>${parentName}</td>
+                    <td>${nationalId}</td>
+                    <td>${workplaceName}</td>
+                    <td>${deptName}</td>
                     <td>${row.type || 'ZNR/ZOP'}</td>
                     <td>${row.date || '—'}</td>
                     <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? 'Položio' : 'Pao'}</span></td>
@@ -787,8 +807,13 @@ export default function ArchivePage() {
                                                 {matchedRows.map((row, idx) => {
                                                     const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
                                                     const selectedW = allWorkers.find(w => w.id === row.selectedWorkerId);
+                                                    const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
                                                     const isManual = row.score === 100 && !row.dobMatch;
-                                                    const conf = isManual ? { emoji: '✍️', label: 'Ručno', color: 'var(--text)' } : confidenceLabel(row.score);
+                                                    const conf = isNotInDb
+                                                        ? { emoji: '👤', label: 'Nije u bazi', color: 'var(--text-muted)' }
+                                                        : isManual
+                                                            ? { emoji: '✍️', label: 'Ručno', color: 'var(--text)' }
+                                                            : confidenceLabel(row.score);
                                                     
                                                     return (
                                                         <tr key={row.id}>
@@ -802,6 +827,7 @@ export default function ArchivePage() {
                                                                     style={{ minWidth: 200, padding: '4px 8px', fontSize: '0.85rem' }}
                                                                 >
                                                                     <option value="">— Odaberite radnika —</option>
+                                                                    <option value="__NOT_IN_DB__">⚠️ Zadrži ime: "{row.extractedName}" (Nije u bazi)</option>
                                                                     {allWorkers.map(w => (
                                                                         <option key={w.id} value={w.id}>
                                                                             {w.ime} {w.prezime} {w.jmbg ? `(JMBG: ${w.jmbg})` : w.oib ? `(OIB: ${w.oib})` : ''}
@@ -809,7 +835,7 @@ export default function ArchivePage() {
                                                                     ))}
                                                                 </select>
                                                             </td>
-                                                            <td>{selectedW?.imeOca || '—'}</td>
+                                                            <td>{selectedW?.imeRoditelja || '—'}</td>
                                                             <td>{selectedW?.jmbg || selectedW?.oib || '—'}</td>
                                                             <td>
                                                                 <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{row.type || '—'}</span>
