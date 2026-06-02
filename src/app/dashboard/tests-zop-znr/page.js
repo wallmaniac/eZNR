@@ -134,8 +134,8 @@ export default function TestsZopZnrPage() {
                     ⚙️ {t('testGenerator')}
                 </button>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>🖨️ {t('zapisnikZos')}</button>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}&lang=${lang}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>🖨️ {t('zapisnikZos')}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}&lang=${lang}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
                 </div>
             </div>
 

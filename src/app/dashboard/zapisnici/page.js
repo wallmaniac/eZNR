@@ -436,10 +436,10 @@ export default function ZapisniciPage() {
                                 + {t('noviZapisnik1')}
                             </button>
 
-                            <button className="btn btn-dark btn-sm" style={{ height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>
+                            <button className="btn btn-dark btn-sm" style={{ height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}&lang=${lang}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>
                                 📝 {t('zapisnikZos')}
                             </button>
-                            <button className="btn btn-dark btn-sm" style={{ height: 38, background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni1')}>
+                            <button className="btn btn-dark btn-sm" style={{ height: 38, background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}&lang=${lang}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni1')}>
                                 🔥 {t('zapisnikZop')}
                             </button>
 

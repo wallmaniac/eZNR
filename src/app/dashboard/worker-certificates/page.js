@@ -311,8 +311,8 @@ function WorkerCertificatesInner() {
                    <>
                      <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
                      <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
-                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {t('zapisnikZos')}</div>
-                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}&lang=${lang}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {t('zapisnikZos')}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}&lang=${lang}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</div>
                      </div>
                    </>, document.body
                  )}

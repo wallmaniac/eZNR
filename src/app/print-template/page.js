@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LAWS } from '@/lib/lawConfig';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /** Read the company country synchronously from localStorage */
 function detectCountryFromStorage() {
@@ -24,6 +25,16 @@ export default function PrintTemplatePage() {
     const type = searchParams.get('type') || 'ZOS'; // ZOS or ZOP
     const workerName = searchParams.get('worker') || '_________________________';
     const urlCountry = searchParams.get('country');
+    const urlLang = searchParams.get('lang');
+
+    const { t, lang, setLang, isInitialized } = useLanguage();
+
+    // Sync language if passed in URL
+    useEffect(() => {
+        if (urlLang && ['bs', 'hr', 'en', 'de', 'sl', 'sr'].includes(urlLang)) {
+            setLang(urlLang);
+        }
+    }, [urlLang, setLang]);
 
     // Detect country: URL param > localStorage > fallback BA
     const [country, setCountry] = useState('BA');
@@ -35,14 +46,18 @@ export default function PrintTemplatePage() {
         ready.current = true;
     }, [urlCountry]);
 
-    // Print only after country has been resolved (next tick after setCountry)
+    // Print only after country and language have been resolved
     useEffect(() => {
-        if (!ready.current) return;
-        const t = setTimeout(() => { window.print(); }, 400);
-        return () => clearTimeout(t);
-    }, [country]);
+        if (!ready.current || !isInitialized) return;
+        const timer = setTimeout(() => { window.print(); }, 400);
+        return () => clearTimeout(timer);
+    }, [country, isInitialized]);
 
-    const today = new Date().toLocaleDateString('hr-HR');
+    if (!isInitialized) return null;
+
+    const today = new Date().toLocaleDateString(
+        lang === 'en' ? 'en-US' : lang === 'de' ? 'de-DE' : lang === 'sl' ? 'sl-SI' : 'hr-HR'
+    );
 
     const osh = LAWS[country]?.osh || LAWS.BA.osh;
     const fire = LAWS[country]?.fire || LAWS.BA.fire;
@@ -52,25 +67,24 @@ export default function PrintTemplatePage() {
             {type === 'ZOS' ? (
                 <>
                     <div style={{ textAlign: 'center', marginBottom: '10mm', fontWeight: 'bold' }}>
-                        ZAPISNIK<br/>
-                        O OCJENI OSPOSOBLJENOSTI RADNIKA ZA RAD NA SIGURAN NAČIN
+                        {t('zapisnikZnrTitle')}
                     </div>
 
                     <div style={{ lineHeight: 1.8, fontSize: '11pt', textAlign: 'justify' }}>
-                        <p>Komisija u sastavu:</p>
+                        <p>{t('komisijaUSastavu')}</p>
                         <ol style={{ marginLeft: '10mm', paddingLeft: 0, listStylePosition: 'inside' }}>
-                            <li>______________________________, Predsjednik komisije</li>
-                            <li>______________________________, Član</li>
-                            <li>______________________________, Član</li>
+                            <li>______________________________, {t('predsjednikKomisije')}</li>
+                            <li>______________________________, {t('clan')}</li>
+                            <li>______________________________, {t('clan')}</li>
                         </ol>
 
                         <p>
-                            Na osnovu {osh.articleWord} {osh.articles?.trainingObligation || '26'}. {osh.name} ("{osh.gazette}")
+                            {t('naOsnovu')} {t(osh.articleWord)} {osh.articles?.trainingObligation || '26'}. {t(osh.name)} ("{osh.gazette}")
                             {country === 'HR'
-                                ? ' i Pravilnika o osposobljavanju i usavršavanju iz zaštite na radu (NN 142/21), '
-                                : ' i Pravilnika o načinu, postupku i rokovima vršenja periodičnih pregleda i ispitivanja iz oblasti zaštite na radu, '
+                                ? t('iPravilnikaHR')
+                                : t('iPravilnikaBA')
                             }
-                            komisija donosi ocjenu da je radnik/ca:
+                            {t('komisijaDonosiOcjenu')}
                         </p>
 
                         <div style={{ textAlign: 'center', margin: '10mm 0', fontSize: '14pt', fontWeight: 'bold' }}>
@@ -78,22 +92,21 @@ export default function PrintTemplatePage() {
                         </div>
 
                         <p>
-                            upoznat/a sa uvjetima rada, opasnostima i štetnostima na radnom mjestu, te je nakon provedene
-                            teoretske i praktične obuke uspješno položio/la provjeru znanja i <strong>OSPOSOBLJEN/A</strong> je za rad na siguran način.
+                            {t('upoznatSaUvjetima')}
                         </p>
 
                         <p>
-                            Mjesto i datum: _______________________, {today} godine.
+                            {t('mjestoIDatum').replace('{0}', today)}
                         </p>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '25mm', fontSize: '11pt' }}>
                         <div style={{ textAlign: 'center' }}>
-                            Radnik/ca:<br/><br/>
+                            {t('radnikca')}<br/><br/>
                             _________________________
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                            Komisija (potpisi):<br/><br/>
+                            {t('komisijaPotpisi')}<br/><br/>
                             1. _________________________<br/><br/>
                             2. _________________________<br/><br/>
                             3. _________________________
@@ -103,21 +116,20 @@ export default function PrintTemplatePage() {
             ) : (
                 <>
                     <div style={{ textAlign: 'center', marginBottom: '10mm', fontWeight: 'bold' }}>
-                        ZAPISNIK<br/>
-                        O OCJENI OSPOSOBLJENOSTI RADNIKA IZ OBLASTI ZAŠTITE OD POŽARA
+                        {t('zapisnikZopTitle')}
                     </div>
 
                     <div style={{ lineHeight: 1.8, fontSize: '11pt', textAlign: 'justify' }}>
-                        <p>Komisija u sastavu:</p>
+                        <p>{t('komisijaUSastavu')}</p>
                         <ol style={{ marginLeft: '10mm', paddingLeft: 0, listStylePosition: 'inside' }}>
-                            <li>______________________________, Predsjednik komisije</li>
-                            <li>______________________________, Član</li>
-                            <li>______________________________, Član</li>
+                            <li>______________________________, {t('predsjednikKomisije')}</li>
+                            <li>______________________________, {t('clan')}</li>
+                            <li>______________________________, {t('clan')}</li>
                         </ol>
 
                         <p>
-                            Na osnovu zakonskih propisa iz oblasti zaštite od požara ({fire.name}, "{fire.gazette}"),
-                            komisija donosi ocjenu da je opće i posebno poznavanje mjera zaštite od požara usvojio/la radnik/ca:
+                            {t('naOsnovu')} {t('zakonPropsZop').replace('{0}', t(fire.name)).replace('{1}', fire.gazette)}
+                            {t('zopDonosiOcjenu')}
                         </p>
 
                         <div style={{ textAlign: 'center', margin: '10mm 0', fontSize: '14pt', fontWeight: 'bold' }}>
@@ -125,23 +137,21 @@ export default function PrintTemplatePage() {
                         </div>
 
                         <p>
-                            koji/a je nakon edukacije i provedene provjere znanja, uspješno položio/la ispit i
-                            <strong> OSPOSOBLJEN/A</strong> je za provođenje mjera zaštite od požara, gašenje početnih požara
-                            kao i za evakuaciju i spašavanje.
+                            {t('zopEdukacijaTekst')}
                         </p>
 
                         <p>
-                            Mjesto i datum: _______________________, {today} godine.
+                            {t('mjestoIDatum').replace('{0}', today)}
                         </p>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '25mm', fontSize: '11pt' }}>
                         <div style={{ textAlign: 'center' }}>
-                            Radnik/ca:<br/><br/>
+                            {t('radnikca')}<br/><br/>
                             _________________________
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                            Komisija (potpisi):<br/><br/>
+                            {t('komisijaPotpisi')}<br/><br/>
                             1. _________________________<br/><br/>
                             2. _________________________<br/><br/>
                             3. _________________________

@@ -15,7 +15,8 @@ import {
 } from '@/lib/firebaseSync';
 import { sendBatchEmails } from '@/lib/emailService';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
-import { apiGenerateQuiz, apiParsePresentation } from '@/lib/trainingsAI';
+import { apiGenerateQuiz, apiParsePresentation, apiTranslateTraining } from '@/lib/trainingsAI';
+import HelpTip from '@/components/HelpTip';
 import PageHeader from '@/components/PageHeader';
 import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/Pagination';
@@ -39,6 +40,7 @@ const EMPTY_TRAINING = {
     prikaziRezultate: true,
     dozvoliPovratak: false,
     responses: [],
+    jezik: '',
 };
 
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -63,6 +65,7 @@ function TrainingsInner() {
     const [search, setSearch] = useState('');
     const [activeFormTab, setActiveFormTab] = useState('slides'); // slides | quiz | settings
     const [generatingQuiz, setGeneratingQuiz] = useState(false);
+    const [translating, setTranslating] = useState(false);
     const [uploadingFile, setUploadingFile] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const [uploadStatus, setUploadStatus] = useState(''); // message shown during upload
@@ -306,6 +309,44 @@ function TrainingsInner() {
         }
     };
 
+    // ── AI TRANSLATION ─────────────────────────
+    const handleTranslate = async () => {
+        const slides = formData.slides || [];
+        const questions = formData.questions || [];
+        if (slides.length === 0 && questions.length === 0) {
+            await alert('Obuka nema dodanih slajdova niti pitanja za prijevod.');
+            return;
+        }
+        if (!formData.jezik) {
+            await alert('Prvo odaberite "Jezik obuke" na koji želite prevesti.');
+            return;
+        }
+        const targetLang = formData.jezik;
+        if (await confirm(`Da li ste sigurni da želite prevesti sve slajdove i pitanja na '${targetLang}' pomoću AI?\n\nOva akcija može prepisati vaše trenutne tekstove.`)) {
+            setTranslating(true);
+            try {
+                const res = await apiTranslateTraining(slides, questions, targetLang);
+                if (res.success && (res.slides || res.questions)) {
+                    setFormData(prev => ({
+                        ...prev,
+                        slides: res.slides || [],
+                        questions: res.questions || []
+                    }));
+                    markDirty();
+                    await alert(`Uspješno prevedeno na ${targetLang}!`);
+                } else if (res.error) {
+                    await alert('Greška pri prijevodu: ' + res.error);
+                } else {
+                    await alert('Prijevod nije uspio. Pokušajte ponovo.');
+                }
+            } catch (err) {
+                await alert('Greška pri prijevodu: ' + err.message);
+            } finally {
+                setTranslating(false);
+            }
+        }
+    };
+
     // ── FILE UPLOAD (PDF / PPTX) ──────────────────
     const handleFileUpload = async (file) => {
         if (!file) return;
@@ -531,8 +572,8 @@ function TrainingsInner() {
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                             <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={t('kreirajNovuObukuSaPrezentacijom')}>+ {t('novaObuka')}</button>
-                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {t('zapisnikZos')}</button>
-                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
+                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}&lang=${lang}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {t('zapisnikZos')}</button>
+                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}&lang=${lang}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
                             <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
                                 <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder={t('pretraziObuke')} value={search} onChange={e => setSearch(e.target.value)}
@@ -1130,6 +1171,39 @@ function TrainingsInner() {
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('showExplanationsDesc')}</div>
                                 </div>
                             </label>
+                        </div>
+                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                            <div style={{ ...lbl, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                {t('jezikObuke')}
+                                <HelpTip text="Jezik na kojem je napisana obuka. Koristi se za AI prevođenje." />
+                            </div>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
+                                <select 
+                                    className="form-select" 
+                                    value={formData.jezik || ''} 
+                                    onChange={e => setF('jezik', e.target.value)} 
+                                    style={{ maxWidth: 220 }}
+                                >
+                                    <option value="">{t('odaberite')}</option>
+                                    <option value="Bosanski">Bosanski</option>
+                                    <option value="Hrvatski">Hrvatski</option>
+                                    <option value="Srpski">Srpski</option>
+                                    <option value="Engleski">English</option>
+                                    <option value="Njemački">Deutsch</option>
+                                    <option value="Slovenački">Slovenščina</option>
+                                    <option value="Makedonski">Македонски</option>
+                                </select>
+                                {formData.jezik && (
+                                    <button 
+                                        className="btn btn-outline btn-sm" 
+                                        style={{ height: 38, borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                                        onClick={handleTranslate}
+                                        disabled={translating}
+                                    >
+                                        {translating ? '⏳ Prevodim...' : '🤖 Prevedi pitanja (AI)'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

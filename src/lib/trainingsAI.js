@@ -44,3 +44,20 @@ export async function apiParsePresentation(file) {
         return { error: err.message };
     }
 }
+
+/**
+ * Translates training slides and quiz questions into target language.
+ * @param {Array} slides 
+ * @param {Array} questions 
+ * @param {string} targetLanguage 
+ * @returns {Promise<{success: boolean, slides: Array, questions: Array, error?: string}>}
+ */
+export async function apiTranslateTraining(slides, questions, targetLanguage) {
+    try {
+        const res = await callFirebaseFunction('translateTraining', { slides, questions, targetLanguage });
+        return res;
+    } catch (err) {
+        console.error('[trainingsAI] apiTranslateTraining error:', err);
+        return { error: err.message };
+    }
+}

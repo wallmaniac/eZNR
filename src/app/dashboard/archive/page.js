@@ -11,6 +11,8 @@ import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
 import Link from 'next/link';
 import { idbOpenFile, idbDownloadFile } from '@/lib/idbFiles';
 import PageHeader from '@/components/PageHeader';
+import * as XLSX from 'xlsx';
+import HelpTip from '@/components/HelpTip';
 
 
 const FILE_ICONS = {
@@ -61,50 +63,236 @@ export default function ArchivePage() {
     const MAX_MB = 5;
 
     // ── Scan tab state ─────────────────────────────────────────────────────────
-    const [scanFile, setScanFile] = useState(null);   // { name, data, size, type }
-    const [scanName, setScanName] = useState('');
-    const [scanDob, setScanDob] = useState('');
+    const [scanFile, setScanFile] = useState(null);
     const [scanDragging, setScanDragging] = useState(false);
-    const [scanMatches, setScanMatches] = useState([]); // top worker matches
     const [scanSearched, setScanSearched] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [matchedRows, setMatchedRows] = useState([]); // Array of { id, extractedName, date, type, passed, selectedWorkerId }
     const scanFileRef = useRef(null);
 
-    const handleScanFileRead = (file) => {
-        if (file.size> 10 * 1024 * 1024) { alert('Max 10MB za skenirani test!'); return; }
+    const handleScanFileRead = async (file) => {
+        if (file.size > 10 * 1024 * 1024) { alert('Max 10MB za skenirani test!'); return; }
+        
+        setScanFile({ name: file.name, size: file.size, type: file.type });
+        setAnalyzing(true);
+        setScanSearched(false);
+        setMatchedRows([]);
+
         const reader = new FileReader();
-        reader.onload = (e) => {
-            setScanFile({ name: file.name, data: e.target.result, size: file.size, type: file.type });
-            // Try to parse name hint from filename: e.g. "Mujo_Mujic_1990.pdf" → "Mujo Mujic"
-            const base = file.name.replace(/\.[^.]+$/, '').replace(/[_\-\.]/g, ' ').replace(/\d{4,}/g, '').trim();
-            if (base.split(' ').length>= 2) setScanName(base);
-            setScanSearched(false);
-            setScanMatches([]);
+        reader.onload = async (e) => {
+            try {
+                const base64Data = e.target.result.split(',')[1];
+                const res = await fetch('/api/analyze-scanned-tests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base64Data, mimeType: file.type })
+                });
+                
+                const result = await res.json();
+                if (result.success && Array.isArray(result.workers)) {
+                    const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
+                    const rows = result.workers.map((ext, idx) => {
+                        const matches = matchWorkers(ext.extractedName, ext.date || '', allWorkers);
+                        const bestMatch = matches[0]; // { worker, score, dobMatch }
+                        return {
+                            id: `row-${idx}-${Date.now()}`,
+                            extractedName: ext.extractedName,
+                            date: ext.date || '',
+                            type: ext.type || '',
+                            passed: ext.passed !== false,
+                            selectedWorkerId: bestMatch ? bestMatch.worker.id : '',
+                            score: bestMatch ? bestMatch.score : 0,
+                            dobMatch: bestMatch ? bestMatch.dobMatch : false
+                        };
+                    });
+                    setMatchedRows(rows);
+                    setScanSearched(true);
+                } else {
+                    alert(result.error || 'Nije uspjelo analiziranje skeniranog dokumenta.');
+                }
+            } catch (err) {
+                console.error('Scan analysis error:', err);
+                alert('Greška pri komunikaciji sa AI modelom: ' + err.message);
+            } finally {
+                setAnalyzing(false);
+            }
         };
         reader.readAsDataURL(file);
     };
 
-    const handleScanSearch = () => {
-        if (!scanName.trim()) { alert(t('unesiteImeRadnika')); return; }
-        const workers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
-        const results = matchWorkers(scanName, scanDob, workers);
-        setScanMatches(results);
-        setScanSearched(true);
+    const handleUpdateRowWorker = (rowId, workerId) => {
+        const allWorkers = getAll(COLLECTIONS.WORKERS);
+        const w = allWorkers.find(x => x.id === workerId);
+        setMatchedRows(prev => prev.map(r => {
+            if (r.id !== rowId) return r;
+            return {
+                ...r,
+                selectedWorkerId: workerId,
+                score: workerId ? 100 : 0,
+                dobMatch: w && r.date && w.datumRodjenja === r.date
+            };
+        }));
     };
 
-    const handleScanSelectWorker = (worker) => {
-        if (!scanFile) { alert('Nema odabranog skena!'); return; }
-        try {
-            sessionStorage.setItem('eznr_scan_prefill', JSON.stringify({
-                data: scanFile.data, name: scanFile.name,
-                size: scanFile.size, type: scanFile.type,
-            }));
-        } catch { /* storage full */ }
-        router.push(`/dashboard/worker-certificates/create?workerId=${worker.id}&fromScan=1`);
+    const handleDeleteRow = (rowId) => {
+        setMatchedRows(prev => prev.filter(r => r.id !== rowId));
     };
 
+    const handleClearScan = () => {
+        setScanFile(null);
+        setMatchedRows([]);
+        setScanSearched(false);
+    };
 
+    const handleDownloadExcel = () => {
+        const allWorkers = getAll(COLLECTIONS.WORKERS);
+        const workplaces = getAll(COLLECTIONS.WORKPLACES);
+        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
 
-    const reload = useCallback(() => {
+        const dataRows = matchedRows.map((row, idx) => {
+            const w = allWorkers.find(x => x.id === row.selectedWorkerId) || {};
+            const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
+            const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+            return {
+                '#': idx + 1,
+                'Ime': w.ime || '',
+                'Prezime': w.prezime || '',
+                'Ime oca': w.imeOca || '—',
+                'JMBG / OIB': w.jmbg || w.oib || '—',
+                'Datum rođenja': w.datumRodjenja || '—',
+                'Radno mjesto': wp.naziv || '—',
+                'Odjel / Org. jedinica': ou.naziv || '—',
+                'Ime iz skeniranog testa (AI)': row.extractedName,
+                'Datum testa': row.date || '—',
+                'Tip testa': row.type || '—',
+                'Status': row.passed ? 'Položio' : 'Nije položio'
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(dataRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Skenirani Testovi Radnici");
+        XLSX.writeFile(wb, `Skenirani_Testovi_Izvjestaj_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleDownloadPDF = () => {
+        const companyId = getActiveCompanyId();
+        let company = { naziv: '', adresa: '', oib: '', jib: '' };
+        if (companyId && companyId !== 'all') {
+            const allComps = getAll('companies');
+            const c = allComps.find(x => x.id === companyId);
+            if (c) company = c;
+        }
+
+        const allWorkers = getAll(COLLECTIONS.WORKERS);
+        const workplaces = getAll(COLLECTIONS.WORKPLACES);
+        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+
+        const rowsHtml = matchedRows.map((row, idx) => {
+            const w = allWorkers.find(x => x.id === row.selectedWorkerId) || {};
+            const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
+            const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+            return `
+                <tr>
+                    <td style="color:#aaa; text-align:center">${idx + 1}</td>
+                    <td style="font-weight:600">${w.ime || ''} ${w.prezime || ''}</td>
+                    <td>${w.imeOca || '—'}</td>
+                    <td>${w.jmbg || w.oib || '—'}</td>
+                    <td>${wp.naziv || '—'}</td>
+                    <td>${ou.naziv || '—'}</td>
+                    <td>${row.type || 'ZNR/ZOP'}</td>
+                    <td>${row.date || '—'}</td>
+                    <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? 'Položio' : 'Pao'}</span></td>
+                </tr>
+            `;
+        }).join('');
+
+        const companyName = company.naziv || company.name || 'eZNR Firma';
+        const docTitle = `Lista radnika sa skeniranog testa`;
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8"/>
+                <title>${docTitle}</title>
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt; color: #1a1a2e; padding: 20mm; }
+                    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #00BFA6; padding-bottom: 12px; margin-bottom: 20px; }
+                    .brand { font-size: 16pt; font-weight: 800; color: #00BFA6; }
+                    .company-info { text-align: right; font-size: 8pt; color: #555; }
+                    .title { font-size: 14pt; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+                    .meta { font-size: 9pt; color: #666; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                    th { background: #f5f6fa; font-size: 8pt; font-weight: 700; text-transform: uppercase; padding: 8px 10px; border-bottom: 2px solid #e0e0e0; text-align: left; }
+                    td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 9pt; }
+                    tr:nth-child(even) td { background: #fafbfd; }
+                    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; }
+                    .badge-ok { background: #e8f5e9; color: #2e7d32; }
+                    .badge-danger { background: #ffebee; color: #c62828; }
+                    .footer { margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; display: flex; justify-content: space-between; font-size: 8pt; color: #888; }
+                    .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #00BFA6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+                    @media print {
+                        .print-btn { display: none; }
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <div class="brand">eZNR</div>
+                        <div style="font-size: 9pt; font-weight: bold; margin-top: 4px;">${companyName}</div>
+                    </div>
+                    <div class="company-info">
+                        ${company.adresa ? `<div>${company.adresa}</div>` : ''}
+                        ${company.mjesto ? `<div>${company.mjesto}</div>` : ''}
+                        ${company.jib || company.oib ? `<div>JIB/OIB: ${company.jib || company.oib}</div>` : ''}
+                    </div>
+                </div>
+                <div class="title">${docTitle}</div>
+                <div class="meta">
+                    Dokument skeniranog testa: <strong>${scanFile ? scanFile.name : '—'}</strong><br/>
+                    Datum generisanja: <strong>${new Date().toLocaleDateString('hr-HR')}</strong> · Broj radnika: <strong>${matchedRows.length}</strong>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 4%">#</th>
+                            <th>Ime i prezime</th>
+                            <th>Ime oca</th>
+                            <th>JMBG / OIB</th>
+                            <th>Radno mjesto</th>
+                            <th>Odjel</th>
+                            <th>Tip testa</th>
+                            <th>Datum testa</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <span>Generisano iz digitalne arhive eZNR</span>
+                    <span>Stranica 1 od 1</span>
+                </div>
+                <button class="print-btn" onclick="window.print()">🖨️ Isprintaj / Save as PDF</button>
+            </body>
+            </html>
+        `;
+
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(html);
+            win.document.close();
+        } else {
+            alert('Molimo dozvolite popup prozore za ispis.');
+        }
+    };
+
+        const reload = useCallback(() => {
         setFiles(getAll(COLLECTIONS.DIGITAL_ARCHIVE));
         // Aggregate form attachments
         const docs = [];
@@ -495,7 +683,7 @@ export default function ArchivePage() {
                                 {t('ubaciSkeniraniTest')}
                             </div>
                             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                                {t('aplikacijaCePronaciOdgovarajucegRadnika')}
+                                Aplikacija će analizirati skenirane testove pomoću AI, izdvojiti imena radnika i uporediti ih sa bazom podataka.
                             </div>
 
                             {/* Drop zone */}
@@ -511,9 +699,16 @@ export default function ArchivePage() {
                                 onDrop={e => { e.preventDefault(); setScanDragging(false); const f = e.dataTransfer.files[0]; if (f) handleScanFileRead(f); }}
                                 onClick={() => scanFileRef.current?.click()}>
                                 <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>
-                                    {scanFile ? '✅' : scanDragging ? '📂' : '📄'}
+                                    {analyzing ? '⏳' : scanFile ? '✅' : scanDragging ? '📂' : '📄'}
                                 </div>
-                                {scanFile ? (
+                                {analyzing ? (
+                                    <div>
+                                        <div style={{ fontWeight: 700, color: 'var(--primary)' }}>Analiziranje dokumenta pomoću AI...</div>
+                                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                            Čitanje teksta i prepoznavanje imena radnika iz skeniranog testa...
+                                        </div>
+                                    </div>
+                                ) : scanFile ? (
                                     <div>
                                         <div style={{ fontWeight: 700, color: 'var(--success)' }}>{scanFile.name}</div>
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
@@ -528,93 +723,120 @@ export default function ArchivePage() {
                                                 : (t('prevuciSkeniraniTestIliKlikni'))}
                                         </div>
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                            PDF, JPG, PNG, DOCX — max 10MB
+                                            PDF, JPG, PNG — max 10MB
                                         </div>
                                     </div>
                                 )}
-                                <input ref={scanFileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.docx" style={{ display: 'none' }}
-                                    onChange={e => { const f = e.target.files[0]; if (f) handleScanFileRead(f); e.target.value = ''; }} />
+                                <input ref={scanFileRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }}
+                                    onChange={e => { const f = e.target.files[0]; if (f) handleScanFileRead(f); e.target.value = ''; }}
+                                    disabled={analyzing} />
                             </div>
 
-                            {/* Name / DOB hints */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px auto', gap: 12, alignItems: 'flex-end' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                        {t('imeIPrezimeIzTesta')}
-                                    </div>
-                                    <input className="form-input" value={scanName}
-                                        onChange={e => { setScanName(e.target.value); setScanSearched(false); setScanMatches([]); }}
-                                        placeholder={t('nprMujoMujic')}
-                                        onKeyDown={e => { if (e.key === 'Enter') handleScanSearch(); }} />
+                            {scanFile && (
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                                    <button className="btn btn-ghost" onClick={handleClearScan} disabled={analyzing}>
+                                        ❌ {t('ocistiSve')}
+                                    </button>
                                 </div>
-                                <div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                        {t('datumROpciono')}
-                                    </div>
-                                    <DateInput value={scanDob}
-                                        onChange={v => { setScanDob(v); setScanSearched(false); setScanMatches([]); }} />
-                                </div>
-                                <button className="btn btn-primary" onClick={handleScanSearch} style={{ whiteSpace: 'nowrap' }}>
-                                    🔍 {t('pronaiRadnika')}
-                                </button>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Results */}
+                    {/* Results Table */}
                     {scanSearched && (
                         <div className="card">
                             <div className="card-body">
-                                <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    {t('matchedWorkersTop').replace('{0}', scanMatches.length)}
-                                </div>
-                                {scanMatches.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>
-                                        <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔎</div>
-                                        <div style={{ fontWeight: 600 }}>{t('nemaRezultata')}</div>
-                                        <div style={{ fontSize: '0.82rem', marginTop: 4 }}>{t('pokusajteSDrugacijimImenomIli')}</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        Rezultati prepoznavanja radnika ({matchedRows.length})
                                     </div>
-                                ) : scanMatches.map(({ worker: w, score, dobMatch }) => {
-                                    const conf = confidenceLabel(score);
-                                    return (
-                                        <div key={w.id} style={{
-                                            display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-                                            borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
-                                            marginBottom: 8, cursor: 'pointer', transition: 'all 0.15s',
-                                            background: 'var(--bg-card)',
-                                        }}
-                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                                            onClick={() => handleScanSelectWorker(w)}>
-                                            <div style={{
-                                                width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-                                                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: 'white', fontWeight: 700, fontSize: '1rem',
-                                            }}>
-                                                {(w.ime || '?')[0]}
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{w.ime} {w.prezime}</div>
-                                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                                                    {w.datumRodjenja && `🎂 ${w.datumRodjenja}`}
-                                                    {w.jmbg && ` · JMBG: ${w.jmbg}`}
-                                                    {dobMatch && <span style={{ color: 'var(--success)', marginLeft: 6, fontWeight: 600 }}>✓ DOB match</span>}
-                                                </div>
-                                            </div>
-                                            <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                                                <div style={{ fontSize: '1.2rem' }}>{conf.emoji}</div>
-                                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: conf.color }}>{conf.label}</div>
-                                            </div>
-                                            <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => { e.stopPropagation(); handleScanSelectWorker(w); }}>
-                                                {t('odaberi')}
+                                    {matchedRows.length > 0 && (
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            <button className="btn btn-outline btn-sm" onClick={handleDownloadExcel} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                📊 Izvezi u Excel
+                                            </button>
+                                            <button className="btn btn-outline btn-sm" onClick={handleDownloadPDF} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+                                                🖨️ Isprintaj / PDF
                                             </button>
                                         </div>
-                                    );
-                                })}
-                                {!scanFile && scanMatches.length> 0 && (
-                                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', fontSize: '0.82rem', color: 'var(--warning)' }}>
-                                        ⚠️ {t('odaberiteDatotekuSkeniranogTestaPrije')}
+                                    )}
+                                </div>
+
+                                {matchedRows.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>
+                                        <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔎</div>
+                                        <div style={{ fontWeight: 600 }}>Nema pronađenih radnika u testu</div>
+                                        <div style={{ fontSize: '0.82rem', marginTop: 4 }}>AI nije uspio detektovati niti jedno ime iz dokumenta.</div>
+                                    </div>
+                                ) : (
+                                    <div className="data-table-wrapper" style={{ overflowX: 'auto' }}>
+                                        <table className="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: '3%' }}>#</th>
+                                                    <th>Ime iz testa (AI)</th>
+                                                    <th>Pronađeni radnik (Baza)</th>
+                                                    <th>Ime oca</th>
+                                                    <th>JMBG / OIB</th>
+                                                    <th>Tip / Datum testa</th>
+                                                    <th style={{ width: 120 }}>Podudaranje</th>
+                                                    <th style={{ width: 60 }}>Akcije</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {matchedRows.map((row, idx) => {
+                                                    const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
+                                                    const selectedW = allWorkers.find(w => w.id === row.selectedWorkerId);
+                                                    const isManual = row.score === 100 && !row.dobMatch;
+                                                    const conf = isManual ? { emoji: '✍️', label: 'Ručno', color: 'var(--text)' } : confidenceLabel(row.score);
+                                                    
+                                                    return (
+                                                        <tr key={row.id}>
+                                                            <td>{idx + 1}</td>
+                                                            <td style={{ fontWeight: 600 }}>{row.extractedName}</td>
+                                                            <td>
+                                                                <select 
+                                                                    className="form-select" 
+                                                                    value={row.selectedWorkerId}
+                                                                    onChange={e => handleUpdateRowWorker(row.id, e.target.value)}
+                                                                    style={{ minWidth: 200, padding: '4px 8px', fontSize: '0.85rem' }}
+                                                                >
+                                                                    <option value="">— Odaberite radnika —</option>
+                                                                    {allWorkers.map(w => (
+                                                                        <option key={w.id} value={w.id}>
+                                                                            {w.ime} {w.prezime} {w.jmbg ? `(JMBG: ${w.jmbg})` : w.oib ? `(OIB: ${w.oib})` : ''}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+                                                            <td>{selectedW?.imeOca || '—'}</td>
+                                                            <td>{selectedW?.jmbg || selectedW?.oib || '—'}</td>
+                                                            <td>
+                                                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{row.type || '—'}</span>
+                                                                {row.date && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{row.date}</div>}
+                                                            </td>
+                                                            <td>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                                    <span title={conf.label} style={{ fontSize: '1rem' }}>{conf.emoji}</span>
+                                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: conf.color }}>{conf.label}</span>
+                                                                    {row.dobMatch && <span style={{ color: 'var(--success)', fontSize: '0.72rem', fontWeight: 600 }} title="Datum rođenja se podudara">🎂</span>}
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ textAlign: 'center' }}>
+                                                                <button 
+                                                                    className="btn btn-ghost btn-sm btn-icon" 
+                                                                    style={{ color: 'var(--danger)', padding: 0 }}
+                                                                    onClick={() => handleDeleteRow(row.id)}
+                                                                    title="Ukloni red"
+                                                                >
+                                                                    🗑️
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
                             </div>
@@ -622,7 +844,7 @@ export default function ArchivePage() {
                     )}
                 </div>
             )}
-
+            
             {/* ── Archive tab content ── */}
             {activeTab === 'archive' && (<>
 
