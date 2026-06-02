@@ -297,11 +297,12 @@ export default function DashboardPage() {
                 if (!c.vrijediDo) return;
                 const w = workers.find(wk => wk.id === c.workerId);
                 const wName = w ? `${w.ime} ${w.prezime}` : '';
+                const certFallback = lang === 'en' ? 'Certificate' : lang === 'de' ? 'Zertifikat' : lang === 'sl' ? 'Potrdilo' : 'Uvjerenje';
                 events.push({
                     id: `auto-cert-${c.id}`,
                     datum: (c.vrijediDo || '').split('T')[0],
                     tip: 'cert',
-                    opis: `${c.ime || c.oznaka || 'Uvjerenje'}${wName ? ` — ${wName}` : ''}`,
+                    opis: `${t(c.ime?.trim()) || c.ime || c.oznaka || certFallback}${wName ? ` — ${wName}` : ''}`,
                     auto: true,
                     sourceId: c.id,
                     companyId: c.companyId,
@@ -312,11 +313,12 @@ export default function DashboardPage() {
         if (notifSettings.calShowEquip !== false) {
             equipment.forEach(eq => {
                 if (!eq.iduci) return;
+                const equipFallback = lang === 'en' ? 'Equipment' : lang === 'de' ? 'Ausrüstung' : lang === 'sl' ? 'Oprema' : 'Oprema';
                 events.push({
                     id: `auto-equip-${eq.id}`,
                     datum: (eq.iduci || '').split('T')[0],
                     tip: 'equip',
-                    opis: `${eq.naziv || eq.invBroj || 'Oprema'}`,
+                    opis: `${t(eq.naziv?.trim()) || eq.naziv || eq.invBroj || equipFallback}`,
                     auto: true,
                     sourceId: eq.id,
                     companyId: eq.companyId,
@@ -326,17 +328,21 @@ export default function DashboardPage() {
         // Fleet — registracijaIstice, tehnickiIstice, osiguranjeIstice
         if (notifSettings.calShowFleet !== false) {
             fleetVehicles.forEach(v => {
+                const regLabel = lang === 'en' ? 'Registration' : lang === 'de' ? 'Registrierung' : lang === 'sl' ? 'Registracija' : 'Registracija';
+                const techLabel = lang === 'en' ? 'Tech Inspection' : lang === 'de' ? 'Technische Inspektion' : lang === 'sl' ? 'Tehnički pregled' : 'Tehnički pregled';
+                const insLabel = lang === 'en' ? 'Insurance' : lang === 'de' ? 'Versicherung' : lang === 'sl' ? 'Zavarovanje' : 'Osiguranje';
+                
                 if (v.registracijaIstice) events.push({
                     id: `auto-fleet-reg-${v.id}`, datum: (v.registracijaIstice || '').split('T')[0],
-                    tip: 'fleet', opis: `Registracija: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
+                    tip: 'fleet', opis: `${regLabel}: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
                 });
                 if (v.tehnickiIstice) events.push({
                     id: `auto-fleet-teh-${v.id}`, datum: (v.tehnickiIstice || '').split('T')[0],
-                    tip: 'fleet', opis: `Tehnički pregl: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
+                    tip: 'fleet', opis: `${techLabel}: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
                 });
                 if (v.osiguranjeIstice) events.push({
                     id: `auto-fleet-osig-${v.id}`, datum: (v.osiguranjeIstice || '').split('T')[0],
-                    tip: 'fleet', opis: `Osiguranje: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
+                    tip: 'fleet', opis: `${insLabel}: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
                 });
             });
         }
@@ -344,11 +350,12 @@ export default function DashboardPage() {
         if (notifSettings.calShowDoc !== false) {
             employerDocs.forEach(d => {
                 if (!d.datumIsteka) return;
+                const docFallback = lang === 'en' ? 'Document' : lang === 'de' ? 'Dokument' : lang === 'sl' ? 'Dokument' : 'Dokument';
                 events.push({
                     id: `auto-doc-${d.id}`,
                     datum: (d.datumIsteka || '').split('T')[0],
                     tip: 'doc',
-                    opis: `${d.naziv || 'Dokument'}`,
+                    opis: `${t(d.naziv?.trim()) || d.naziv || docFallback}`,
                     auto: true,
                     sourceId: d.id,
                     companyId: d.companyId,
@@ -361,11 +368,13 @@ export default function DashboardPage() {
                 if (ra.status !== 'aktivan') return;
                 const items = riskItems.filter(ri => ri.procjenaId === ra.id && ri.rokProvedbe && ri.predlozeneMjere);
                 items.forEach(ri => {
+                    const measureLabel = lang === 'en' ? 'Measure' : lang === 'de' ? 'Maßnahme' : lang === 'sl' ? 'Ukrep' : 'Mjera';
+                    const assessFallback = lang === 'en' ? 'Assessment' : lang === 'de' ? 'Bewertung' : lang === 'sl' ? 'Ocena' : 'Procjena';
                     events.push({
                         id: `auto-risk-${ri.id}`,
                         datum: (ri.rokProvedbe || '').split('T')[0],
                         tip: 'risk',
-                        opis: `Mjera: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length> 30 ? '...' : ''} (${ra.nazivTvrtke || 'Procjena'})`,
+                        opis: `${measureLabel}: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length> 30 ? '...' : ''} (${ra.nazivTvrtke || assessFallback})`,
                         auto: true,
                         sourceId: ri.id,
                         companyId: ra.companyId,
@@ -374,7 +383,7 @@ export default function DashboardPage() {
             });
         }
         return events;
-    }, [certs, equipment, fleetVehicles, employerDocs, workers, riskAssessments, riskItems, notifSettings]);
+    }, [certs, equipment, fleetVehicles, employerDocs, workers, riskAssessments, riskItems, notifSettings, lang]);
 
     const companies = userCompanies || [];
     const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
@@ -487,7 +496,7 @@ export default function DashboardPage() {
                 label: t('isteklaUvjerenja'),
                 items: expiredCertsRaw,
                 onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
-                itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
+                itemLabel: c => <><strong>{c.wName || '?'}</strong> — {t(c.ime?.trim()) || c.ime || c.oznaka}</>,
                 itemSub: c => formatDate(c.vrijediDo),
             },
             expiringCertsRaw.length > 0 && {
@@ -495,7 +504,7 @@ export default function DashboardPage() {
                 label: t('isticeZa30Dana'),
                 items: expiringCertsRaw,
                 onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
-                itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
+                itemLabel: c => <><strong>{c.wName || '?'}</strong> — {t(c.ime?.trim()) || c.ime || c.oznaka}</>,
                 itemSub: c => formatDate(c.vrijediDo),
             },
             overdueMedRaw.length > 0 && {
@@ -503,7 +512,19 @@ export default function DashboardPage() {
                 label: t('prekoraceniMedPregledi'),
                 items: overdueMedRaw,
                 onItemClick: m => router.push('/dashboard/medical-exams'),
-                itemLabel: m => <><strong>{m.wName || '?'}</strong>{m.tipPregleda ? ` — ${m.tipPregleda}` : ''}</>,
+                itemLabel: m => {
+                    const mapTip = {
+                        prethodni: t('prethodniPregled'),
+                        'periodični': t('periodicniPregled'),
+                        periodicni: t('periodicniPregled'),
+                        vanredni: t('vanredniPregled'),
+                        nocniRad: t('pregledNocniRad'),
+                        'noćni rad': t('pregledNocniRad'),
+                        ostalo: t('ostalo')
+                    };
+                    const tipTranslated = mapTip[m.tipPregleda] || m.tipPregleda || t('pregled1');
+                    return <><strong>{m.wName || '?'}</strong> — {tipTranslated}</>;
+                },
                 itemSub: m => formatDate(m.vrijediDo),
             },
             equipDueRaw.length > 0 && {
@@ -511,7 +532,7 @@ export default function DashboardPage() {
                 label: t('zakasnjeliPreglediOpreme'),
                 items: equipDueRaw,
                 onItemClick: e => router.push('/dashboard/equipment'),
-                itemLabel: e => <>{e.naziv}</>,
+                itemLabel: e => <>{t(e.naziv?.trim()) || e.naziv}</>,
                 itemSub: e => formatDate(e.iduci),
             },
             riskMeasuresDueRaw.length > 0 && {

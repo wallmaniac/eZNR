@@ -57,6 +57,17 @@ const EXPORT_TRANSLATIONS = {
         paoPdf: 'Pao',
         generatedFrom: 'Generisano iz digitalne arhive eZNR',
         pageOf: 'Stranica 1 od 1',
+        imeIzTesta: 'Ime iz testa (AI)',
+        pronadeniRadnik: 'Pronađeni radnik (Baza)',
+        odaberiRadnikaPlaceholder: '— Odaberite radnika —',
+        keepName: '⚠️ Zadrži ime: "{0}" (Nije u bazi)',
+        nijeUBazi: 'Nije u bazi',
+        rucno: 'Ručno',
+        podudaranje: 'Podudaranje',
+        ukloniRed: 'Ukloni red',
+        sheetName: 'Skenirani testovi radnici',
+        fileName: 'Skenirani_Testovi_Izvjestaj',
+        printPdf: 'Isprintaj / Snimi kao PDF',
     },
     hr: {
         title: 'POPIS RADNIKA SA SKENIRANOG TESTA',
@@ -79,6 +90,17 @@ const EXPORT_TRANSLATIONS = {
         paoPdf: 'Pao',
         generatedFrom: 'Generirano iz digitalne arhive eZNR',
         pageOf: 'Stranica 1 od 1',
+        imeIzTesta: 'Ime iz testa (AI)',
+        pronadeniRadnik: 'Pronađeni radnik (Baza)',
+        odaberiRadnikaPlaceholder: '— Odaberite radnika —',
+        keepName: '⚠️ Zadrži ime: "{0}" (Nije u bazi)',
+        nijeUBazi: 'Nije u bazi',
+        rucno: 'Ručno',
+        podudaranje: 'Podudaranje',
+        ukloniRed: 'Ukloni red',
+        sheetName: 'Skenirani testovi radnici',
+        fileName: 'Skenirani_Testovi_Izvjestaj',
+        printPdf: 'Isprintaj / Snimi kao PDF',
     },
     sr: {
         title: 'ЛИСТА РАДНИКА СА СКЕНИРАНОГ ТЕСТА',
@@ -101,6 +123,17 @@ const EXPORT_TRANSLATIONS = {
         paoPdf: 'Пао',
         generatedFrom: 'Генерисано из дигиталне архиве eZNR',
         pageOf: 'Страница 1 од 1',
+        imeIzTesta: 'Име из теста (АИ)',
+        pronadeniRadnik: 'Пронађени radnik (База)',
+        odaberiRadnikaPlaceholder: '— Одаберите радника —',
+        keepName: '⚠️ Задрži ime: "{0}" (Није у бази)',
+        nijeUBazi: 'Није у бази',
+        rucno: 'Ручно',
+        podudaranje: 'Подударање',
+        ukloniRed: 'Уклони ред',
+        sheetName: 'Скенирани тестови радники',
+        fileName: 'Скенирани_Тестови_Извјештај',
+        printPdf: 'Испринтај / Сними као ПДФ',
     },
     en: {
         title: 'WORKER LIST FROM SCANNED TEST',
@@ -123,6 +156,17 @@ const EXPORT_TRANSLATIONS = {
         paoPdf: 'Failed',
         generatedFrom: 'Generated from eZNR digital archive',
         pageOf: 'Page 1 of 1',
+        imeIzTesta: 'Name from test (AI)',
+        pronadeniRadnik: 'Found worker (Database)',
+        odaberiRadnikaPlaceholder: '— Select worker —',
+        keepName: '⚠️ Keep name: "{0}" (Not in database)',
+        nijeUBazi: 'Not in database',
+        rucno: 'Manual',
+        podudaranje: 'Match',
+        ukloniRed: 'Remove row',
+        sheetName: 'Scanned tests workers',
+        fileName: 'Scanned_Tests_Report',
+        printPdf: 'Print / Save as PDF',
     },
     de: {
         title: 'MITARBEITERLISTE VOM GESCANNTEN TEST',
@@ -145,6 +189,17 @@ const EXPORT_TRANSLATIONS = {
         paoPdf: 'Nicht bestanden',
         generatedFrom: 'Generiert aus dem eZNR Digitalarchiv',
         pageOf: 'Seite 1 von 1',
+        imeIzTesta: 'Name aus dem Test (AI)',
+        pronadeniRadnik: 'Gefundener Mitarbeiter (Datenbank)',
+        odaberiRadnikaPlaceholder: '— Mitarbeiter auswählen —',
+        keepName: '⚠️ Name behalten: "{0}" (Nicht in der Datenbank)',
+        nijeUBazi: 'Nicht in der Datenbank',
+        rucno: 'Manuell',
+        podudaranje: 'Übereinstimmung',
+        ukloniRed: 'Zeile entfernen',
+        sheetName: 'Gescannte Tests Mitarbeiter',
+        fileName: 'Gescannte_Tests_Bericht',
+        printPdf: 'Drucken / Als PDF speichern',
     },
     sl: {
         title: 'SEZNAM DELAVCEV IZ SKENIRANEGA TESTA',
@@ -167,6 +222,17 @@ const EXPORT_TRANSLATIONS = {
         paoPdf: 'Ni opravil',
         generatedFrom: 'Generirano iz digitalnega arhiva eZNR',
         pageOf: 'Stran 1 od 1',
+        imeIzTesta: 'Ime iz testa (AI)',
+        pronadeniRadnik: 'Najden delavec (Baza)',
+        odaberiRadnikaPlaceholder: '— Izberite delavca —',
+        keepName: '⚠️ Obdrži ime: "{0}" (Ni v bazi)',
+        nijeUBazi: 'Ni v bazi',
+        rucno: 'Ročno',
+        podudaranje: 'Ujemanje',
+        ukloniRed: 'Odstrani vrstico',
+        sheetName: 'Skenirani testi delavci',
+        fileName: 'Skenirani_Testi_Porocilo',
+        printPdf: 'Natisni / Shrani kot PDF',
     }
 };
 
@@ -184,6 +250,7 @@ const FORM_SOURCES = [
 
 export default function ArchivePage() {
     const { t, lang } = useLanguage();
+    const getExp = useCallback((k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k], [lang]);
     const { alert, confirm, DialogRenderer } = useDialog();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('archive'); // 'archive' | 'scan'
@@ -228,19 +295,55 @@ export default function ArchivePage() {
                 const result = await res.json();
                 if (result.success && Array.isArray(result.workers)) {
                     const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
+                    const workplaces = getAll(COLLECTIONS.WORKPLACES);
+                    const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
                     const rows = result.workers.map((ext, idx) => {
                         const matches = matchWorkers(ext.extractedName, ext.date || '', allWorkers);
                         const bestMatch = matches[0]; // { worker, score, dobMatch }
                         const hasGoodMatch = bestMatch && bestMatch.score >= 0.35;
+                        const wId = hasGoodMatch ? bestMatch.worker.id : '__NOT_IN_DB__';
+
+                        let ime = '';
+                        let prezime = '';
+                        let imeOca = '';
+                        let jmbgOib = '';
+                        let datumRodenja = '';
+                        let radnoMjesto = '';
+                        let odjel = '';
+
+                        if (wId !== '__NOT_IN_DB__') {
+                            const w = bestMatch.worker;
+                            const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
+                            const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+                            ime = w.ime || '';
+                            prezime = w.prezime || '';
+                            imeOca = w.imeRoditelja || '';
+                            jmbgOib = w.jmbg || w.oib || '';
+                            datumRodenja = w.datumRodjenja || '';
+                            radnoMjesto = wp.naziv || w.radnoMjesto || '';
+                            odjel = ou.naziv || w.orgJedinica || '';
+                        } else {
+                            const parts = ext.extractedName.trim().split(/\s+/);
+                            ime = parts[0] || '';
+                            prezime = parts.slice(1).join(' ') || '';
+                        }
+
                         return {
                             id: `row-${idx}-${Date.now()}`,
                             extractedName: ext.extractedName,
                             date: ext.date || '',
                             type: ext.type || '',
                             passed: ext.passed !== false,
-                            selectedWorkerId: hasGoodMatch ? bestMatch.worker.id : '__NOT_IN_DB__',
+                            selectedWorkerId: wId,
                             score: bestMatch ? bestMatch.score : 0,
-                            dobMatch: bestMatch ? bestMatch.dobMatch : false
+                            dobMatch: bestMatch ? bestMatch.dobMatch : false,
+                            ime,
+                            prezime,
+                            imeOca,
+                            jmbgOib,
+                            datumRodenja,
+                            radnoMjesto,
+                            odjel
                         };
                     });
                     setMatchedRows(rows);
@@ -260,15 +363,64 @@ export default function ArchivePage() {
 
     const handleUpdateRowWorker = (rowId, workerId) => {
         const allWorkers = getAll(COLLECTIONS.WORKERS);
+        const workplaces = getAll(COLLECTIONS.WORKPLACES);
+        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
         const w = allWorkers.find(x => x.id === workerId);
         setMatchedRows(prev => prev.map(r => {
             if (r.id !== rowId) return r;
             const isNotInDb = workerId === '__NOT_IN_DB__';
+            
+            let ime = r.ime;
+            let prezime = r.prezime;
+            let imeOca = r.imeOca;
+            let jmbgOib = r.jmbgOib;
+            let datumRodenja = r.datumRodenja;
+            let radnoMjesto = r.radnoMjesto;
+            let odjel = r.odjel;
+
+            if (!isNotInDb && w) {
+                const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
+                const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+                ime = w.ime || '';
+                prezime = w.prezime || '';
+                imeOca = w.imeRoditelja || '';
+                jmbgOib = w.jmbg || w.oib || '';
+                datumRodenja = w.datumRodjenja || '';
+                radnoMjesto = wp.naziv || w.radnoMjesto || '';
+                odjel = ou.naziv || w.orgJedinica || '';
+            } else if (isNotInDb) {
+                const parts = r.extractedName.trim().split(/\s+/);
+                ime = parts[0] || '';
+                prezime = parts.slice(1).join(' ') || '';
+                imeOca = '';
+                jmbgOib = '';
+                datumRodenja = '';
+                radnoMjesto = '';
+                odjel = '';
+            }
+
             return {
                 ...r,
                 selectedWorkerId: workerId,
                 score: isNotInDb ? 0 : (workerId ? 100 : 0),
-                dobMatch: !isNotInDb && w && r.date && w.datumRodjenja === r.date
+                dobMatch: !isNotInDb && w && r.date && w.datumRodjenja === r.date,
+                ime,
+                prezime,
+                imeOca,
+                jmbgOib,
+                datumRodenja,
+                radnoMjesto,
+                odjel
+            };
+        }));
+    };
+
+    const handleUpdateRowField = (rowId, field, value) => {
+        setMatchedRows(prev => prev.map(r => {
+            if (r.id !== rowId) return r;
+            return {
+                ...r,
+                [field]: value
             };
         }));
     };
@@ -285,45 +437,29 @@ export default function ArchivePage() {
     };
 
     const handleDownloadExcel = () => {
-        const allWorkers = getAll(COLLECTIONS.WORKERS);
-        const workplaces = getAll(COLLECTIONS.WORKPLACES);
-        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
         const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
 
         const dataRows = matchedRows.map((row, idx) => {
-            const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
-            const w = isNotInDb ? {} : (allWorkers.find(x => x.id === row.selectedWorkerId) || {});
-            const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
-            const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
-
-            let firstName = w.ime || '';
-            let lastName = w.prezime || '';
-            if (isNotInDb && row.extractedName) {
-                const parts = row.extractedName.trim().split(/\s+/);
-                firstName = parts[0] || '';
-                lastName = parts.slice(1).join(' ') || '';
-            }
-
             return {
                 '#': idx + 1,
-                [getExp('ime')]: firstName,
-                [getExp('prezime')]: lastName,
-                [getExp('imeOca')]: w.imeRoditelja || '—',
-                [getExp('jmbgOib')]: w.jmbg || w.oib || '—',
-                [getExp('datumRodenja')]: w.datumRodjenja || '—',
-                [getExp('radnoMjesto')]: wp.naziv || w.radnoMjesto || '—',
-                [getExp('odjel')]: ou.naziv || w.orgJedinica || '—',
+                [getExp('ime')]: row.ime || '',
+                [getExp('prezime')]: row.prezime || '',
+                [getExp('imeOca')]: row.imeOca || '—',
+                [getExp('jmbgOib')]: row.jmbgOib || '—',
+                [getExp('datumRodenja')]: row.datumRodenja || '—',
+                [getExp('radnoMjesto')]: t(row.radnoMjesto?.trim()) || row.radnoMjesto || '—',
+                [getExp('odjel')]: t(row.odjel?.trim()) || row.odjel || '—',
                 [getExp('imeIPrezime') + ' (AI)']: row.extractedName,
                 [getExp('datumTesta')]: row.date || '—',
-                [getExp('tipTesta')]: row.type || '—',
+                [getExp('tipTesta')]: t(row.type?.trim()) || row.type || '—',
                 [getExp('status')]: row.passed ? getExp('polozio') : getExp('pao')
             };
         });
 
         const ws = XLSX.utils.json_to_sheet(dataRows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Skenirani Testovi Radnici");
-        XLSX.writeFile(wb, `Skenirani_Testovi_Izvjestaj_${new Date().toISOString().slice(0,10)}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, getExp('sheetName'));
+        XLSX.writeFile(wb, `${getExp('fileName')}_${new Date().toISOString().slice(0,10)}.xlsx`);
     };
 
     const handleDownloadPDF = () => {
@@ -335,22 +471,15 @@ export default function ArchivePage() {
             if (c) company = c;
         }
 
-        const allWorkers = getAll(COLLECTIONS.WORKERS);
-        const workplaces = getAll(COLLECTIONS.WORKPLACES);
-        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
         const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
 
         const rowsHtml = matchedRows.map((row, idx) => {
-            const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
-            const w = isNotInDb ? {} : (allWorkers.find(x => x.id === row.selectedWorkerId) || {});
-            const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
-            const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
-
-            const fullName = isNotInDb ? row.extractedName : `${w.ime || ''} ${w.prezime || ''}`.trim();
-            const parentName = w.imeRoditelja || '—';
-            const nationalId = w.jmbg || w.oib || '—';
-            const workplaceName = wp.naziv || w.radnoMjesto || '—';
-            const deptName = ou.naziv || w.orgJedinica || '—';
+            const fullName = `${row.ime || ''} ${row.prezime || ''}`.trim() || row.extractedName;
+            const parentName = row.imeOca || '—';
+            const nationalId = row.jmbgOib || '—';
+            const workplaceName = t(row.radnoMjesto?.trim()) || row.radnoMjesto || '—';
+            const deptName = t(row.odjel?.trim()) || row.odjel || '—';
+            const testType = t(row.type?.trim()) || row.type || '—';
 
             return `
                 <tr>
@@ -360,7 +489,7 @@ export default function ArchivePage() {
                     <td>${nationalId}</td>
                     <td>${workplaceName}</td>
                     <td>${deptName}</td>
-                    <td>${row.type || 'ZNR/ZOP'}</td>
+                    <td>${testType}</td>
                     <td>${row.date || '—'}</td>
                     <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? getExp('polozio') : getExp('paoPdf')}</span></td>
                 </tr>
@@ -438,7 +567,7 @@ export default function ArchivePage() {
                     <span>${getExp('generatedFrom')}</span>
                     <span>${getExp('pageOf')}</span>
                 </div>
-                <button class="print-btn" onclick="window.print()">🖨️ ${lang === 'en' ? 'Print / Save as PDF' : 'Isprintaj / Save as PDF'}</button>
+                <button class="print-btn" onclick="window.print()">🖨️ ${getExp('printPdf')}</button>
             </body>
             </html>
         `;
@@ -941,26 +1070,32 @@ export default function ArchivePage() {
                                         <table className="data-table">
                                             <thead>
                                                 <tr>
-                                                    <th style={{ width: '3%' }}>#</th>
-                                                    <th>Ime iz testa (AI)</th>
-                                                    <th>Pronađeni radnik (Baza)</th>
-                                                    <th>Ime oca</th>
-                                                    <th>JMBG / OIB</th>
-                                                    <th>Tip / Datum testa</th>
-                                                    <th style={{ width: 120 }}>Podudaranje</th>
-                                                    <th style={{ width: 60 }}>Akcije</th>
+                                                    <th style={{ width: '2%' }}>#</th>
+                                                    <th style={{ width: '12%' }}>{getExp('imeIzTesta')}</th>
+                                                    <th style={{ width: '15%' }}>{getExp('pronadeniRadnik')}</th>
+                                                    <th style={{ width: '9%' }}>{getExp('ime')}</th>
+                                                    <th style={{ width: '9%' }}>{getExp('prezime')}</th>
+                                                    <th style={{ width: '7%' }}>{getExp('imeOca')}</th>
+                                                    <th style={{ width: '8%' }}>{getExp('jmbgOib')}</th>
+                                                    <th style={{ width: '9%' }}>{getExp('datumRodenja')}</th>
+                                                    <th style={{ width: '9%' }}>{getExp('radnoMjesto')}</th>
+                                                    <th style={{ width: '9%' }}>{getExp('odjel')}</th>
+                                                    <th style={{ width: '8%' }}>{getExp('tipTesta')}</th>
+                                                    <th style={{ width: '9%' }}>{getExp('datumTesta')}</th>
+                                                    <th style={{ width: '7%' }}>{getExp('status')}</th>
+                                                    <th style={{ width: '5%' }}>{getExp('podudaranje')}</th>
+                                                    <th style={{ width: '2%' }}></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {matchedRows.map((row, idx) => {
                                                     const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
-                                                    const selectedW = allWorkers.find(w => w.id === row.selectedWorkerId);
                                                     const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
                                                     const isManual = row.score === 100 && !row.dobMatch;
                                                     const conf = isNotInDb
-                                                        ? { emoji: '👤', label: 'Nije u bazi', color: 'var(--text-muted)' }
+                                                        ? { emoji: '👤', label: getExp('nijeUBazi'), color: 'var(--text-muted)' }
                                                         : isManual
-                                                            ? { emoji: '✍️', label: 'Ručno', color: 'var(--text)' }
+                                                            ? { emoji: '✍️', label: getExp('rucno'), color: 'var(--text)' }
                                                             : confidenceLabel(row.score);
                                                     
                                                     return (
@@ -972,10 +1107,10 @@ export default function ArchivePage() {
                                                                     className="form-select" 
                                                                     value={row.selectedWorkerId}
                                                                     onChange={e => handleUpdateRowWorker(row.id, e.target.value)}
-                                                                    style={{ minWidth: 200, padding: '4px 8px', fontSize: '0.85rem' }}
+                                                                    style={{ minWidth: 150, padding: '4px 8px', fontSize: '0.82rem' }}
                                                                 >
-                                                                    <option value="">— Odaberite radnika —</option>
-                                                                    <option value="__NOT_IN_DB__">⚠️ Zadrži ime: "{row.extractedName}" (Nije u bazi)</option>
+                                                                    <option value="">{getExp('odaberiRadnikaPlaceholder')}</option>
+                                                                    <option value="__NOT_IN_DB__">{getExp('keepName').replace('{0}', row.extractedName)}</option>
                                                                     {allWorkers.map(w => (
                                                                         <option key={w.id} value={w.id}>
                                                                             {w.ime} {w.prezime} {w.jmbg ? `(JMBG: ${w.jmbg})` : w.oib ? `(OIB: ${w.oib})` : ''}
@@ -983,11 +1118,90 @@ export default function ArchivePage() {
                                                                     ))}
                                                                 </select>
                                                             </td>
-                                                            <td>{selectedW?.imeRoditelja || '—'}</td>
-                                                            <td>{selectedW?.jmbg || selectedW?.oib || '—'}</td>
                                                             <td>
-                                                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{row.type || '—'}</span>
-                                                                {row.date && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{row.date}</div>}
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.ime || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'ime', e.target.value)}
+                                                                    style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.prezime || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'prezime', e.target.value)}
+                                                                    style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.imeOca || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'imeOca', e.target.value)}
+                                                                    style={{ minWidth: 70, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.jmbgOib || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'jmbgOib', e.target.value)}
+                                                                    style={{ minWidth: 90, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    type="date"
+                                                                    value={row.datumRodenja || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'datumRodenja', e.target.value)}
+                                                                    style={{ minWidth: 110, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)', border: '1px solid var(--border)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.radnoMjesto || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'radnoMjesto', e.target.value)}
+                                                                    style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.odjel || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'odjel', e.target.value)}
+                                                                    style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    value={row.type || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'type', e.target.value)}
+                                                                    style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <input 
+                                                                    className="form-input" 
+                                                                    type="date"
+                                                                    value={row.date || ''} 
+                                                                    onChange={e => handleUpdateRowField(row.id, 'date', e.target.value)}
+                                                                    style={{ minWidth: 110, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)', border: '1px solid var(--border)' }}
+                                                                />
+                                                            </td>
+                                                            <td>
+                                                                <select 
+                                                                    className="form-select" 
+                                                                    value={row.passed ? 'true' : 'false'}
+                                                                    onChange={e => handleUpdateRowField(row.id, 'passed', e.target.value === 'true')}
+                                                                    style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                                >
+                                                                    <option value="true">{getExp('polozio')}</option>
+                                                                    <option value="false">{getExp('pao')}</option>
+                                                                </select>
                                                             </td>
                                                             <td>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1001,7 +1215,7 @@ export default function ArchivePage() {
                                                                     className="btn btn-ghost btn-sm btn-icon" 
                                                                     style={{ color: 'var(--danger)', padding: 0 }}
                                                                     onClick={() => handleDeleteRow(row.id)}
-                                                                    title="Ukloni red"
+                                                                    title={getExp('ukloniRed')}
                                                                 >
                                                                     🗑️
                                                                 </button>
