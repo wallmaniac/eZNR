@@ -84,7 +84,10 @@ RULES:
 1. Return ONLY the JSON object, absolutely no markdown formatting (no \`\`\`json) or other text.
 2. Sadržaj mora početi sa { i završiti sa }.
 3. Extract each worker's name (extractedName), the date of the test (date, in YYYY-MM-DD format or null), the type of test (type: "ZNR", "ZOP", or null), and whether they passed (passed: boolean, default true).
-4. Be very thorough. Read handwritten text carefully. A document may contain multiple test sheets for different workers. Extract EVERY worker.
+4. Be very thorough. Read handwritten text carefully. A document may contain multiple test sheets for different workers. Extract EVERY unique worker.
+5. DEDUPLICATION: A single test sheet (or page) belongs to exactly one worker. Do NOT extract duplicate names or different handwritten variations of the same person's name (e.g. if the name is written at the top and signed at the bottom). Ensure each worker is only listed ONCE in the output.
+6. OCR NORMALIZATION: Hand-written or scanned names can sometimes be distorted (e.g., "Mujononc My" instead of "Mujo Mujonović" or "Halilonc Arjon" instead of "Arijana Halilović"). Use your language and contextual understanding to normalize such names to realistic Bosnian/Croatian/Serbian names. Do not output obviously garbled or duplicate variants.
+7. Return names in standard title case (e.g. "Mujo Mujonović", "Arijana Halilović", "Elma Elmanović").
 
 JSON FORMAT:
 {

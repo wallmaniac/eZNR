@@ -64,6 +64,7 @@ export default function ArchivePage() {
 
     // ── Scan tab state ─────────────────────────────────────────────────────────
     const [scanFile, setScanFile] = useState(null);
+    const [rawFile, setRawFile] = useState(null); // Cache raw HTML5 File for rescanning
     const [scanDragging, setScanDragging] = useState(false);
     const [scanSearched, setScanSearched] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
@@ -73,6 +74,7 @@ export default function ArchivePage() {
     const handleScanFileRead = async (file) => {
         if (file.size > 10 * 1024 * 1024) { alert('Max 10MB za skenirani test!'); return; }
         
+        setRawFile(file);
         setScanFile({ name: file.name, size: file.size, type: file.type });
         setAnalyzing(true);
         setScanSearched(false);
@@ -142,6 +144,7 @@ export default function ArchivePage() {
 
     const handleClearScan = () => {
         setScanFile(null);
+        setRawFile(null);
         setMatchedRows([]);
         setScanSearched(false);
     };
@@ -754,6 +757,14 @@ export default function ArchivePage() {
 
                             {scanFile && (
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                                    <button 
+                                        className="btn btn-outline" 
+                                        onClick={() => { if (rawFile) handleScanFileRead(rawFile); }} 
+                                        disabled={analyzing}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                    >
+                                        🔄 {lang === 'en' ? 'Rescan Document' : 'Ponovo analiziraj'}
+                                    </button>
                                     <button className="btn btn-ghost" onClick={handleClearScan} disabled={analyzing}>
                                         ❌ {t('ocistiSve')}
                                     </button>
