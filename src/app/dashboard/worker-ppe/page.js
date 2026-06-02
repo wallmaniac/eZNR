@@ -1,8 +1,9 @@
 'use client';
 import DateInput from '@/components/DateInput';
 import { createPortal } from 'react-dom';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { logPPEAssigned } from '@/lib/activityLog';
@@ -14,8 +15,10 @@ import { generatePPEReport } from '@/lib/pdfReportGenerator';
 import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';
 
-export default function WorkerPPEPage() {
+function WorkerPPEInner() {
   const { t, lang } = useLanguage();
+  const searchParams = useSearchParams();
+  const openId = searchParams ? searchParams.get('openId') : null;
   const { confirm, DialogRenderer } = useDialog();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrgUnit, setFilterOrgUnit] = useState('');
@@ -122,6 +125,15 @@ export default function WorkerPPEPage() {
     setAddForm({ workerId: item.workerId, naziv: item.naziv || '', datumZaduzenja: item.datumZaduzenja || todayISO(), kolicina: item.kolicina || 1 });
     setShowAddModal(true);
   };
+
+  useEffect(() => {
+    if (openId && assignments.length > 0) {
+      const item = assignments.find(x => x.id === openId);
+      if (item) {
+        handleEditModal(item);
+      }
+    }
+  }, [openId, assignments]);
 
   const clickableName = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' };
   const clickableNaziv = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 500, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' };
@@ -303,5 +315,13 @@ export default function WorkerPPEPage() {
         />
       )}
     </>
+  );
+}
+
+export default function WorkerPPEPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
+      <WorkerPPEInner />
+    </Suspense>
   );
 }

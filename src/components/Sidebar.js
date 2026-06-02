@@ -62,6 +62,7 @@ const menuItems = [
         children: [
             { key: 'trainings',      icon: '🎬', path: '/dashboard/trainings' },
             { key: 'testoviZopZnr',  icon: '📝', path: '/dashboard/tests-zop-znr', label_bs: 'Testovi ZOP i ZNR', label_en: 'ZOP & ZNR Tests' },
+            { key: 'scannedTests',   icon: '📝', path: '/dashboard/scanned-tests', label_bs: 'Skenirani testovi', label_en: 'Scanned Tests' },
             { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
         ],
@@ -157,6 +158,7 @@ const SIDEBAR_TOOLTIPS = {
         diseaseReport: 'Prijava profesionalne bolesti — obrazac za evidentiranje',
         trainings: 'Obuke i prezentacije — kreiranje i prikaz prezentacija za radnike',
         testoviZopZnr: 'Testovi ZOP (zaštita od požara) i ZNR (zaštita na radu) — provjera znanja radnika',
+        scannedTests: 'Skenirani testovi — automatska AI analiza i prepoznavanje rezultata sa skeniranih dokumenata',
         questionnaires: 'Upitnici i ankete — kreiranje i slanje obrazaca radnicima putem emaila',
         observations: 'Prijave opasnosti — prijave problema sa terena putem QR koda',
         riskAssessment: 'Procjena rizika — analiza opasnosti na radnim mjestima',
@@ -216,6 +218,7 @@ const SIDEBAR_TOOLTIPS = {
         trainingMasterBook: 'Training Master Book — central training registry',
         ekEquipment: 'Evidence Card (EK) — equipment/facility card for printing',
         testoviZopZnr: 'Fire Protection (ZOP) & Occupational Safety (ZNR) tests — worker knowledge assessment',
+        scannedTests: 'Scanned tests — automatic AI analysis and worker recognition from scanned test sheets',
         questionnaires: 'Questionnaires & surveys — create and email forms to workers',
         observations: 'Hazard Reports — field issue reports via QR code',
         riskAssessment: 'Risk Assessment — workplace hazard analysis',

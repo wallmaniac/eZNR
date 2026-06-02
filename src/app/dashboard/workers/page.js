@@ -293,6 +293,12 @@ function WorkersPageInner() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
+    useEffect(() => {
+        if (showForm && typeof window !== 'undefined') {
+            window.scrollTo(0, 0);
+        }
+    }, [showForm]);
+
     const filteredWorkers = useMemo(() => {
         return workers.filter(w => {
             const matchSearch = !searchTerm || matchesSearch(

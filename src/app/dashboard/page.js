@@ -1910,9 +1910,9 @@ export default function DashboardPage() {
                                                     </td>
                                                     <td>
                                                         <button
-                                                            onClick={() => { if (worker) setViewWorkerId(worker.id); }}
-                                                            style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (t('klikniZaPregledUvjerenjaRadnika')) : ''}>{t(c.naziv?.trim()) || t(c.ime?.trim()) || c.naziv || c.ime || '—'}</button>
+                                                            onClick={() => { router.push(`/dashboard/worker-certificates/edit/${c.id}`); }}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
+                                                            title={t('otvoriUvjerenje') || 'Otvori uvjerenje'}>{t(c.naziv?.trim()) || t(c.ime?.trim()) || c.naziv || c.ime || '—'}</button>
                                                     </td>
                                                     <td><span className="badge badge-info">{c.oznaka}</span></td>
                                                     <td>{formatDate(c.datum)}</td>
@@ -1967,9 +1967,9 @@ export default function DashboardPage() {
                                                     </td>
                                                     <td>
                                                         <button
-                                                            onClick={() => { if (worker) setViewWorkerId(worker.id); }}
-                                                            style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (t('klikniZaPregledOzoZaduzenja')) : ''}>{t(p.naziv?.trim()) || p.naziv || '—'}</button>
+                                                            onClick={() => { router.push(`/dashboard/worker-ppe?openId=${p.id}`); }}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
+                                                            title={t('otvoriZaduzenje') || 'Otvori zaduženje'}>{t(p.naziv?.trim()) || p.naziv || '—'}</button>
                                                     </td>
                                                     <td>{formatDate(p.datumZaduzenja)}</td>
                                                     <td>{p.kolicina}</td>
