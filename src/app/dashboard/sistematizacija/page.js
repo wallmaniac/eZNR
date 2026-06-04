@@ -314,7 +314,13 @@ export default function SistematizacijaPage() {
                                             <button className="btn btn-outline btn-sm" onClick={() => setEditData({ ...sist })}>✏️ {t('detalji')}</button>
                                             <button className="btn btn-outline btn-sm" onClick={() => handlePrintSist(sist, wp, ou)} style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>🖨️ {t('isprintaj')}</button>
                                             <button className="btn btn-outline btn-sm" onClick={() => handleAIGenerate(wp)} disabled={isLoading}
-                                                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
+                                                style={{
+                                                    background: isLoading ? 'var(--border)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    color: isLoading ? 'var(--text-light)' : '#fff',
+                                                    border: 'none',
+                                                    fontWeight: 700,
+                                                    fontSize: '0.72rem'
+                                                }}>
                                                 {isLoading ? (t('regenerise')) : (t('regenerisi'))}
                                             </button>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSist(wp.id)}>✖</button>
@@ -327,7 +333,12 @@ export default function SistematizacijaPage() {
                                         </div>
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                             <button className="btn btn-outline btn-sm" onClick={() => handleAIGenerate(wp)} disabled={isLoading}
-                                                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                                style={{
+                                                    background: isLoading ? 'var(--border)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    color: isLoading ? 'var(--text-light)' : '#fff',
+                                                    border: 'none',
+                                                    fontWeight: 700
+                                                }}>
                                                 {isLoading ? '⏳ Generiše...' : '🤖 AI Generiši'}
                                             </button>
                                             <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>

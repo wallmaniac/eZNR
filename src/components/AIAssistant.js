@@ -595,7 +595,7 @@ Keep responses short and action-focused`;
     }
 }
 
-// ─── Dynamic suggestion chips based on live data ────────────────────────────
+// ────────────────── Dynamic suggestion chips based on live data ──────────────────
 function buildDynamicSuggestions(lang, pathname) {
     const chips = [];
     try {
@@ -612,79 +612,327 @@ function buildDynamicSuggestions(lang, pathname) {
         const sickLeave = [...injuries, ...diseases].filter(i => i.bolovanje && i.status !== 'zatvorena');
         const overdueEq = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
 
+        // Helper to resolve string based on language
+        const resolveStr = (obj, currentLang) => {
+            return obj[currentLang] || obj.bs || '';
+        };
+
         // ALWAYS show urgent issues first
-        if (expired.length > 0) chips.push(lang !== 'en'
-            ? { label: `🔴 ${expired.length} istekla uvjerenja`, text: 'Koji radnici imaju istekla uvjerenja?' }
-            : { label: `🔴 ${expired.length} expired certs`, text: 'Which workers have expired certificates?' });
-        if (expiring.length > 0) chips.push(lang !== 'en'
-            ? { label: `📜 ${expiring.length} uvjerenja uskoro iste`, text: 'Prikaži mi uvjerenja koja uskoro ističu.' }
-            : { label: `📜 ${expiring.length} certs expiring soon`, text: 'Show me certificates expiring soon.' });
-        if (sickLeave.length > 0) chips.push(lang !== 'en'
-            ? { label: `🏥 ${sickLeave.length} na bolovanju`, text: 'Ko je trenutno na bolovanju?' }
-            : { label: `🏥 ${sickLeave.length} on sick leave`, text: 'Who is currently on sick leave?' });
-        if (overdueEq.length > 0) chips.push(lang !== 'en'
-            ? { label: `⚠️ ${overdueEq.length} pregleda opreme kasni`, text: 'Koja oprema ima prekoračen pregled?' }
-            : { label: `⚠️ ${overdueEq.length} equipment overdue`, text: 'Which equipment has overdue inspection?' });
+        if (expired.length > 0) {
+            chips.push({
+                label: resolveStr({
+                    bs: `🔴 ${expired.length} istekla uvjerenja`,
+                    hr: `🔴 ${expired.length} istekla uvjerenja`,
+                    sr: `🔴 ${expired.length} istekla uverenja`,
+                    en: `🔴 ${expired.length} expired certs`,
+                    de: `🔴 ${expired.length} abgelaufene Zertifikate`,
+                    sl: `🔴 ${expired.length} potekla potrdila`
+                }, lang),
+                text: resolveStr({
+                    bs: `Koji radnici imaju istekla uvjerenja?`,
+                    hr: `Koji radnici imaju istekla uvjerenja?`,
+                    sr: `Koji radnici imaju istekla uverenja?`,
+                    en: `Which workers have expired certificates?`,
+                    de: `Welche Mitarbeiter haben abgelaufene Zertifikate?`,
+                    sl: `Kateri delavci imajo potekla potrdila?`
+                }, lang)
+            });
+        }
+        if (expiring.length > 0) {
+            chips.push({
+                label: resolveStr({
+                    bs: `📜 ${expiring.length} uvjerenja uskoro ističe`,
+                    hr: `📜 ${expiring.length} uvjerenja uskoro ističe`,
+                    sr: `📜 ${expiring.length} uverenja uskoro ističe`,
+                    en: `📜 ${expiring.length} certs expiring soon`,
+                    de: `📜 ${expiring.length} Zertifikate laufen bald ab`,
+                    sl: `📜 ${expiring.length} potrdila bodo kmalu potekla`
+                }, lang),
+                text: resolveStr({
+                    bs: `Prikaži mi uvjerenja koja uskoro ističu.`,
+                    hr: `Prikaži mi uvjerenja koja uskoro ističu.`,
+                    sr: `Prikaži mi uverenja koja uskoro ističu.`,
+                    en: `Show me certificates expiring soon.`,
+                    de: `Zeige mir die bald ablaufenden Zertifikate.`,
+                    sl: `Pokaži mi potrdila, ki bodo kmalu potekla.`
+                }, lang)
+            });
+        }
+        if (sickLeave.length > 0) {
+            chips.push({
+                label: resolveStr({
+                    bs: `🏥 ${sickLeave.length} na bolovanju`,
+                    hr: `🏥 ${sickLeave.length} na bolovanju`,
+                    sr: `🏥 ${sickLeave.length} na bolovanju`,
+                    en: `🏥 ${sickLeave.length} on sick leave`,
+                    de: `🏥 ${sickLeave.length} im Krankenstand`,
+                    sl: `🏥 ${sickLeave.length} na bolniški`
+                }, lang),
+                text: resolveStr({
+                    bs: `Ko je trenutno na bolovanju?`,
+                    hr: `Tko je trenutno na bolovanju?`,
+                    sr: `Ko je trenutno na bolovanju?`,
+                    en: `Who is currently on sick leave?`,
+                    de: `Wer ist zurzeit im Krankenstand?`,
+                    sl: `Kdo je trenutno na bolniški?`
+                }, lang)
+            });
+        }
+        if (overdueEq.length > 0) {
+            chips.push({
+                label: resolveStr({
+                    bs: `⚠️ ${overdueEq.length} pregleda opreme kasni`,
+                    hr: `⚠️ ${overdueEq.length} pregleda opreme kasni`,
+                    sr: `⚠️ ${overdueEq.length} pregleda opreme kasni`,
+                    en: `⚠️ ${overdueEq.length} equipment overdue`,
+                    de: `⚠️ ${overdueEq.length} Geräteinspektion überfällig`,
+                    sl: `⚠️ ${overdueEq.length} pregled opreme zamuja`
+                }, lang),
+                text: resolveStr({
+                    bs: `Koja oprema ima prekoračen pregled?`,
+                    hr: `Koja oprema ima prekoračen pregled?`,
+                    sr: `Koja oprema ima prekoračen pregled?`,
+                    en: `Which equipment has overdue inspection?`,
+                    de: `Welche Geräte haben eine überfällige Inspektion?`,
+                    sl: `Katera oprema ima zamujen pregled?`
+                }, lang)
+            });
+        }
 
         // Context-aware suggestions based on current page
+        const addContextChips = (items) => {
+            items.forEach(item => {
+                chips.push({
+                    label: resolveStr(item.label, lang),
+                    text: resolveStr(item.text, lang)
+                });
+            });
+        };
+
         if (pathname === '/dashboard/workers') {
-            chips.push(lang !== 'en' ? { label: '👷 Dodaj novog radnika', text: 'Otvori formu za dodavanje novog radnika.' } : { label: '👷 Add new worker', text: 'Open the form to add a new worker.' });
-            chips.push(lang !== 'en' ? { label: '📊 Statistika radnika', text: 'Koliko ukupno imamo radnika po odjelima?' } : { label: '📊 Worker stats', text: 'How many workers do we have per department?' });
+            addContextChips([
+                {
+                    label: { bs: '👷 Dodaj novog radnika', hr: '👷 Dodaj novog radnika', sr: '👷 Dodaj novog radnika', en: '👷 Add new worker', de: '👷 Neuen Mitarbeiter hinzufügen', sl: '👷 Dodaj novega delavca' },
+                    text: { bs: 'Otvori formu za dodavanje novog radnika.', hr: 'Otvori obrazac za dodavanje novog radnika.', sr: 'Otvori formu za dodavanje novog radnika.', en: 'Open the form to add a new worker.', de: 'Öffne das Formular, um einen neuen Mitarbeiter hinzuzufügen.', sl: 'Odpri obrazec za dodajanje novega delavca.' }
+                },
+                {
+                    label: { bs: '📊 Statistika radnika', hr: '📊 Statistika radnika', sr: '📊 Statistika radnika', en: '📊 Worker stats', de: '📊 Mitarbeiterstatistik', sl: '📊 Statistika delavcev' },
+                    text: { bs: 'Koliko ukupno imamo radnika po odjelima?', hr: 'Koliko ukupno imamo radnika po odjelima?', sr: 'Koliko ukupno imamo radnika po odeljenjima?', en: 'How many workers do we have per department?', de: 'Wie viele Mitarbeiter haben wir insgesamt nach Abteilungen?', sl: 'Koliko delavcev imamo skupaj po oddelkih?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/equipment') {
-            chips.push(lang !== 'en' ? { label: '📅 Idući pregledi', text: 'Kojoj opremi najprije ističe pregled?' } : { label: '📅 Upcoming exams', text: 'Which equipment needs inspection next?' });
+            addContextChips([
+                {
+                    label: { bs: '📅 Idući pregledi', hr: '📅 Idući pregledi', sr: '📅 Idući pregledi', en: '📅 Upcoming exams', de: '📅 Nächste Inspektionen', sl: '📅 Naslednji pregledi' },
+                    text: { bs: 'Kojoj opremi najprije ističe pregled?', hr: 'Kojoj opremi najprije ističe pregled?', sr: 'Kojoj opremi najpre ističe pregled?', en: 'Which equipment needs inspection next?', de: 'Bei welchen Geräten läuft die Inspektion als Nächstes ab?', sl: 'Kateri opremi najprej poteče pregled?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/injuries') {
-            chips.push(lang !== 'en' ? { label: '🚑 Prijavi tešku povredu', text: 'Želim prijaviti tešku povredu na radu.' } : { label: '🚑 Report severe injury', text: 'I want to report a severe injury.' });
-            chips.push(lang !== 'en' ? { label: '✅ Zatvori bolovanje', text: 'Radnik se vratio, zatvori mu bolovanje.' } : { label: '✅ Close sick leave', text: 'Worker returned, close their sick leave.' });
-            chips.push(lang !== 'en' ? { label: '📅 Promijeni godinu svima', text: 'Želim prebaciti sve povrede u 2026. godinu.' } : { label: '📅 Change all years', text: 'Set all injuries to year 2026.' });
+            addContextChips([
+                {
+                    label: { bs: '🚑 Prijavi tešku povredu', hr: '🚑 Prijavi tešku ozljedu', sr: '🚑 Prijavi tešku povredu', en: '🚑 Report severe injury', de: '🚑 Schweren Unfall melden', sl: '🚑 Prijavi hudo poškodbo' },
+                    text: { bs: 'Želim prijaviti tešku povredu na radu.', hr: 'Želim prijaviti tešku ozljedu na radu.', sr: 'Želim prijaviti tešku povredu na radu.', en: 'I want to report a severe injury.', de: 'Ich möchte einen schweren Arbeitsunfall melden.', sl: 'Želim prijaviti hudo poškodbo pri delu.' }
+                },
+                {
+                    label: { bs: '✅ Zatvori bolovanje', hr: '✅ Zatvori bolovanje', sr: '✅ Zatvori bolovanje', en: '✅ Close sick leave', de: '✅ Krankenstand beenden', sl: '✅ Zaključi bolniško' },
+                    text: { bs: 'Radnik se vratio, zatvori mu bolovanje.', hr: 'Radnik se vratio, zatvori mu bolovanje.', sr: 'Radnik se vratio, zatvori mu bolovanje.', en: 'Worker returned, close their sick leave.', de: 'Der Mitarbeiter ist zurückgekehrt, beende seinen Krankenstand.', sl: 'Delavec se je vrnil, zaključi bolniško odsotnost.' }
+                },
+                {
+                    label: { bs: '📅 Promijeni godinu svima', hr: '📅 Promijeni godinu svima', sr: '📅 Promeni godinu svima', en: '📅 Change all years', de: '📅 Jahr für alle ändern', sl: '📅 Spremeni leto za vse' },
+                    text: { bs: 'Želim prebaciti sve povrede u 2026. godinu.', hr: 'Želim prebaciti sve ozljede u 2026. godinu.', sr: 'Želim prebaciti sve povrede u 2026. godinu.', en: 'Set all injuries to year 2026.', de: 'Ich möchte alle Unfälle in das Jahr 2026 übertragen.', sl: 'Želim prenesti vse poškodbe v leto 2026.' }
+                }
+            ]);
         } else if (pathname === '/dashboard/worker-ppe' || pathname === '/dashboard/ppe') {
-            chips.push(lang !== 'en' ? { label: '🦺 Zaduži šljem', text: 'Želim zadužiti zaštitni šljem radniku.' } : { label: '🦺 Assign helmet', text: 'I want to assign a safety helmet to a worker.' });
-            chips.push(lang !== 'en' ? { label: '🧤 Zaduži rukavice', text: 'Radnik je zadužio zaštitne rukavice.' } : { label: '🧤 Assign gloves', text: 'Worker received safety gloves.' });
+            addContextChips([
+                {
+                    label: { bs: '🦺 Zaduži šljem', hr: '🦺 Zaduži šljem', sr: '🦺 Zaduži šlem', en: '🦺 Assign helmet', de: '🦺 Helm zuweisen', sl: '🦺 Dodeli čelado' },
+                    text: { bs: 'Želim zadužiti zaštitni šljem radniku.', hr: 'Želim zadužiti zaštitni šljem radniku.', sr: 'Želim zadužiti zaštitni šlem radniku.', en: 'I want to assign a safety helmet to a worker.', de: 'Ich möchte einem Mitarbeiter einen Schutzhelm zuweisen.', sl: 'Delavcu želim dodeliti zaščitno čelado.' }
+                },
+                {
+                    label: { bs: '🧤 Zaduži rukavice', hr: '🧤 Zaduži rukavice', sr: '🧤 Zaduži rukavice', en: '🧤 Assign gloves', de: '🧤 Handschuhe zuweisen', sl: '🧤 Dodeli rokavice' },
+                    text: { bs: 'Radnik je zadužio zaštitne rukavice.', hr: 'Radnik je zadužio zaštitne rukavice.', sr: 'Radnik je zadužio zaštitne rukavice.', en: 'Worker received safety gloves.', de: 'Der Mitarbeiter hat Schutzhandschuhe erhalten.', sl: 'Delavec je prejel zaščitne rukavice.' }
+                }
+            ]);
         } else if (pathname === '/dashboard/questionnaires') {
-            chips.push(lang !== 'en' ? { label: '📧 Pošalji anketu', text: 'Želim poslati upitnik radnicima.' } : { label: '📧 Send survey', text: 'I want to send a questionnaire to workers.' });
+            addContextChips([
+                {
+                    label: { bs: '📧 Pošalji anketu', hr: '📧 Pošalji anketu', sr: '📧 Pošalji anketu', en: '📧 Send survey', de: '📧 Umfrage senden', sl: '📧 Pošlji anketo' },
+                    text: { bs: 'Želim poslati upitnik radnicima.', hr: 'Želim poslati upitnik radnicima.', sr: 'Želim poslati upitnik radnicima.', en: 'I want to send a questionnaire to workers.', de: 'Ich möchte den Fragebogen an die Mitarbeiter senden.', sl: 'Delavcem želim poslati vprašalnik.' }
+                }
+            ]);
         } else if (pathname === '/dashboard/archive') {
-            chips.push(lang !== 'en' ? { label: '📄 Analiza PDF-a', text: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.' } : { label: '📄 PDF Analysis', text: 'Analyze the contents of a document I upload.' });
+            addContextChips([
+                {
+                    label: { bs: '📄 Analiza PDF-a', hr: '📄 Analiza PDF-a', sr: '📄 Analiza PDF-a', en: '📄 PDF Analysis', de: '📄 PDF-Analyse', sl: '📄 Analiza PDF' },
+                    text: { bs: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.', hr: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.', sr: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.', en: 'Analyze the contents of a document I upload.', de: 'Analysiere den Inhalt dieses hochgeladenen Dokuments für mich.', sl: 'Analiziraj vsebino tega naloženega dokumenta.' }
+                }
+            ]);
         } else if (pathname === '/dashboard/medical-exams') {
-            chips.push(lang !== 'en' ? { label: '⚕️ Dodaj pregled', text: 'Želim upisati novi periodični ljekarski pregled.' } : { label: '⚕️ Add exam', text: 'I want to record a new periodic medical exam.' });
-            chips.push(lang !== 'en' ? { label: '📅 Kome ističe?', text: 'Kome sve ljekarski pregled ističe u narednih mjesec dana?' } : { label: '📅 Expiring soon', text: 'Whose medical exams are expiring in the next month?' });
+            addContextChips([
+                {
+                    label: { bs: '⚕️ Dodaj pregled', hr: '⚕️ Dodaj pregled', sr: '⚕️ Dodaj pregled', en: '⚕️ Add exam', de: '⚕️ Untersuchung hinzufügen', sl: '⚕️ Dodaj pregled' },
+                    text: { bs: 'Želim upisati novi periodični ljekarski pregled.', hr: 'Želim upisati novi periodični liječnički pregled.', sr: 'Želim upisati novi periodični lekarski pregled.', en: 'I want to record a new periodic medical exam.', de: 'Ich möchte eine neue regelmäßige arbeitsmedizinische Untersuchung eintragen.', sl: 'Želim vpisati nov periodični zdravstveni pregled.' }
+                },
+                {
+                    label: { bs: '📅 Kome ističe?', hr: '📅 Kome ističe?', sr: '📅 Kome ističe?', en: '📅 Expiring soon', de: '📅 Wer läuft ab?', sl: '📅 Komu poteče?' },
+                    text: { bs: 'Kome sve ljekarski pregled ističe u narednih mjesec dana?', hr: 'Kome sve liječnički pregled ističe u sljedećih mjesec dana?', sr: 'Kome sve lekarski pregled ističe u narednih mesec dana?', en: 'Whose medical exams are expiring in the next month?', de: 'Bei wem läuft die arbeitsmedizinische Untersuchung im nächsten Monat ab?', sl: 'Komu vse zdravstveni pregled poteče v naslednjem mesecu?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/fleet') {
-            chips.push(lang !== 'en' ? { label: '🚗 Novo vozilo', text: 'Želim dodati novo vozilo u vozni park.' } : { label: '🚗 New vehicle', text: 'I want to add a new vehicle to the fleet.' });
-            chips.push(lang !== 'en' ? { label: '🔑 Zaduži vozilo', text: 'Želim zadužiti vozilo određenom radniku.' } : { label: '🔑 Assign vehicle', text: 'I want to assign a vehicle to a worker.' });
+            addContextChips([
+                {
+                    label: { bs: '🚗 Novo vozilo', hr: '🚗 Novo vozilo', sr: '🚗 Novo vozilo', en: '🚗 New vehicle', de: '🚗 Neues Fahrzeug', sl: '🚗 Novo vozilo' },
+                    text: { bs: 'Želim dodati novo vozilo u vozni park.', hr: 'Želim dodati novo vozilo u vozni park.', sr: 'Želim dodati novo vozilo u vozni park.', en: 'I want to add a new vehicle to the fleet.', de: 'Ich möchte ein neues Fahrzeug zum Fuhrpark hinzufügen.', sl: 'Želim dodati novo vozilo v vozni park.' }
+                },
+                {
+                    label: { bs: '🔑 Zaduži vozilo', hr: '🔑 Zaduži vozilo', sr: '🔑 Zaduži vozilo', en: '🔑 Assign vehicle', de: '🔑 Fahrzeug zuweisen', sl: '🔑 Dodeli vozilo' },
+                    text: { bs: 'Želim zadužiti vozilo određenom radniku.', hr: 'Želim zadužiti vozilo određenom radniku.', sr: 'Želim zadužiti vozilo određenom radniku.', en: 'I want to assign a vehicle to a worker.', de: 'Ich möchte einem bestimmten Mitarbeiter ein Fahrzeug zuweisen.', sl: 'Želim dodeliti vozilo določenemu delavcu.' }
+                }
+            ]);
         } else if (pathname === '/dashboard/fire-protection') {
-            chips.push(lang !== 'en' ? { label: '🧯 Zaostali servisi', text: 'Koji protupožarni aparati već kasne sa servisom?' } : { label: '🧯 Overdue services', text: 'Which fire extinguishers are overdue for service?' });
+            addContextChips([
+                {
+                    label: { bs: '🧯 Zaostali servisi', hr: '🧯 Zaostali servisi', sr: '🧯 Zaostali servisi', en: '🧯 Overdue services', de: '🧯 Überfällige Wartungen', sl: '🧯 Zamuđeni servisi' },
+                    text: { bs: 'Koji protupožarni aparati već kasne sa servisom?', hr: 'Koji vatrogasni aparati već kasne sa servisom?', sr: 'Koji vatrogasni aparati već kasne sa servisom?', en: 'Which fire extinguishers are overdue for service?', de: 'Welche Feuerlöscher sind bereits überfällig für eine Wartung?', sl: 'Kateri gasilni aparati že zamujajo s servisom?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/employer-docs') {
-            chips.push(lang !== 'en' ? { label: '📄 Traženje akta', text: 'Da li imamo važeći Pravilnik o zaštiti od požara?' } : { label: '📄 Find document', text: 'Do we have a valid Fire Protection Rulebook?' });
+            addContextChips([
+                {
+                    label: { bs: '📄 Traženje akta', hr: '📄 Traženje akta', sr: '📄 Traženje akta', en: '📄 Find document', de: '📄 Dokumentsuche', sl: '📄 Iskanje akta' },
+                    text: { bs: 'Da li imamo važeći Pravilnik o zaštiti od požara?', hr: 'Imamo li važeći Pravilnik o zaštiti od požara?', sr: 'Da li imamo važeći Pravilnik o zaštiti od požara?', en: 'Do we have a valid Fire Protection Rulebook?', de: 'Haben wir eine gültige Brandschutzordnung?', sl: 'Ali imamo veljaven Pravilnik o varstvu pred požarom?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/risk-assessment') {
-            chips.push(lang !== 'en' ? { label: '⚠️ Kritični rizici', text: 'Koja radna mjesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?' } : { label: '⚠️ Critical risks', text: 'Which workplaces have High or Unacceptable risks (R ≥ 16)?' });
-            chips.push(lang !== 'en' ? { label: '📋 Propisane mjere', text: 'Koje su propisane mjere za smanjenje znatnih rizika?' } : { label: '📋 Prescribed measures', text: 'What are the prescribed measures to reduce high risks?' });
+            addContextChips([
+                {
+                    label: { bs: '⚠️ Kritični rizici', hr: '⚠️ Kritični rizici', sr: '⚠️ Kritični rizici', en: '⚠️ Critical risks', de: '⚠️ Kritische Risiken', sl: '⚠️ Kritična tveganja' },
+                    text: { bs: 'Koja radna mjesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?', hr: 'Koja radna mjesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?', sr: 'Koja radna mesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?', en: 'Which workplaces have High or Unacceptable risks (R ≥ 16)?', de: 'Welche Arbeitsplätze haben bei uns ein erhebliches oder unzulässiges Risiko (R ≥ 16)?', sl: 'Katera delovna mesta imajo pri nas znatno ali nedopustno tveganje (R ≥ 16)?' }
+                },
+                {
+                    label: { bs: '📋 Propisane mjere', hr: '📋 Propisane mjere', sr: '📋 Propisane mere', en: '📋 Prescribed measures', de: '📋 Vorgeschriebene Maßnahmen', sl: '📋 Predpisani ukrepi' },
+                    text: { bs: 'Koje su propisane mjere za smanjenje znatnih rizika?', hr: 'Koje su propisane mjere za smanjenje znatnih rizika?', sr: 'Koje su propisane mere za smanjenje znatnih rizika?', en: 'What are the prescribed measures to reduce high risks?', de: 'Welches sind die vorgeschriebenen Maßnahmen zur Verringerung erheblicher Risiken?', sl: 'Kakšni so predpisani ukrepi za zmanjšanje znatnih tveganj?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/zapisnici') {
-            chips.push(lang !== 'en' ? { label: '📝 Novi zapisnik', text: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.' } : { label: '📝 Draft minute', text: 'Draft a new meeting minute for today regarding the purchase of helmets.' });
+            addContextChips([
+                {
+                    label: { bs: '📝 Novi zapisnik', hr: '📝 Novi zapisnik', sr: '📝 Novi zapisnik', en: '📝 Draft minute', de: '📝 Neues Protokoll', sl: '📝 Nov zapisnik' },
+                    text: { bs: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.', hr: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.', sr: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šlemova.', en: 'Draft a new meeting minute for today regarding the purchase of helmets.', de: 'Erstelle mir ein neues Protokoll für die heutige Ausschusssitzung: vereinbarte Anschaffung neuer Helme.', sl: 'Ustvari mi nov zapisnik za današnji sestanek odbora: dogovorjena nabava novih čelad.' }
+                }
+            ]);
         } else if (pathname === '/dashboard/observations') {
-            chips.push(lang !== 'en' ? { label: '⚠️ Prijavi opasnost', text: 'Želim prijaviti opasnost na radnom mjestu.' } : { label: '⚠️ Report hazard', text: 'I want to report a workplace hazard.' });
-            chips.push(lang !== 'en' ? { label: '📊 Otvorene prijave', text: 'Koliko imamo otvorenih prijava opasnosti?' } : { label: '📊 Open reports', text: 'How many open hazard reports do we have?' });
+            addContextChips([
+                {
+                    label: { bs: '⚠️ Prijavi opasnost', hr: '⚠️ Prijavi opasnost', sr: '⚠️ Prijavi opasnost', en: '⚠️ Report hazard', de: '⚠️ Gefahr melden', sl: '⚠️ Prijavi nevarnost' },
+                    text: { bs: 'Želim prijaviti opasnost na radnom mjestu.', hr: 'Želim prijaviti opasnost na radnom mjestu.', sr: 'Želim prijaviti opasnost na radnom mestu.', en: 'I want to report a workplace hazard.', de: 'Ich möchte eine Gefahr am Arbeitsplatz melden.', sl: 'Želim prijaviti nevarnost na delovnem mestu.' }
+                },
+                {
+                    label: { bs: '📊 Otvorene prijave', hr: '📊 Otvorene prijave', sr: '📊 Otvorene prijave', en: '📊 Open reports', de: '📊 Offene Meldungen', sl: '📊 Odprte prijave' },
+                    text: { bs: 'Koliko imamo otvorenih prijava opasnosti?', hr: 'Koliko imamo otvorenih prijava opasnosti?', sr: 'Koliko imamo otvorenih prijava opasnosti?', en: 'How many open hazard reports do we have?', de: 'Wie viele offene Gefahrenmeldungen haben wir?', sl: 'Koliko odprtih prijav nevarnosti imamo?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/trainings') {
-            chips.push(lang !== 'en' ? { label: '🎓 Nova obuka', text: 'Želim evidentirati novu obuku iz ZNR.' } : { label: '🎓 New training', text: 'I want to record a new safety training.' });
-            chips.push(lang !== 'en' ? { label: '📊 Pregled obuka', text: 'Koliko obuka smo proveli ove godine?' } : { label: '📊 Training overview', text: 'How many trainings have we conducted this year?' });
+            addContextChips([
+                {
+                    label: { bs: '🎓 Nova obuka', hr: '🎓 Nova obuka', sr: '🎓 Nova obuka', en: '🎓 New training', de: '🎓 Neue Schulung', sl: '🎓 Novo usposavljanje' },
+                    text: { bs: 'Želim evidentirati novu obuku iz ZNR.', hr: 'Želim evidentirati novu obuku iz ZNR.', sr: 'Želim evidentirati novu obuku iz ZNR.', en: 'I want to record a new safety training.', de: 'Ich möchte eine neue ZNR-Schulung erfassen.', sl: 'Želim zabeležiti novo usposabljanje iz ZNR.' }
+                },
+                {
+                    label: { bs: '📊 Pregled obuka', hr: '📊 Pregled obuka', sr: '📊 Pregled obuka', en: '📊 Training overview', de: '📊 Schulungsübersicht', sl: '📊 Pregled usposabljanj' },
+                    text: { bs: 'Koliko obuka smo proveli ove godine?', hr: 'Koliko obuka smo proveli ove godine?', sr: 'Koliko obuka smo proveli ove godine?', en: 'How many trainings have we conducted this year?', de: 'Wie viele Schulungen haben wir in diesem Jahr durchgeführt?', sl: 'Koliko usposabljanj smo izvedli letos?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/evacuation') {
-            chips.push(lang !== 'en' ? { label: '🗺️ Planovi evakuacije', text: 'Koji planovi evakuacije su trenutno aktivni?' } : { label: '🗺️ Evacuation plans', text: 'Which evacuation plans are currently active?' });
+            addContextChips([
+                {
+                    label: { bs: '🗺️ Planovi evakuacije', hr: '🗺️ Planovi evakuacije', sr: '🗺️ Planovi evakuacije', en: '🗺️ Evacuation plans', de: '🗺️ Evakuierungspläne', sl: '🗺️ Načrti evakuacije' },
+                    text: { bs: 'Koji planovi evakuacije su trenutno aktivni?', hr: 'Koji planovi evakuacije su trenutno aktivni?', sr: 'Koji planovi evakuacije su trenutno aktivni?', en: 'Which evacuation plans are currently active?', de: 'Welche Evakuierungspläne sind derzeit aktiv?', sl: 'Kateri načrti evakuacije so trenutno aktivni?' }
+                }
+            ]);
         } else if (pathname === '/dashboard/evacuation-drills') {
-            chips.push(lang !== 'en' ? { label: '🏃 Posljednja vježba', text: 'Kad smo zadnji put imali vježbu evakuacije i koliko je bilo evakuiranih?' } : { label: '🏃 Last drill', text: 'When was our last evacuation drill and how many were evacuated?' });
+            addContextChips([
+                {
+                    label: { bs: '🏃 Posljednja vježba', hr: '🏃 Posljednja vježba', sr: '🏃 Poslednja vežba', en: '🏃 Last drill', de: '🏃 Letzte Übung', sl: '🏃 Zadnja vaja' },
+                    text: { bs: 'Kad smo zadnji put imali vježbu evakuacije i koliko je bilo evakuiranih?', hr: 'Kad smo zadnji put imali vježbu evakuacije i koliko je bilo evakuiranih?', sr: 'Kad smo zadnji put imali vežbu evakuacije i koliko je bilo evakuisanih?', en: 'When was our last evacuation drill and how many were evacuated?', de: 'Wann hatten wir die letzte Evakuierungsübung und wie viele Personen wurden evakuiert?', sl: 'Kdaj smo imeli zadnjo vajo evakuacije in koliko ljudi je bilo evakuiranih?' }
+                }
+            ]);
         } else if (pathname === '/dashboard') {
-            chips.push(lang !== 'en' ? { label: '📅 Novi podsjetnik', text: 'Dodaj podsjetnik u kalendar za idući ponedjeljak.' } : { label: '📅 New reminder', text: 'Add a calendar reminder for next Monday.' });
+            addContextChips([
+                {
+                    label: { bs: '📅 Novi podsjetnik', hr: '📅 Novi podsjetnik', sr: '📅 Novi podsetnik', en: '📅 New reminder', de: '📅 Neue Erinnerung', sl: '📅 Nov opomnik' },
+                    text: { bs: 'Dodaj podsjetnik u kalendar za idući ponedjeljak.', hr: 'Dodaj podsjetnik u kalendar za sljedeći ponedjeljak.', sr: 'Dodaj podsetnik u kalendar za sledeći ponedeljak.', en: 'Add a calendar reminder for next Monday.', de: 'Füge eine Kalendererinnerung für nächsten Montag hinzu.', sl: 'Dodaj opomnik v koledar za naslednji ponedeljek.' }
+                }
+            ]);
         }
 
     } catch { /* ignore */ }
 
     // Fallback actions if we don't have enough chips
     if (chips.length < 4) {
-        if (lang !== 'en') {
-            chips.push({ label: '📊 Pregled stanja', text: 'Daj mi pregled trenutnog stanja zaštite na radu.' });
-            chips.push({ label: '📋 Obavezna dokumentacija', text: 'Koja je obavezna dokumentacija za poslodavca?' });
-            chips.push({ label: 'ℹ️ Šta sve možeš?', text: 'Šta sve mogu uraditi sa tobom?' });
-        } else {
-            chips.push({ label: '📊 Status overview', text: 'Give me a current occupational safety status overview.' });
-            chips.push({ label: '📋 Mandatory docs', text: 'What mandatory documentation is required for employers?' });
-            chips.push({ label: 'ℹ️ What can you do?', text: 'What can I do with you?' });
-        }
+        const fallbackItems = [
+            {
+                label: {
+                    bs: '📊 Pregled stanja',
+                    hr: '📊 Pregled stanja',
+                    sr: '📊 Pregled stanja',
+                    en: '📊 Status overview',
+                    de: '📊 Statusübersicht',
+                    sl: '📊 Pregled stanja'
+                },
+                text: {
+                    bs: 'Daj mi pregled trenutnog stanja zaštite na radu.',
+                    hr: 'Daj mi pregled trenutnog stanja zaštite na radu.',
+                    sr: 'Daj mi pregled trenutnog stanja bezbednosti na radu.',
+                    en: 'Give me a current occupational safety status overview.',
+                    de: 'Gib mir eine Übersicht über den aktuellen Zustand des Arbeitsschutzes.',
+                    sl: 'Daj mi pregled trenutnega stanja varnosti pri delu.'
+                }
+            },
+            {
+                label: {
+                    bs: '📋 Obavezna dokumentacija',
+                    hr: '📋 Obvezna dokumentacija',
+                    sr: '📋 Obavezna dokumentacija',
+                    en: '📋 Mandatory docs',
+                    de: '📋 Pflichtdokumentation',
+                    sl: '📋 Obvezna dokumentacija'
+                },
+                text: {
+                    bs: 'Koja je obavezna dokumentacija za poslodavca?',
+                    hr: 'Koja je obavezna dokumentacija za poslodavca?',
+                    sr: 'Koja je obavezna dokumentacija za poslodavca?',
+                    en: 'What mandatory documentation is required for employers?',
+                    de: 'Welche Pflichtdokumentation ist für Arbeitgeber erforderlich?',
+                    sl: 'Kakšna je obvezna dokumentacija za delodajalca?'
+                }
+            },
+            {
+                label: {
+                    bs: 'ℹ️ Šta sve možeš?',
+                    hr: 'ℹ️ Što sve možeš?',
+                    sr: 'ℹ️ Šta sve možeš?',
+                    en: 'ℹ️ What can you do?',
+                    de: 'ℹ️ Was kannst du tun?',
+                    sl: 'ℹ️ Kaj vse lahko storiš?'
+                },
+                text: {
+                    bs: 'Šta sve mogu uraditi sa tobom?',
+                    hr: 'Što sve mogu učiniti s tobom?',
+                    sr: 'Šta sve mogu uraditi sa tobom?',
+                    en: 'What can I do with you?',
+                    de: 'Was kann ich mit dir tun?',
+                    sl: 'Kaj vse lahko storim s tabo?'
+                }
+            }
+        ];
+
+        fallbackItems.forEach(item => {
+            chips.push({
+                label: resolveStr(item.label, lang),
+                text: resolveStr(item.text, lang)
+            });
+        });
     }
     
     // Shuffle the non-urgent context chips to keep it dynamic, but keep urgents at top

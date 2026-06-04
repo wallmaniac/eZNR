@@ -1489,7 +1489,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                             else { alert('AI error: ' + error); }
                                                         } catch (err) { alert('Error: ' + err.message); }
                                                         setSistAiLoading(false); setSistSelectedWp(null);
-                                                    }} disabled={isLoading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
+                                                    }} disabled={isLoading} style={{ background: isLoading ? 'var(--border)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: isLoading ? 'var(--text-light)' : '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
                                                         {isLoading ? tr('⏳ Generiše...', '⏳ Generating...', '⏳ Generiert...', '⏳ Generira...') : tr('🤖 AI Generiši', '🤖 AI Generate', '🤖 KI Generieren', '🤖 AI Generiraj')}
                                                     </button>
                                                     <button className="btn btn-outline btn-sm" style={{ fontSize: '0.72rem' }} onClick={() => setSistEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: getDefaultPravniOsnov(country), uvjetiRada: {}, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
@@ -1586,13 +1586,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 <button className="btn btn-outline btn-sm" onClick={() => handleAiOpis('app')} disabled={aiOpisLoading}
                                     title={tr("Generiši opis iz podataka aplikacije (radna mjesta, djelatnost, sistematizacija)", "Generate description from application data (workplaces, industry, systematization)", "Beschreibung aus Anwendungsdaten generieren (Arbeitsplätze, Branche, Systematisierung)", "Generiraj opis iz podatkov aplikacije (delovna mesta, dejavnost, sistematizacija)")}
-                                    style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                    style={{ background: aiOpisLoading ? 'var(--border)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: aiOpisLoading ? 'var(--text-light)' : '#fff', border: 'none', fontWeight: 700 }}>
                                     {aiOpisLoading ? tr('⏳ Generišem...', '⏳ Generating...', '⏳ Generiere...', '⏳ Generiram...') : tr('🤖 Generiši iz podataka aplikacije', '🤖 Generate from App Data', '🤖 Aus App-Daten generieren', '🤖 Generiraj iz podatkov aplikacije')}
                                 </button>
                                 {(formData.opisProcesa || formData.analizaOrganizacije) && (
                                     <button className="btn btn-outline btn-sm" onClick={() => handleAiOpis('text')} disabled={aiOpisLoading}
                                         title={tr("Proširi i poboljšaj tekst koji ste već napisali koristeći AI", "Expand and improve your written text using AI", "Erweitern und verbessern Sie Ihren geschriebenen Text mit KI", "Razširi in izboljšaj svoje zapisano besedilo z AI")}
-                                        style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                        style={{ background: aiOpisLoading ? 'var(--border)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: aiOpisLoading ? 'var(--text-light)' : '#fff', border: 'none', fontWeight: 700 }}>
                                         {aiOpisLoading ? tr('⏳ Generišem...', '⏳ Generating...', '⏳ Generiere...', '⏳ Generiram...') : tr('📝 Proširi moj tekst s AI', '📝 Expand my text with AI', '📝 Meinen Text mit KI erweitern', '📝 Razširi moje besedilo z AI')}
                                     </button>
                                 )}
@@ -1833,7 +1833,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 <button className="btn btn-ghost" onClick={() => setShowAiGenTableModal(false)} disabled={aiGenLoading}>{t('cancel')}</button>
                                                 <button className="btn btn-primary" onClick={handleAiGenerateTableSubmit}
                                                     disabled={(aiGenSelectedWps.length === 0 && !aiGenCustomWp.trim() && !aiGenJobTitle.trim()) || aiGenLoading}
-                                                        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+                                                    style={{
+                                                        background: ((aiGenSelectedWps.length === 0 && !aiGenCustomWp.trim() && !aiGenJobTitle.trim()) || aiGenLoading) ? 'var(--border)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                        color: ((aiGenSelectedWps.length === 0 && !aiGenCustomWp.trim() && !aiGenJobTitle.trim()) || aiGenLoading) ? 'var(--text-light)' : '#fff',
+                                                        border: 'none'
+                                                    }}>
                                                     {aiGenLoading ? tr('⏳ Generišem tabelu...', '⏳ Generating table...', '⏳ Tabelle wird generiert...', '⏳ Ustvarjam tabelo...', '⏳ Generiram tablicu...') : tr('⚡ Generiši Tabelu', '⚡ Generate Table', '⚡ Tabelle generieren', '⚡ Ustvari tabelo', '⚡ Generiraj Tablicu')}
                                                 </button>
                                             </div>
@@ -2434,13 +2438,23 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>{tr('ZAKLJUČAK', 'CONCLUSION', 'FAZIT', 'ZAKLJUČEK')}</div>
                         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                             <button className="btn btn-outline btn-sm" onClick={handleAutoConclusion} disabled={conclusionLoading || riskItems.length === 0}
-                                style={{ background: conclusionLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                {conclusionLoading ? '⏳ Generisanje...' : '🤖 AI Generiši zaključak'}
+                                style={{
+                                    background: (conclusionLoading || riskItems.length === 0) ? 'var(--border)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: (conclusionLoading || riskItems.length === 0) ? 'var(--text-light)' : '#fff',
+                                    border: 'none',
+                                    fontWeight: 700
+                                }}>
+                                {conclusionLoading 
+                                    ? tr('⏳ Generisanje...', '⏳ Generating...', '⏳ Generieren...', '⏳ Generiranje...', '⏳ Generiranje...', '⏳ Generisanje...') 
+                                    : tr('🤖 AI Generiši zaključak', '🤖 AI Generate conclusion', '🤖 KI Fazit generieren', '🤖 AI Generiraj zaključek', '🤖 AI Generiraj zaključak', '🤖 AI Generiši zaključak')
+                                }
                             </button>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'center' }}>AI će napisati profesionalni zaključak na osnovu procjene</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'center' }}>
+                                {tr('AI će napisati profesionalni zaključak na osnovu procjene', 'AI will write a professional conclusion based on the assessment', 'Die KI schreibt ein professionelles Fazit basierend auf der Bewertung', 'AI bo napisal strokovni zaključek na podlagi osebe', 'AI će napisati profesionalni zaključak na temelju procjene', 'AI će napisati profesionalni zaključak na osnovu procene')}
+                            </span>
                         </div>
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
-                            placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
+                            placeholder={tr('Na osnovu provedene procjene rizika, zaključuje se...', 'Based on the risk assessment carried out, it is concluded...', 'Basierend auf der durchgeführten Risikobewertung wird geschlussfolgert...', 'Na podlagi izvedene ocene tveganja se ugotavlja...', 'Na temelju provedene procjene rizika, zaključuje se...', 'Na osnovu sprovedene procene rizika, zaključuje se...')} style={{ resize: 'vertical', marginBottom: 16 }} />
                         <div className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                             <button className="btn btn-outline" onClick={() => handleGenerateReport()}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
