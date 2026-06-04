@@ -703,6 +703,13 @@ export default function QuestionnairesPage() {
                   <option value="Srpski">Srpski</option>
                   <option value="Engleski">English</option>
                   <option value="Njemački">Deutsch</option>
+                  <option value="Slovenački">Slovenščina</option>
+                  <option value="Francuski">Français</option>
+                  <option value="Španski">Español</option>
+                  <option value="Turski">Türkçe</option>
+                  <option value="Poljski">Polski</option>
+                  <option value="Italijanski">Italiano</option>
+                  <option value="Portugalski">Português</option>
                 </select>
               </div>
               {aiWorkplaces.length === 0 && (
@@ -1035,6 +1042,12 @@ export default function QuestionnairesPage() {
                   <option value="Engleski">English</option>
                   <option value="Njemački">Deutsch</option>
                   <option value="Slovenački">Slovenščina</option>
+                  <option value="Francuski">Français</option>
+                  <option value="Španski">Español</option>
+                  <option value="Turski">Türkçe</option>
+                  <option value="Poljski">Polski</option>
+                  <option value="Italijanski">Italiano</option>
+                  <option value="Portugalski">Português</option>
                   <option value="Makedonski">Makedonski</option>
                 </select>
                 {formData.surveyJson && formData.jezik && (
