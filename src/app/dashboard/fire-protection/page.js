@@ -214,7 +214,7 @@ export default function FireProtectionPage() {
 
     const renderStatusBadge = (status) => {
         const s = STATUS_MAP[status] || STATUS_MAP.ispravan;
-        return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{bs ? s.bs : s.en}</span>;
+        return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{t('status_' + status)}</span>;
     };
 
     const tabBtn = (key, label, icon) => (
