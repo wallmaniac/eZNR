@@ -121,7 +121,7 @@ const APP_KNOWLEDGE = {
 };
 
 // ─── Live data context builder ────────────────────────────────────────────────
-function buildDataContext(lang, activeCompanyId, userCompanies) {
+function buildDataContext(lang, activeCompanyId, userCompanies, t) {
     if (typeof window === 'undefined') return '';
     try {
         const get = (key) => getRawAll(key);
@@ -384,7 +384,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
     } catch { return ''; }
 }
 
-function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies, country) {
+function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies, country, t) {
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
         ? (t('userIsCurrentlyOn').replace('{0}', currentPage.label_bs).replace('{1}', currentPage.desc_bs).replace('{2}', currentPage.label_en).replace('{3}', currentPage.desc_en))
@@ -1591,8 +1591,8 @@ export default function AIAssistant() {
                     pendingRetryRef.current = null;
                     if (pending) {
                         const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
-                        const dataContextTxt = buildDataContext(lang, activeCompId, userCompanies);
-                        const systemPromptTxt = buildSystemPrompt(lang, pathname, dataContextTxt, activeCompId, userCompanies);
+                        const dataContextTxt = buildDataContext(lang, activeCompId, userCompanies, t);
+                        const systemPromptTxt = buildSystemPrompt(lang, pathname, dataContextTxt, activeCompId, userCompanies, country, t);
                         sendMessageInternal(pending.text, pending.history, true);
                     }
                     return 0;
@@ -1600,7 +1600,7 @@ export default function AIAssistant() {
                 return prev - 1;
             });
         }, 1000);
-    }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [lang, userCompanies, pathname, t, country]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Internal send (supports retry loop + function calling) ───────────────
     const sendMessageInternal = useCallback(async (text, prefilledHistory, forceAutoSend = false, attachedFiles = []) => {
@@ -1610,8 +1610,8 @@ export default function AIAssistant() {
         setIsLoading(true);
         try {
             const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
-            const dataCtx = buildDataContext(lang, activeCompId, userCompanies);
-            const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies, country);
+            const dataCtx = buildDataContext(lang, activeCompId, userCompanies, t);
+            const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies, country, t);
 
             const newHistory = prefilledHistory || [...chatHistoryRef.current, { role: 'user', parts: [{ text: safeText }] }];
             if (!prefilledHistory) chatHistoryRef.current = newHistory;
@@ -1683,7 +1683,7 @@ export default function AIAssistant() {
             setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
             setIsLoading(false);
         }
-    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
+    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown, userCompanies, country, t]);
 
     // ── Proactive logic REMOVED — badge count instead ─────────────────────────
     // (urgentCount computed in separate useEffect above)

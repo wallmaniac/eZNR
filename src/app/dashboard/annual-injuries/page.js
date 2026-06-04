@@ -9,8 +9,14 @@ import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { fmtDate, fmtDateTime } from '@/lib/dateUtils';
 import PageHeader from '@/components/PageHeader';
 
-const MONTHS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
-const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_MAP = {
+  bs: ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'],
+  hr: ['Siječanj', 'Veljača', 'Ožujak', 'Travanj', 'Svibanj', 'Lipanj', 'Srpanj', 'Kolovoz', 'Rujan', 'Listopad', 'Studeni', 'Prosinac'],
+  sr: ['Јануар', 'Фебруар', 'Март', 'Април', 'Мај', 'Јуни', 'Јули', 'Август', 'Септембар', 'Октобар', 'Новембар', 'Децембар'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  de: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+  sl: ['Januar', 'Februar', 'Marec', 'April', 'Maj', 'Junij', 'Julij', 'Avgust', 'September', 'Oktober', 'November', 'December']
+};
 
 const EMPTY_COMPANY = { naziv: '', adresa: '', jib: '', odgovornaOsoba: '', telefon: '', email: '' };
 
@@ -51,7 +57,34 @@ const DOPIS_TEXT = {
     form_f3: 'JIB / ID broj',
     form_f4: 'Odgovorna osoba (ime i prezime)',
     form_f5: 'Telefon',
-    form_f6: 'Email'
+    form_f6: 'Email',
+    tab_dopis: '📄 Dopis / Zvanični izvještaj',
+    tab_stats: '📊 Statistika po mjesecima',
+    stat_total: 'Ukupno',
+    stat_laka: 'Lake',
+    stat_teska: 'Teške',
+    stat_smrtna: 'Smrtne',
+    stat_kolektivna: 'Kolektivne',
+    stat_bolovanje: 'Bolovanje',
+    deadline_warning: '<strong>Rok za dostavu:</strong> Godišnji izvještaj o povredama na radu dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.',
+    deadline_date: '15. januar {nextYear}. godine',
+    tbl_month: 'Mjesec',
+    tbl_worker: 'Radnik',
+    tbl_date: 'Datum',
+    tbl_tip: 'Tip',
+    tbl_location: 'Lokacija',
+    tbl_cause: 'Uzrok',
+    tbl_bolovanje: 'Bolovanje',
+    pdf_filename: 'Godisnji_izvjestaj_{year}.pdf',
+    word_filename: 'Godisnji_izvjestaj_{year}.doc',
+    word_title: 'Godišnji izvještaj',
+    excel_filename: 'Pregled_povreda_{year}.xlsx',
+    excel_sheetname: 'Izvjestaj',
+    total_lbl: 'Ukupno:',
+    no_reported_injuries: '✅ Nema prijavljenih povreda za {year}. godinu.',
+    attachment_list_title: 'Pregled svih povreda',
+    letter_number: 'Broj',
+    letter_date: 'Datum'
   },
   hr: {
     inspectorateTitle: 'INSPEKTORAT RADA',
@@ -59,7 +92,7 @@ const DOPIS_TEXT = {
     subject: 'Predmet: Godišnje izvješće o ozljedama na radu za {year}. godinu',
     dear: 'Poštovani,',
     p1: 'U skladu s odredbama Zakona o zaštiti na radu, dostavljamo Vam godišnje izvješće o ozljedama na radu za {year}. godinu, za poslovni subjekt',
-    p2_1: 'U navedenom razdoblju evidentirano je ukupno',
+    p2_1: 'U navedenom razdoblju preventirano je ukupno',
     p2_2: 'ozljeda na radu, od čega:',
     p2_laka: 'lakih',
     p2_teska: 'teških',
@@ -89,7 +122,34 @@ const DOPIS_TEXT = {
     form_f3: 'OIB',
     form_f4: 'Odgovorna osoba (ime i prezime)',
     form_f5: 'Telefon',
-    form_f6: 'Email'
+    form_f6: 'Email',
+    tab_dopis: '📄 Dopis / Službeno izvješće',
+    tab_stats: '📊 Statistika po mjesecima',
+    stat_total: 'Ukupno',
+    stat_laka: 'Lake',
+    stat_teska: 'Teške',
+    stat_smrtna: 'Smrtne',
+    stat_kolektivna: 'Kolektivne',
+    stat_bolovanje: 'Bolovanje',
+    deadline_warning: '<strong>Napomena za RH:</strong> Poslodavci u Hrvatskoj nemaju zakonsku obvezu dostavljanja godišnjeg izvješća inspekcijskim tijelima, već su dužni ovu evidenciju voditi interno.',
+    deadline_date: '15. siječnja {nextYear}. godine',
+    tbl_month: 'Mjesec',
+    tbl_worker: 'Radnik',
+    tbl_date: 'Datum',
+    tbl_tip: 'Tip',
+    tbl_location: 'Lokacija',
+    tbl_cause: 'Uzrok',
+    tbl_bolovanje: 'Bolovanje',
+    pdf_filename: 'Godisnje_izvjesce_{year}.pdf',
+    word_filename: 'Godisnje_izvjesce_{year}.doc',
+    word_title: 'Godišnje izvješće',
+    excel_filename: 'Pregled_ozljeda_{year}.xlsx',
+    excel_sheetname: 'Izvjesce',
+    total_lbl: 'Ukupno:',
+    no_reported_injuries: '✅ Nema prijavljenih ozljeda za {year}. godinu.',
+    attachment_list_title: 'Pregled svih ozljeda',
+    letter_number: 'Broj',
+    letter_date: 'Datum'
   },
   en: {
     inspectorateTitle: 'LABOR INSPECTORATE',
@@ -127,7 +187,229 @@ const DOPIS_TEXT = {
     form_f3: 'Company ID / VAT',
     form_f4: 'Responsible person (name)',
     form_f5: 'Phone',
-    form_f6: 'Email'
+    form_f6: 'Email',
+    tab_dopis: '📄 Official Letter / Report',
+    tab_stats: '📊 Monthly Statistics',
+    stat_total: 'Total',
+    stat_laka: 'Minor',
+    stat_teska: 'Severe',
+    stat_smrtna: 'Fatal',
+    stat_kolektivna: 'Collective',
+    stat_bolovanje: 'Sick Leave',
+    deadline_warning: '<strong>Submission deadline:</strong> The annual work injury report must be submitted to the <strong>Labor Inspectorate</strong> by <strong>{deadline}</strong>.',
+    deadline_date: 'January 15, {nextYear}',
+    tbl_month: 'Month',
+    tbl_worker: 'Worker',
+    tbl_date: 'Date',
+    tbl_tip: 'Type',
+    tbl_location: 'Location',
+    tbl_cause: 'Cause',
+    tbl_bolovanje: 'Sick Leave',
+    pdf_filename: 'Annual_injury_report_{year}.pdf',
+    word_filename: 'Annual_injury_report_{year}.doc',
+    word_title: 'Annual Injury Report',
+    excel_filename: 'Overview_of_injuries_{year}.xlsx',
+    excel_sheetname: 'Report',
+    total_lbl: 'Total:',
+    no_reported_injuries: '✅ No injuries reported for the year {year}.',
+    attachment_list_title: 'Overview of all injuries',
+    letter_number: 'Number',
+    letter_date: 'Date'
+  },
+  de: {
+    inspectorateTitle: 'ARBEITSINSPEKTORAT',
+    inspectorateSubtitle: '(Zuständige Inspektion für Arbeitssicherheit und Gesundheitsschutz)',
+    subject: 'Betreff: Jahresbericht über Arbeitsunfälle für das Jahr {year}',
+    dear: 'Sehr geehrte Damen und Herren,',
+    p1: 'in Übereinstimmung mit den Bestimmungen des Arbeitsschutzgesetzes überreichen wir Ihnen den Jahresbericht über Arbeitsunfälle für das Jahr {year} für das Unternehmen',
+    p2_1: 'Im genannten Zeitraum wurden insgesamt',
+    p2_2: 'Arbeitsunfälle registriert, davon:',
+    p2_laka: 'leichte',
+    p2_teska: 'schwere',
+    p2_smrtna: 'tödliche und',
+    p2_kol: 'kollektive.',
+    p3: 'Eine detaillierte Übersicht der Arbeitsunfälle mit leichten, schweren oder tödlichen Folgen finden Sie in der Tabelle im Anhang dieses Schreibens.',
+    p4: 'Für weitere Fragen stehen wir Ihnen gerne zur Verfügung.',
+    regards: 'Mit freundlichen Grüßen',
+    officer: 'Verantwortliche Person / Sicherheitsfachkraft',
+    seal: 'Stempel und Unterschrift',
+    attachment: 'ANHANG: Übersicht der Arbeitsunfälle mit leichten, schweren oder tödlichen Folgen — Jahr {year}',
+    empName: 'Name des Arbeitgebers:',
+    table_rb: 'Nr.',
+    table_death: 'Arbeitsunfall mit tödlicher Folge',
+    table_personal: 'Persönliche Daten der Verunfallten (Name, Geburtsdatum, Geschlecht)',
+    table_location: 'Datum und Ort des Unfalls',
+    table_cause: 'Ursachen des schweren oder kollektiven Arbeitsunfalls',
+    table_report: 'Meldung an Polizei und Inspektorat (Nummer und Datum)',
+    table_note: 'Anmerkung',
+    table_sub1: 'Einzelunfall',
+    table_sub2: 'Kollektivunfall',
+    table_sub3: 'Anzahl der Verunfallten',
+    no_injuries: '✅ Für das Jahr {year} wurden keine Arbeitsunfälle registriert.',
+    form_title: 'Arbeitgeberdaten (für den Briefkopf)',
+    form_f1: 'Name des Unternehmens / Arbeitgebers',
+    form_f2: 'Anschrift des Hauptsitzes',
+    form_f3: 'Unternehmens-ID / Steuernummer',
+    form_f4: 'Verantwortliche Person (Name)',
+    form_f5: 'Telefon',
+    form_f6: 'E-Mail',
+    tab_dopis: '📄 Offizielles Anschreiben / Bericht',
+    tab_stats: '📊 Monatliche Statistik',
+    stat_total: 'Gesamt',
+    stat_laka: 'Leicht',
+    stat_teska: 'Schwer',
+    stat_smrtna: 'Tödlich',
+    stat_kolektivna: 'Kollektiv',
+    stat_bolovanje: 'Krankenstand',
+    deadline_warning: '<strong>Abgabefrist:</strong> Der Jahresbericht über Arbeitsunfälle ist bis zum <strong>{deadline}</strong> an das <strong>Arbeitsinspektorat</strong> zu übermitteln.',
+    deadline_date: '15. Januar {nextYear}',
+    tbl_month: 'Monat',
+    tbl_worker: 'Mitarbeiter',
+    tbl_date: 'Datum',
+    tbl_tip: 'Typ',
+    tbl_location: 'Ort',
+    tbl_cause: 'Ursache',
+    tbl_bolovanje: 'Krankenstand',
+    pdf_filename: 'Jahresbericht_Arbeitsunfaelle_{year}.pdf',
+    word_filename: 'Jahresbericht_Arbeitsunfaelle_{year}.doc',
+    word_title: 'Jahresbericht',
+    excel_filename: 'Uebersicht_Arbeitsunfaelle_{year}.xlsx',
+    excel_sheetname: 'Bericht',
+    total_lbl: 'Gesamt:',
+    no_reported_injuries: '✅ Für das Jahr {year} wurden keine Arbeitsunfälle gemeldet.',
+    attachment_list_title: 'Übersicht aller Arbeitsunfälle',
+    letter_number: 'Nummer',
+    letter_date: 'Datum'
+  },
+  sl: {
+    inspectorateTitle: 'INŠPEKTORAT ZA DELO',
+    inspectorateSubtitle: '(Pristojni inšpektorat za varnost in zdravje pri delu)',
+    subject: 'Zadeva: Letno poročilo o poškodbah pri delu za leto {year}',
+    dear: 'Spoštovani,',
+    p1: 'V skladu z določili Zakona o varnosti in zdravju pri delu vam pošiljamo letno poročilo o poškodbah pri delu za leto {year} za poslovni subjekt',
+    p2_1: 'V navedenom obdobju je bilo evidentiranih skupaj',
+    p2_2: 'poškodb pri delu, od tega:',
+    p2_laka: 'lažjih',
+    p2_teska: 'hujših',
+    p2_smrtna: 'smrtnih in',
+    p2_kol: 'kolektivnih.',
+    p3: 'Podroben pregled poškodb pri delu z lažjimi, hujšimi ali smrtnimi posledicami je naveden v tabeli v prilogi tega dopisa.',
+    p4: 'Za vsa dodatna pojasnila smo vam na voljo.',
+    regards: 'S spoštovanjem,',
+    officer: 'Odgovorna oseba / Strokovni delavec za VZD',
+    seal: 'Žig in podpis',
+    attachment: 'PRILOGA: Pregled poškodb pri delu z lažjimi, hujšimi ali smrtnimi posledicami — leto {year}',
+    empName: 'Naziv delodajalca:',
+    table_rb: 'Št.',
+    table_death: 'Poškodba pri delu s smrtnim izidom',
+    table_personal: 'Osebni podatki poškodovancev (ime in priimek, datum roj., spol)',
+    table_location: 'Datum in kraj nesreče / poškodbe',
+    table_cause: 'Vzroki za nastanek hujše ali kolektivne poškodbe pri delu',
+    table_report: 'Prijava policiji in inšpektoratu (številka in datum)',
+    table_note: 'Opomba',
+    table_sub1: 'Posamična',
+    table_sub2: 'Kolektivna',
+    table_sub3: 'Število ponesrečencev',
+    no_injuries: '✅ Za leto {year} ni evidentiranih poškodb pri delu.',
+    form_title: 'Podatki o delodajalcu (za glavo dopisa)',
+    form_f1: 'Naziv podjetja / delodajalca',
+    form_f2: 'Naslov sedeža',
+    form_f3: 'Matična številka / Davčna št.',
+    form_f4: 'Odgovorna oseba (ime in priimek)',
+    form_f5: 'Telefon',
+    form_f6: 'E-pošta',
+    tab_dopis: '📄 Dopis / Uradno poročilo',
+    tab_stats: '📊 Statistika po mesecih',
+    stat_total: 'Skupaj',
+    stat_laka: 'Lažje',
+    stat_teska: 'Hujše',
+    stat_smrtna: 'Smrtne',
+    stat_kolektivna: 'Kolektivne',
+    stat_bolovanje: 'Bolniška',
+    deadline_warning: '<strong>Rok za oddajo:</strong> Letno poročilo o poškodbah pri delu je treba oddati <strong>Inšpektoratu za delo</strong> do <strong>{deadline}</strong>.',
+    deadline_date: '15. januar {nextYear}',
+    tbl_month: 'Mesec',
+    tbl_worker: 'Delavec',
+    tbl_date: 'Datum',
+    tbl_tip: 'Tip',
+    tbl_location: 'Lokacija',
+    tbl_cause: 'Vzrok',
+    tbl_bolovanje: 'Bolniška',
+    pdf_filename: 'Letno_porocilo_poskodbe_{year}.pdf',
+    word_filename: 'Letno_porocilo_poskodbe_{year}.doc',
+    word_title: 'Letno poročilo',
+    excel_filename: 'Pregled_poskodb_{year}.xlsx',
+    excel_sheetname: 'Porocilo',
+    total_lbl: 'Skupaj:',
+    no_reported_injuries: '✅ Za leto {year} ni prijavljenih poškodb pri delu.',
+    attachment_list_title: 'Pregled vseh poškodb',
+    letter_number: 'Številka',
+    letter_date: 'Datum'
+  },
+  sr: {
+    inspectorateTitle: 'ИНСПЕКТОРАТ РАДА',
+    inspectorateSubtitle: '(Надлежна инспекција рада за заштиту на раду)',
+    subject: 'Предмет: Годишњи извештај о повредама на раду за {year}. годину',
+    dear: 'Поштовани,',
+    p1: 'У складу са одредбама Закона о безбедности и здрављу на раду, достављамо Вам годишњи извештај о повредама на раду за {year}. годину, за привредни субјекат',
+    p2_1: 'У наведеном периоду евидентирано је укупно',
+    p2_2: 'повреда на раду, од чега:',
+    p2_laka: 'лаких',
+    p2_teska: 'тешких',
+    p2_smrtna: 'смртних и',
+    p2_kol: 'колективних.',
+    p3: 'Детаљан преглед повреда на раду са лаком, тешком или смртном последицом дат је у табели у прилогу овог дописа.',
+    p4: 'Остајемо на Вашем располагању за сва додатна појашњења.',
+    regards: 'С поштовањем,',
+    officer: 'Одговорно лице / Стручњак за безбедност и здравље на раду',
+    seal: 'Печат и потпис',
+    attachment: 'ПРИЛОГ: Преглед повреда на раду са лаком, тешком или смртном последицом — {year}. година',
+    empName: 'Назив послодавца:',
+    table_rb: 'Рб.',
+    table_death: 'Повреда на раду са смртном последицом',
+    table_personal: 'Лични подаци страдалих (име и презиме, датум рођ., пол)',
+    table_location: 'Датум и место несреће / повреде',
+    table_cause: 'Узроци појаве тешке или колективне повреде на раду',
+    table_report: 'Пријава полицији и Инспекцији рада (број и датум)',
+    table_note: 'Напомена',
+    table_sub1: 'Појединачна',
+    table_sub2: 'Колективна',
+    table_sub3: 'Број страдалих',
+    no_injuries: '✅ Није евидентирано повреда на раду за {year}. годину.',
+    form_title: 'Подаци послодавца (за заглавље дописа)',
+    form_f1: 'Назив фирме / послодавца',
+    form_f2: 'Адреса седишта',
+    form_f3: 'ЈИБ / ПИБ',
+    form_f4: 'Одговорно лице (име и презиме)',
+    form_f5: 'Телефон',
+    form_f6: 'Емаил',
+    tab_dopis: '📄 Допис / Званични извештај',
+    tab_stats: '📊 Статистика по месецима',
+    stat_total: 'Укупно',
+    stat_laka: 'Лаке',
+    stat_teska: 'Тешке',
+    stat_smrtna: 'Смртне',
+    stat_kolektivna: 'Колективне',
+    stat_bolovanje: 'Боловање',
+    deadline_warning: '<strong>Рок за доставу:</strong> Годишњи извештај о повредама на раду доставља се <strong>Инспекторату рада</strong> до <strong>{deadline}</strong>.',
+    deadline_date: '15. јануар {nextYear}. године',
+    tbl_month: 'Месец',
+    tbl_worker: 'Радник',
+    tbl_date: 'Датум',
+    tbl_tip: 'Тип',
+    tbl_location: 'Локација',
+    tbl_cause: 'Узрок',
+    tbl_bolovanje: 'Боловање',
+    pdf_filename: 'Godisnji_izvestaj_{year}.pdf',
+    word_filename: 'Godisnji_izvestaj_{year}.doc',
+    word_title: 'Годишњи извештај',
+    excel_filename: 'Pregled_povreda_{year}.xlsx',
+    excel_sheetname: 'Извештај',
+    total_lbl: 'Укупно:',
+    no_reported_injuries: '✅ Није евидентирано повреда на раду за {year}. годину.',
+    attachment_list_title: 'Преглед свих повреда',
+    letter_number: 'Број',
+    letter_date: 'Датум'
   }
 };
 
@@ -223,8 +505,9 @@ export default function AnnualInjuriesPage() {
   const teskePovreda = useMemo(() => yearInjuries.filter(x => x.tip === 'teska'), [yearInjuries]);
   const kolektivnePovreda = useMemo(() => yearInjuries.filter(x => x.kolektivna), [yearInjuries]);
 
-  const MONTHS = lang !== 'en' ? MONTHS_BS : MONTHS_EN;
-  const deadline = `15. januar ${Number(year) + 1}. godine`;
+  const MONTHS = MONTHS_MAP[lang] || MONTHS_MAP.bs;
+  const nextYear = Number(year) + 1;
+  const deadline = tLocal.deadline_date.replace('{nextYear}', nextYear);
 
   // ── LIVE STATS (Updates dynamically based on selected year) ──
   const selectedYearInjuries = useMemo(() =>
@@ -343,9 +626,9 @@ export default function AnnualInjuriesPage() {
 
   const tipBadge = (tip) => {
     const map = {
-      laka: { color: '#F59E0B', label: 'Laka' },
-      teska: { color: '#EF4444', label: 'Teška' },
-      smrtna: { color: '#7C3AED', label: 'Smrtna' },
+      laka: { color: '#F59E0B', label: tLocal.stat_laka },
+      teska: { color: '#EF4444', label: tLocal.stat_teska },
+      smrtna: { color: '#7C3AED', label: tLocal.stat_smrtna },
     };
     const s = map[tip] || map.laka;
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
@@ -376,7 +659,7 @@ export default function AnnualInjuriesPage() {
       const html2pdf = (await import('html2pdf.js')).default;
       const opt = {
         margin: [10, 10, 10, 10], // top, left, bottom, right in mm
-        filename: `Godisnji_izvjestaj_${year}.pdf`,
+        filename: tLocal.pdf_filename.replace('{year}', year),
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
@@ -407,7 +690,7 @@ export default function AnnualInjuriesPage() {
             xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset='utf-8'>
-        <title>Godišnji izvještaj</title>
+        <title>${tLocal.word_title}</title>
         <!--[if gte mso 9]>
         <xml>
           <w:WordDocument>
@@ -474,7 +757,7 @@ export default function AnnualInjuriesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Godisnji_izvjestaj_${year}.doc`;
+    a.download = tLocal.word_filename.replace('{year}', year);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -496,8 +779,8 @@ export default function AnnualInjuriesPage() {
 
     try {
       const XLSX = await import('xlsx');
-      const wb = XLSX.utils.table_to_book(table, { raw: true, sheet: 'Izvjestaj' });
-      const ws = wb.Sheets['Izvjestaj'];
+      const wb = XLSX.utils.table_to_book(table, { raw: true, sheet: tLocal.excel_sheetname });
+      const ws = wb.Sheets[tLocal.excel_sheetname];
       
       // Auto-fit columns based on max content length
       const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
@@ -516,7 +799,7 @@ export default function AnnualInjuriesPage() {
       }
       ws['!cols'] = colWidths;
       
-      XLSX.writeFile(wb, `Pregled_povreda_${year}.xlsx`);
+      XLSX.writeFile(wb, tLocal.excel_filename.replace('{year}', year));
     } catch (err) {
       console.error('Excel export error', err);
       await alert(t('greskaPriGenerisanjuExcela'));
@@ -645,16 +928,14 @@ export default function AnnualInjuriesPage() {
           {country === 'BA' && (
             <div style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: '1.2rem' }}>⏰</span>
-              <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
-                <strong>Rok za dostavu:</strong> Godišnji izvještaj o povredama na radu dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }} dangerouslySetInnerHTML={{ __html: tLocal.deadline_warning.replace('{deadline}', deadline) }}>
               </span>
             </div>
           )}
           {country === 'HR' && (
             <div style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
-              <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
-                <strong>Napomena za RH:</strong> Poslodavci u Hrvatskoj nemaju zakonsku obvezu dostavljanja godišnjeg izvješća inspekcijskim tijelima, već su dužni ovu evidenciju voditi interno.
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }} dangerouslySetInnerHTML={{ __html: tLocal.deadline_warning }}>
               </span>
             </div>
           )}
@@ -662,11 +943,11 @@ export default function AnnualInjuriesPage() {
           {/* Quick stats (Updates dynamically based on selected year) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
             {[
-              { label: 'Ukupno', value: selectedYearInjuries.length, color: 'var(--primary)' },
-              { label: 'Lake', value: selectedYearTotals.laka, color: '#F59E0B' },
-              { label: 'Teške', value: selectedYearTotals.teska, color: '#EF4444' },
-              { label: 'Smrtne', value: selectedYearTotals.smrtna, color: '#7C3AED' },
-              { label: 'Kolektivne', value: selectedYearTotals.kolektivna, color: '#10B981' },
+              { label: tLocal.stat_total, value: selectedYearInjuries.length, color: 'var(--primary)' },
+              { label: tLocal.stat_laka, value: selectedYearTotals.laka, color: '#F59E0B' },
+              { label: tLocal.stat_teska, value: selectedYearTotals.teska, color: '#EF4444' },
+              { label: tLocal.stat_smrtna, value: selectedYearTotals.smrtna, color: '#7C3AED' },
+              { label: tLocal.stat_kolektivna, value: selectedYearTotals.kolektivna, color: '#10B981' },
             ].map((s, i) => (
               <div key={i} className="card" style={{ textAlign: 'center' }}>
                 <div className="card-body" style={{ padding: '12px 8px' }}>
@@ -732,7 +1013,7 @@ export default function AnnualInjuriesPage() {
                           <td>{r.companyInfo?.naziv || '—'}</td>
                           <td>
                             <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{r.totalInjuries || 0}</span>
-                            {r.totals && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: 6 }}>({r.totals.laka || 0}L / {r.totals.teska || 0}T / {r.totals.smrtna || 0}S)</span>}
+                            {r.totals && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: 6 }}>({r.totals.laka || 0}{tLocal.stat_laka[0]} / {r.totals.teska || 0}{tLocal.stat_teska[0]} / {r.totals.smrtna || 0}{tLocal.stat_smrtna[0]})</span>}
                           </td>
                           <td style={{ fontSize: '0.82rem' }}>{r.savedAt ? fmtDate(r.savedAt) : '—'}</td>
                           <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{fmtDateTime(r.updatedAt) || '—'}</td>
@@ -793,16 +1074,14 @@ export default function AnnualInjuriesPage() {
         {country === 'BA' && (
           <div className="no-print" style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: '1.2rem' }}>⏰</span>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
-              <strong>Rok za dostavu:</strong> Godišnji izvještaj dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }} dangerouslySetInnerHTML={{ __html: tLocal.deadline_warning.replace('{deadline}', deadline) }}>
             </span>
           </div>
         )}
         {country === 'HR' && (
           <div className="no-print" style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
-              <strong>Napomena za RH:</strong> Poslodavci u Hrvatskoj nemaju zakonsku obvezu dostavljanja godišnjeg izvješća inspekcijskim tijelima, već su dužni ovu evidenciju voditi interno.
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }} dangerouslySetInnerHTML={{ __html: tLocal.deadline_warning }}>
             </span>
           </div>
         )}
@@ -810,8 +1089,8 @@ export default function AnnualInjuriesPage() {
         {/* Tabs */}
         <div className="no-print" style={{ display: 'flex', gap: 0, marginBottom: 20, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border)', width: 'fit-content' }}>
           {[
-            { key: 'dopis', label: '📄 Dopis / Zvanični izvještaj' },
-            { key: 'stats', label: '📊 Statistika po mjesecima' },
+            { key: 'dopis', label: tLocal.tab_dopis },
+            { key: 'stats', label: tLocal.tab_stats },
           ].map(tab_ => (
             <button key={tab_.key} onClick={() => setTab(tab_.key)}
               style={{ padding: '8px 20px', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: tab === tab_.key ? 700 : 400,
@@ -856,17 +1135,17 @@ export default function AnnualInjuriesPage() {
               <div className="card-body" style={{ fontFamily: 'Georgia, serif', color: '#111', lineHeight: 1.7, maxWidth: 900, margin: '0 auto', padding: '32px 40px' }}>
                 {/* Sender */}
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: '1rem' }}>{companyInfo.naziv || '[Naziv firme]'}</div>
-                  <div>{companyInfo.adresa || '[Adresa]'}</div>
-                  {companyInfo.jib && <div>JIB: {companyInfo.jib}</div>}
-                  {companyInfo.telefon && <div>Tel: {companyInfo.telefon}</div>}
-                  {companyInfo.email && <div>Email: {companyInfo.email}</div>}
+                  <div style={{ fontWeight: 700, fontSize: '1rem' }}>{companyInfo.naziv || `[${tLocal.form_f1}]`}</div>
+                  <div>{companyInfo.adresa || `[${tLocal.form_f2}]`}</div>
+                  {companyInfo.jib && <div>{tLocal.form_f3}: {companyInfo.jib}</div>}
+                  {companyInfo.telefon && <div>{tLocal.form_f5}: {companyInfo.telefon}</div>}
+                  {companyInfo.email && <div>{tLocal.form_f6}: {companyInfo.email}</div>}
                 </div>
 
                 {/* Date + number */}
                 <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                  <div>Broj: _____ / {Number(year) + 1}</div>
-                  <div>Datum: _________________________</div>
+                  <div>{tLocal.letter_number}: _____ / {Number(year) + 1}</div>
+                  <div>{tLocal.letter_date}: _________________________</div>
                 </div>
 
                 {/* Recipient */}
@@ -884,7 +1163,7 @@ export default function AnnualInjuriesPage() {
                 <div style={{ marginBottom: 20 }}>
                   <p>{tLocal.dear}</p>
                   <p>
-                    {tLocal.p1} <strong>{companyInfo.naziv || '[Naziv]'}</strong>.
+                    {tLocal.p1.replace('{year}', year)} <strong>{companyInfo.naziv || '[Naziv]'}</strong>.
                   </p>
                   <p>
                     {tLocal.p2_1} <strong>{yearInjuries.length}</strong> {tLocal.p2_2}{' '}
@@ -1002,7 +1281,7 @@ export default function AnnualInjuriesPage() {
                         );
                       })}
                       <tr style={{ background: 'var(--bg-table-header)', fontWeight: 700 }}>
-                        <td colSpan={2} style={{ textAlign: 'right', fontStyle: 'italic' }}>Ukupno:</td>
+                        <td colSpan={2} style={{ textAlign: 'right', fontStyle: 'italic' }}>{tLocal.total_lbl}</td>
                         <td style={{ textAlign: 'center' }}>{totals.kolektivna}</td>
                         <td style={{ textAlign: 'center' }}>{totals.smrtna + totals.kolektivna}</td>
                         <td colSpan={5}></td>
@@ -1021,11 +1300,11 @@ export default function AnnualInjuriesPage() {
             {/* Summary stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'Ukupno', value: yearInjuries.length, color: 'var(--primary)' },
-                { label: 'Lake', value: totals.laka, color: '#F59E0B' },
-                { label: 'Teške', value: totals.teska, color: '#EF4444' },
-                { label: 'Smrtne', value: totals.smrtna, color: '#7C3AED' },
-                { label: 'Kolektivne', value: totals.kolektivna, color: '#10B981' },
+                { label: tLocal.stat_total, value: yearInjuries.length, color: 'var(--primary)' },
+                { label: tLocal.stat_laka, value: totals.laka, color: '#F59E0B' },
+                { label: tLocal.stat_teska, value: totals.teska, color: '#EF4444' },
+                { label: tLocal.stat_smrtna, value: totals.smrtna, color: '#7C3AED' },
+                { label: tLocal.stat_kolektivna, value: totals.kolektivna, color: '#10B981' },
               ].map((s, i) => (
                 <div key={i} className="card" style={{ textAlign: 'center' }}>
                   <div className="card-body" style={{ padding: '12px 8px' }}>
@@ -1043,12 +1322,12 @@ export default function AnnualInjuriesPage() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Mjesec</th>
-                        <th>Lake</th>
-                        <th>Teške</th>
-                        <th>Smrtne</th>
-                        <th>Kolektivne</th>
-                        <th>Ukupno</th>
+                        <th>{tLocal.tbl_month}</th>
+                        <th>{tLocal.stat_laka}</th>
+                        <th>{tLocal.stat_teska}</th>
+                        <th>{tLocal.stat_smrtna}</th>
+                        <th>{tLocal.stat_kolektivna}</th>
+                        <th>{tLocal.stat_total}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1063,7 +1342,7 @@ export default function AnnualInjuriesPage() {
                         </tr>
                       ))}
                       <tr style={{ background: 'var(--bg-table-header)', fontWeight: 700 }}>
-                        <td>Ukupno</td>
+                        <td>{tLocal.stat_total}</td>
                         <td style={{ color: '#F59E0B' }}>{totals.laka}</td>
                         <td style={{ color: '#EF4444' }}>{totals.teska}</td>
                         <td style={{ color: '#7C3AED' }}>{totals.smrtna}</td>
@@ -1081,19 +1360,19 @@ export default function AnnualInjuriesPage() {
               <div className="card">
                 <div className="card-body">
                   <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: 12, paddingBottom: 6, borderBottom: '1px solid var(--border-light)' }}>
-                    Pregled svih povreda ({yearInjuries.length})
+                    {tLocal.attachment_list_title} ({yearInjuries.length})
                   </div>
                   <div className="data-table-wrapper">
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th>Rb.</th>
-                          <th>Radnik</th>
-                          <th>Datum</th>
-                          <th>Tip</th>
-                          <th>Lokacija</th>
-                          <th>Uzrok</th>
-                          <th>Bolovanje</th>
+                          <th>{tLocal.table_rb}</th>
+                          <th>{tLocal.tbl_worker}</th>
+                          <th>{tLocal.tbl_date}</th>
+                          <th>{tLocal.tbl_tip}</th>
+                          <th>{tLocal.tbl_location}</th>
+                          <th>{tLocal.tbl_cause}</th>
+                          <th>{tLocal.tbl_bolovanje}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1121,7 +1400,7 @@ export default function AnnualInjuriesPage() {
 
             {yearInjuries.length === 0 && (
               <div style={{ marginTop: 24, textAlign: 'center', padding: 32, color: 'var(--text-muted)', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
-                ✅ Nema prijavljenih povreda za {year}. godinu.
+                {tLocal.no_reported_injuries.replace('{year}', year)}
               </div>
             )}
           </>

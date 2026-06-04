@@ -192,22 +192,22 @@ export default function LandingPage() {
             
             <div style={{ position: 'relative' }}>
               <button onClick={() => setShowLangMenu(!showLangMenu)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 6, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 20, padding: '6px 12px', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                <img src={lang === 'hr' ? 'https://flagcdn.com/w40/hr.png' : lang === 'en' ? 'https://flagcdn.com/w40/gb.png' : lang === 'de' ? 'https://flagcdn.com/w40/de.png' : lang === 'sl' ? 'https://flagcdn.com/w40/si.png' : lang === 'sr' ? 'https://flagcdn.com/w40/rs.png' : 'https://flagcdn.com/w40/ba.png'} width={16} height={16} alt={lang} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                <img src={lang === 'hr' ? 'https://flagcdn.com/hr.svg' : lang === 'en' ? 'https://flagcdn.com/gb.svg' : lang === 'de' ? 'https://flagcdn.com/de.svg' : lang === 'sl' ? 'https://flagcdn.com/si.svg' : lang === 'sr' ? 'https://flagcdn.com/rs.svg' : 'https://flagcdn.com/ba.svg'} width={16} height={16} alt={lang} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (lang === 'sl' || lang === 'sr') ? '28% 50%' : 'center' }} />
                 <span>{lang === 'hr' ? 'HR' : lang === 'en' ? 'EN' : lang === 'de' ? 'DE' : lang === 'sl' ? 'SL' : lang === 'sr' ? 'SR' : 'BA'}</span>
               </button>
               {showLangMenu && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 'auto', marginTop: 8, background: 'rgba(15,25,35,0.95)', backdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: '6px', minWidth: 120, zIndex: 100 }}>
                   {[
-                    { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
-                    { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
-                    { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' },
-                    { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png', title: 'Deutsch' },
-                    { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png', title: 'Slovenščina' },
-                    { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png', title: 'Srpski' }
+                    { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/ba.svg', title: 'Bosanski' },
+                    { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/hr.svg', title: 'Hrvatski' },
+                    { code: 'en', label: 'EN', flag: 'https://flagcdn.com/gb.svg', title: 'English' },
+                    { code: 'de', label: 'DE', flag: 'https://flagcdn.com/de.svg', title: 'Deutsch' },
+                    { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/si.svg', title: 'Slovenščina' },
+                    { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/rs.svg', title: 'Srpski' }
                   ].map(l => (
                     <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 10, padding: '6px 6px', width: '100%', border: 'none', background: lang === l.code ? 'rgba(0,191,166,0.15)' : 'transparent', color: lang === l.code ? '#00BFA6' : 'white', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500 }}>
-                      <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                      <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (l.code === 'sl' || l.code === 'sr') ? '28% 50%' : 'center' }} />
                       <span>{l.title}</span>
                     </button>
                   ))}
@@ -234,16 +234,16 @@ export default function LandingPage() {
           <a href="#kontakt" onClick={() => setMobileMenu(false)}>{t.navContact}</a>
           <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
             {[
-              { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png' },
-              { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png' },
-              { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png' },
-              { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png' },
-              { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png' },
-              { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png' }
+              { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/ba.svg' },
+              { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/hr.svg' },
+              { code: 'en', label: 'EN', flag: 'https://flagcdn.com/gb.svg' },
+              { code: 'de', label: 'DE', flag: 'https://flagcdn.com/de.svg' },
+              { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/si.svg' },
+              { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/rs.svg' }
             ].map(l => (
               <button key={l.code} onClick={() => {setLang(l.code); setMobileMenu(false)}} 
                 style={{display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: lang === l.code ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none', fontWeight: 600}}>
-                <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} /> {l.label}
+                <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (l.code === 'sl' || l.code === 'sr') ? '28% 50%' : 'center' }} /> {l.label}
               </button>
             ))}
           </div>

@@ -9,7 +9,8 @@ import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import HelpTip from '@/components/HelpTip';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
-import { generateSafeWordDoc } from '@/lib/riskExportDocx';
+import { generateSafeWordDoc, RISK_REPORT_T } from '@/lib/riskExportDocx';
+import { t as translateGlobal } from '@/i18n/translations';
 import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
@@ -875,7 +876,8 @@ export default function RiskAssessmentPage() {
             workplaces, 
             hazards, 
             saveToFile,
-            country
+            country,
+            lang
         );
     };
 
@@ -896,15 +898,18 @@ export default function RiskAssessmentPage() {
     const handleGenerateReport = (overrideData = null, overrideItems = null, autoPrint = false) => {
         const data = (overrideData && !overrideData.nativeEvent) ? overrideData : formData;
         const items = (overrideItems && !overrideItems.nativeEvent) ? overrideItems : riskItems;
-        const itemsWithScores = items.filter(ri => ri.rizik> 0);
-        const avgBefore = itemsWithScores.length> 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
-        const itemsWithAfter = items.filter(ri => ri.rizikNakon> 0);
-        const avgAfter = itemsWithAfter.length> 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
-        const gradeBefore = avgBefore> 0 ? riskLevel(Math.round(avgBefore)) : null;
-        const gradeAfter = avgAfter> 0 ? riskLevel(Math.round(avgAfter)) : null;
+        const itemsWithScores = items.filter(ri => ri.rizik > 0);
+        const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+        const itemsWithAfter = items.filter(ri => ri.rizikNakon > 0);
+        const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
         const sorted = [...items].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
-        const highRiskItems = items.filter(ri => ri.rizik>= 6).sort((a, b) => b.rizik - a.rizik);
-        const today = new Date().toLocaleDateString('hr-HR');
+        const highRiskItems = items.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
+
+        const getExp = (k) => RISK_REPORT_T[lang]?.[k] || RISK_REPORT_T.bs[k];
+        const tReport = (k) => translateGlobal(k, lang);
+        const localeMap = { bs: 'hr-HR', hr: 'hr-HR', sr: 'sr-Latn-RS', en: 'en-US', de: 'de-DE', sl: 'sl-SI' };
+        const locale = localeMap[lang] || 'hr-HR';
+        const today = new Date().toLocaleDateString(locale);
 
         const rlColor = (score) => {
             if (score <= 5) return '#4caf50'; if (score <= 10) return '#f59e0b';
@@ -914,9 +919,18 @@ export default function RiskAssessmentPage() {
             if (score <= 5) return '#e8f5e9'; if (score <= 10) return '#fff8e1';
             if (score <= 15) return '#fff3e0'; if (score <= 20) return '#ffebee'; return '#ffcdd2';
         };
-        const rlLabel = (score) => riskLevel(score).label;
+        const rlLabel = (score) => {
+            if (score <= 5) return tReport('neznatan');
+            if (score <= 10) return tReport('dopustiv');
+            if (score <= 15) return tReport('umjeren');
+            if (score <= 20) return tReport('znatan');
+            return tReport('nedopustiv');
+        };
 
-        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Akt o procjeni rizika — ${data.nazivTvrtke || 'Procjena'}</title>
+        const gradeBeforeLabel = avgBefore > 0 ? rlLabel(Math.round(avgBefore)) : '';
+        const gradeAfterLabel = avgAfter > 0 ? rlLabel(Math.round(avgAfter)) : '';
+
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${getExp('docTitle')} — ${data.nazivTvrtke || 'Procjena'}</title>
 <style>
 @page { size: A4; margin: 20mm 15mm; }
 body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; font-size: 11pt; line-height: 1.5; padding: 0; margin: 0; }
@@ -943,70 +957,70 @@ tr:nth-child(even) { background: #fafafa; }
 
 <!-- COVER PAGE -->
 <div class="cover">
-    <div style="font-size:10pt;color:#999;margin-bottom:30px">Bosna i Hercegovina — Federacija BiH</div>
-    <h1>AKT O PROCJENI RIZIKA</h1>
-    <div class="subtitle">na radnim mjestima i u radnim prostorijama</div>
+    <div style="font-size:10pt;color:#999;margin-bottom:30px">${getExp('jurisdiction')}</div>
+    <h1>${getExp('docTitle')}</h1>
+    <div class="subtitle">${getExp('docSubtitle')}</div>
     <div style="margin:30px 0;padding:20px;background:#f5f5f5;border-radius:8px;display:inline-block;min-width:300px">
         <div style="font-size:16pt;font-weight:700;color:#1a237e">${data.nazivTvrtke || '—'}</div>
         <div style="font-size:10pt;color:#666;margin-top:4px">${data.sjediste || ''}</div>
         <div style="font-size:10pt;color:#666">${data.djelatnost || ''}</div>
     </div>
-    <div class="meta">Datum izrade: ${data.datumIzrade ? new Date(data.datumIzrade).toLocaleDateString('hr-HR') : today}</div>
-    <div class="meta">Revizija: ${data.revizija || '1'}</div>
-    ${data.ovlOrganizacija ? `<div class="meta" style="margin-top:16px">Izradila: ${data.ovlOrganizacija}</div>` : ''}
-    ${data.ovlOsobaIme ? `<div class="meta">Ovlaštena osoba: ${data.ovlOsobaIme} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</div>` : ''}
+    <div class="meta">${getExp('dateCreated')} ${data.datumIzrade ? new Date(data.datumIzrade).toLocaleDateString(locale) : today}</div>
+    <div class="meta">${getExp('revision')} ${data.revizija || '1'}</div>
+    ${data.ovlOrganizacija ? `<div class="meta" style="margin-top:16px">${getExp('preparedBy')} ${data.ovlOrganizacija}</div>` : ''}
+    ${data.ovlOsobaIme ? `<div class="meta">${getExp('authPerson')} ${data.ovlOsobaIme} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</div>` : ''}
 </div>
 
 <!-- SECTION 1: GENERAL DATA -->
-<h2>1. Opšti podaci o poslodavcu</h2>
+<h2>${getExp('secEmployerInfo')}</h2>
 <div class="info-grid">
-    <dt>Naziv:</dt><dd>${data.nazivTvrtke || '—'}</dd>
-    <dt>Sjedište:</dt><dd>${data.sjediste || '—'}</dd>
-    <dt>Djelatnost:</dt><dd>${data.djelatnost || '—'}</dd>
-    <dt>Ukupno zaposlenih:</dt><dd>${data.ukupnoZaposlenih || '—'}</dd>
-    <dt>Ovlaštena organizacija:</dt><dd>${data.ovlOrganizacija || '—'}</dd>
-    <dt>Ovlaštena osoba:</dt><dd>${data.ovlOsobaIme || '—'} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</dd>
+    <dt>${getExp('tblEmployerName')}:</dt><dd>${data.nazivTvrtke || '—'}</dd>
+    <dt>${getExp('tblEmployerSeat')}:</dt><dd>${data.sjediste || '—'}</dd>
+    <dt>${getExp('tblEmployerActivity')}:</dt><dd>${data.djelatnost || '—'}</dd>
+    <dt>${getExp('tblTotalEmployees')}:</dt><dd>${data.ukupnoZaposlenih || '—'}</dd>
+    <dt>${getExp('tblAuthOrg')}:</dt><dd>${data.ovlOrganizacija || '—'}</dd>
+    <dt>${getExp('tblAuthPerson')}:</dt><dd>${data.ovlOsobaIme || '—'} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</dd>
 </div>
 
 <!-- SECTION 2: SISTEMATIZACIJA -->
-<h2>2. Sistematizacija radnih mjesta</h2>
+<h2>2. ${tReport('sistematizacija')}</h2>
 ${workplaces.filter(wp => items.some(ri => ri.radnoMjestoId === wp.id)).map(wp => {
     const sist = sistematizacije.find(s => s.radnoMjestoId === wp.id);
-    if (!sist) return `<h3>${wp.naziv}</h3><p>Nema unesenih podataka o sistematizaciji.</p>`;
+    if (!sist) return `<h3>${wp.naziv}</h3><p>${tReport('nemaPodatakaOSistematizaciji') || 'Nema unesenih podataka o sistematizaciji.'}</p>`;
     return `<h3>${wp.naziv} — ${sist.nazivPosla || wp.naziv}</h3>
     <div class="info-grid">
-        <dt>Kategorija:</dt><dd>${sist.kategorijaRM || '—'}</dd>
-        <dt>Složenost:</dt><dd>${sist.slozenostPoslova || '—'}</dd>
-        <dt>Stručna sprema:</dt><dd>${sist.strucnaSprema || '—'}</dd>
-        <dt>Radno iskustvo:</dt><dd>${sist.radnoIskustvo || '—'}</dd>
-        <dt>Broj izvršilaca:</dt><dd>${sist.brojIzvrsilaca || 1}</dd>
-        <dt>Probni rad:</dt><dd>${sist.probniRad || '—'}</dd>
+        <dt>${tReport('kategorija') || 'Kategorija'}:</dt><dd>${sist.kategorijaRM || '—'}</dd>
+        <dt>${tReport('slozenost') || 'Složenost'}:</dt><dd>${sist.slozenostPoslova || '—'}</dd>
+        <dt>${tReport('strucnaSprema') || 'Stručna sprema'}:</dt><dd>${sist.strucnaSprema || '—'}</dd>
+        <dt>${tReport('radnoIskustvo') || 'Radno iskustvo'}:</dt><dd>${sist.radnoIskustvo || '—'}</dd>
+        <dt>${tReport('brojIzvrsilaca') || 'Broj izvršilaca'}:</dt><dd>${sist.brojIzvrsilaca || 1}</dd>
+        <dt>${tReport('probniRad') || 'Probni rad'}:</dt><dd>${sist.probniRad || '—'}</dd>
     </div>
-    <p><strong>Opis poslova:</strong><br>${(sist.opisPoslova || '—').replace(/\n/g, '<br>')}</p>
-    <p><strong>Odgovornosti:</strong><br>${(sist.odgovornosti || '—').replace(/\n/g, '<br>')}</p>
+    <p><strong>${tReport('opisPoslova') || 'Opis poslova'}:</strong><br>${(sist.opisPoslova || '—').replace(/\n/g, '<br>')}</p>
+    <p><strong>${tReport('odgovornosti') || 'Odgovornosti'}:</strong><br>${(sist.odgovornosti || '—').replace(/\n/g, '<br>')}</p>
     <div class="info-grid">
-        <dt>Potrebna OZO:</dt><dd>${(sist.potrebnaOZO || []).join(', ') || '—'}</dd>
-        <dt>Radna oprema:</dt><dd>${(sist.radnaOprema || []).join(', ') || '—'}</dd>
-        <dt>Zdravstveni zahtjevi:</dt><dd>${(sist.zdravstveniZahtjevi || []).join(', ') || '—'}</dd>
-        <dt>Certifikati:</dt><dd>${(sist.certifikati || []).join(', ') || '—'}</dd>
+        <dt>${tReport('potrebnaOzo') || 'Potrebna OZO'}:</dt><dd>${(sist.potrebnaOZO || []).join(', ') || '—'}</dd>
+        <dt>${tReport('radnaOprema') || 'Radna oprema'}:</dt><dd>${(sist.radnaOprema || []).join(', ') || '—'}</dd>
+        <dt>${tReport('zdravstveniZahtjevi') || 'Zdravstveni zahtjevi'}:</dt><dd>${(sist.zdravstveniZahtjevi || []).join(', ') || '—'}</dd>
+        <dt>${tReport('certifikati') || 'Certifikati'}:</dt><dd>${(sist.certifikati || []).join(', ') || '—'}</dd>
     </div>`;
 }).join('')}
 
 <!-- SECTION 3: PROCESS -->
-<h2>3. Opis tehničko-tehnološkog procesa</h2>
-<p>${(data.opisProcesa || 'Nije uneseno.').replace(/\n/g, '<br>')}</p>
-${data.analizaOrganizacije ? `<h3>Analiza organizacije rada</h3><p>${data.analizaOrganizacije.replace(/\n/g, '<br>')}</p>` : ''}
+<h2>${getExp('secProcessDesc')}</h2>
+<p>${(data.opisProcesa || getExp('noProcessDesc')).replace(/\n/g, '<br>')}</p>
+${data.analizaOrganizacije ? `<h3>${getExp('secOrgAnalysis')}</h3><p>${data.analizaOrganizacije.replace(/\n/g, '<br>')}</p>` : ''}
 
 <!-- SECTION 4: RISK MATRIX RESULTS -->
-<h2>4. Procjena rizika — rezultati</h2>
-<p>Ukupno procijenjeno: <strong>${items.length}</strong> stavki na <strong>${[...new Set(items.map(r => r.radnoMjestoId))].length}</strong> radnih mjesta.</p>
+<h2>${getExp('secResults')}</h2>
+<p>${getExp('secResultsDesc').replace('{0}', `<strong>${items.length}</strong>`).replace('{1}', `<strong>${[...new Set(items.map(r => r.radnoMjestoId))].length}</strong>`)}</p>
 <table>
-<thead><tr><th>#</th><th>Radno mjesto</th><th>Opasnost / Štetnost</th><th>V₀</th><th>P₀</th><th>R₀</th><th>Nivo</th><th>V₁</th><th>P₁</th><th>R₁</th><th>Nivo nakon</th></tr></thead>
+<thead><tr><th>#</th><th>${getExp('tblWp')}</th><th>${getExp('tblHazard')}</th><th>V₀</th><th>P₀</th><th>R₀</th><th>${getExp('tblLevel')}</th><th>V₁</th><th>P₁</th><th>R₁</th><th>${getExp('tblLevelAfter')}</th></tr></thead>
 <tbody>
 ${sorted.map((ri, i) => {
     const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
     const hz = hazards.find(h => h.id === ri.opasnostId);
-    const hasAfter = ri.rizikNakon> 0;
+    const hasAfter = ri.rizikNakon > 0;
     return `<tr>
         <td>${i + 1}</td>
         <td>${wp?.naziv || '—'}</td>
@@ -1025,44 +1039,44 @@ ${sorted.map((ri, i) => {
 </table>
 
 <!-- SECTION 5: OVERALL GRADE -->
-<h2>5. Ukupna ocjena rizika</h2>
+<h2>${getExp('secOverallGrade')}</h2>
 <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0">
-    <div class="grade-box" style="background:${gradeBefore ? rlBg(Math.round(avgBefore)) : '#f5f5f5'};border:2px solid ${gradeBefore ? rlColor(Math.round(avgBefore)) : '#ddd'}">
-        <div style="font-size:8pt;color:#666;margin-bottom:4px">PRIJE MJERA</div>
-        <div style="font-size:20pt;font-weight:900;color:${gradeBefore ? rlColor(Math.round(avgBefore)) : '#999'}">${avgBefore> 0 ? avgBefore.toFixed(1) : '—'}</div>
-        ${gradeBefore ? '<div style="font-size:9pt;font-weight:700;color:' + rlColor(Math.round(avgBefore)) + '">' + gradeBefore.label + '</div>' : ''}
+    <div class="grade-box" style="background:${avgBefore > 0 ? rlBg(Math.round(avgBefore)) : '#f5f5f5'};border:2px solid ${avgBefore > 0 ? rlColor(Math.round(avgBefore)) : '#ddd'}">
+        <div style="font-size:8pt;color:#666;margin-bottom:4px">${getExp('tblBefore')}</div>
+        <div style="font-size:20pt;font-weight:900;color:${avgBefore > 0 ? rlColor(Math.round(avgBefore)) : '#999'}">${avgBefore > 0 ? avgBefore.toFixed(1) : '—'}</div>
+        ${avgBefore > 0 ? '<div style="font-size:9pt;font-weight:700;color:' + rlColor(Math.round(avgBefore)) + '">' + gradeBeforeLabel + '</div>' : ''}
     </div>
-    ${gradeAfter ? '<div style="font-size:20pt;font-weight:900;color:#4caf50">→</div>' : ''}
-    ${gradeAfter ? '<div class="grade-box" style="background:' + rlBg(Math.round(avgAfter)) + ';border:2px solid ' + rlColor(Math.round(avgAfter)) + '"><div style="font-size:8pt;color:#666;margin-bottom:4px">NAKON MJERA</div><div style="font-size:20pt;font-weight:900;color:' + rlColor(Math.round(avgAfter)) + '">' + avgAfter.toFixed(1) + '</div><div style="font-size:9pt;font-weight:700;color:' + rlColor(Math.round(avgAfter)) + '">' + gradeAfter.label + '</div></div>' : ''}
-    ${gradeAfter && avgAfter < avgBefore ? '<div class="grade-box" style="background:#e8f5e9;border:2px solid #4caf50"><div style="font-size:8pt;color:#4caf50">SMANJENJE</div><div style="font-size:18pt;font-weight:900;color:#4caf50">↓ ' + ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%</div></div>' : ''}
+    ${avgAfter > 0 ? '<div style="font-size:20pt;font-weight:900;color:#4caf50">→</div>' : ''}
+    ${avgAfter > 0 ? "<div class='grade-box' style='background:" + rlBg(Math.round(avgAfter)) + ";border:2px solid " + rlColor(Math.round(avgAfter)) + "'><div style='font-size:8pt;color:#666;margin-bottom:4px'>" + getExp("tblAfter") + "</div><div style='font-size:20pt;font-weight:900;color:" + rlColor(Math.round(avgAfter)) + "'>" + avgAfter.toFixed(1) + "</div><div style='font-size:9pt;font-weight:700;color:" + rlColor(Math.round(avgAfter)) + "'>" + gradeAfterLabel + "</div></div>" : ""}
+    ${avgAfter > 0 && avgBefore > 0 && avgAfter < avgBefore ? "<div class='grade-box' style='background:#e8f5e9;border:2px solid #4caf50'><div style='font-size:8pt;color:#4caf50'>" + getExp("tblReduction") + "</div><div style='font-size:18pt;font-weight:900;color:#4caf50'>↓ " + ((1 - avgAfter / avgBefore) * 100).toFixed(0) + "%</div></div>" : ""}
 </div>
 
 <!-- SECTION 6: MEASURES -->
-${highRiskItems.length> 0 ? `<h2>6. Plan mjera za smanjenje rizika</h2>
-<p>Stavke sa početnim rizikom R₀ ≥ 6 koje zahtijevaju dodatne mjere:</p>
+${highRiskItems.length > 0 ? `<h2>${getExp('secPlanMeasures')}</h2>
+<p>${getExp('planMeasuresDesc')}</p>
 <table>
-<thead><tr><th>#</th><th>Opasnost</th><th>R₀</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>R₁</th><th>Odgovorna osoba</th><th>Rok</th></tr></thead>
+<thead><tr><th>#</th><th>${getExp('tblHazard')}</th><th>R₀</th><th>${getExp('tblExistingMeasures')}</th><th>${getExp('tblProposedMeasures')}</th><th>R₁</th><th>${getExp('tblResponsible')}</th><th>${getExp('tblDeadline')}</th></tr></thead>
 <tbody>
 ${highRiskItems.map((ri, i) => {
     const hz = hazards.find(h => h.id === ri.opasnostId);
-    const hasAfter = ri.rizikNakon> 0;
-    return '<tr><td>' + (i + 1) + '</td><td>' + (hz ? (hz.oznaka ? hz.oznaka + ' ' : '') + hz.naziv : ri.opisOpasnosti || '—') + '</td><td style="text-align:center;font-weight:700;color:' + rlColor(ri.rizik) + '">' + ri.rizik + '</td><td>' + (ri.postojeceMjere || '—') + '</td><td style="font-weight:600">' + (ri.predlozeneMjere || '—') + '</td><td style="text-align:center;font-weight:700;color:' + (hasAfter ? rlColor(ri.rizikNakon) : '#999') + '">' + (hasAfter ? ri.rizikNakon : '—') + '</td><td>' + (ri.odgovornaOsoba || '—') + '</td><td>' + (ri.rokProvedbe ? new Date(ri.rokProvedbe).toLocaleDateString('hr-HR') : '—') + '</td></tr>';
+    const hasAfter = ri.rizikNakon > 0;
+    return '<tr><td>' + (i + 1) + '</td><td>' + (hz ? (hz.oznaka ? hz.oznaka + ' ' : '') + hz.naziv : ri.opisOpasnosti || '—') + '</td><td style="text-align:center;font-weight:700;color:' + rlColor(ri.rizik) + '">' + ri.rizik + '</td><td>' + (ri.postojeceMjere || '—') + '</td><td style="font-weight:600">' + (ri.predlozeneMjere || '—') + '</td><td style="text-align:center;font-weight:700;color:' + (hasAfter ? rlColor(ri.rizikNakon) : '#999') + '">' + (hasAfter ? ri.rizikNakon : '—') + '</td><td>' + (ri.odgovornaOsoba || '—') + '</td><td>' + (ri.rokProvedbe ? new Date(ri.rokProvedbe).toLocaleDateString(locale) : '—') + '</td></tr>';
 }).join('')}
 </tbody>
 </table>` : ''}
 
 <!-- SECTION 7: CONCLUSION -->
-<h2>${highRiskItems.length> 0 ? '7' : '6'}. Zaključak</h2>
-<div class="conclusion">${(data.zakljucak || 'Zaključak nije unesen.').replace(/\n/g, '<br>')}</div>
+<h2>${highRiskItems.length > 0 ? '7' : '6'}. ${getExp('secConclusion')}</h2>
+<div class="conclusion">${(data.zakljucak || getExp('noConclusion')).replace(/\n/g, '<br>')}</div>
 
 <div style="margin-top:60px;display:flex;justify-content:space-between">
-    <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">Poslodavac</div></div>
-    <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">Ovlaštena osoba za ZNR</div></div>
+    <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">${getExp('employerSign')}</div></div>
+    <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">${getExp('officerSign')}</div></div>
 </div>
 
-<div class="footer">Akt o procjeni rizika — ${data.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform</div>
+<div class="footer">${getExp('docFooter').replace('{0}', data.nazivTvrtke || '').replace('{1}', today)}</div>
 
-<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">📄 Preuzmi PDF (Print)</button>
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">📄 ${tReport('printSaveAsPdf') || 'Preuzmi PDF'}</button>
 ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 </body></html>`;
 

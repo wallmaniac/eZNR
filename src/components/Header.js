@@ -193,12 +193,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         : { label: t('strucnjakZnr'), bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
 
     const LANGUAGES = [
-        { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
-        { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
-        { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' },
-        { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png', title: 'Deutsch' },
-        { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png', title: 'Slovenščina' },
-        { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png', title: 'Srpski' }
+        { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/ba.svg', title: 'Bosanski' },
+        { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/hr.svg', title: 'Hrvatski' },
+        { code: 'en', label: 'EN', flag: 'https://flagcdn.com/gb.svg', title: 'English' },
+        { code: 'de', label: 'DE', flag: 'https://flagcdn.com/de.svg', title: 'Deutsch' },
+        { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/si.svg', title: 'Slovenščina' },
+        { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/rs.svg', title: 'Srpski' }
     ];
     const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
 
@@ -533,7 +533,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60, justifyContent: 'flex-start' })}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                                <img src={currentLang.flag} width={18} height={18} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                <img src={currentLang.flag} width={18} height={18} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (currentLang.code === 'sl' || currentLang.code === 'sr') ? '28% 50%' : 'center' }} />
                                 <span>{currentLang.label}</span>
                             </button>
                             {showLangMenu && (
@@ -543,7 +543,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}
                                             onMouseEnter={e => { if(lang !== l.code) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
                                             onMouseLeave={e => { if(lang !== l.code) e.currentTarget.style.background = 'transparent'; }}>
-                                            <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                            <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (l.code === 'sl' || l.code === 'sr') ? '28% 50%' : 'center' }} />
                                             <span>{l.title}</span>
                                         </button>
                                     ))}

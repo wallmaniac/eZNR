@@ -570,6 +570,7 @@ export default function NewsPage() {
    FormsTab — Categorized official forms with blank template downloads
    ═══════════════════════════════════════════════════════════════════════════════ */
 function FormsTab({ lang, country }) {
+    const { t } = useLanguage();
     const { activeCompanyId, user } = useAuth();
 
     /** Generate a blank ZOS template and open in a print window */

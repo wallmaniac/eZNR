@@ -27,6 +27,297 @@ import PageHeader from '@/components/PageHeader';
 import Pagination from '@/components/Pagination';
 import TabBar from '@/components/TabBar';
 
+const EXPORT_TRANSLATIONS = {
+    bs: {
+        sheetName: 'Lista radnika',
+        fileName: 'Lista_radnika',
+        ime: 'Ime',
+        prezime: 'Prezime',
+        imeRoditelja: 'Ime roditelja',
+        jmbg: 'JMBG',
+        oib: 'OIB/Osobni br.',
+        oibLbl: 'OIB',
+        evidencijskiBroj: 'Evidencijski broj',
+        evidencijskiBrojLbl: 'Evid. br.',
+        datumRodenja: 'Datum rođenja',
+        miestoRodenja: 'Mjesto rođenja',
+        spol: 'Spol',
+        zivotnaDob: 'Životna dob',
+        orgJedinicaId: 'Organizacijska jedinica',
+        orgJedinicaIdLbl: 'Organizacijska jed.',
+        radnoMjestoId: 'Radno mjesto',
+        lokacija: 'Lokacija',
+        datumZaposlenja: 'Datum zaposlenja',
+        datumZaposlenjaLbl: 'Datum zapošlj.',
+        stazDoDolaska: 'Staž do dolaska',
+        datumOdlaska: 'Datum odlaska',
+        ukupniStaz: 'Ukupni radni staž',
+        ukupniStazLbl: 'Ukupni staž',
+        koef: 'Koeficijent',
+        ulica: 'Ulica',
+        kucniBroj: 'Kućni broj',
+        mjestoId: 'Mjesto',
+        opcina: 'Općina',
+        telefonTvrtki: 'Telefon (Firma)',
+        telefonTvrtkiLbl: 'Tel (Firma)',
+        mobitel: 'Mobitel',
+        email: 'Email',
+        napomena: 'Napomena',
+        vanjskiSuradnik: 'Vanjski saradnik',
+        aktivan: 'Status',
+        aktivanLbl: 'Status (Aktivan)',
+        uvjerenja: 'Uvjerenja ZNR',
+        uvjerenjaLbl: 'Uvjerenja ZNR..',
+        ljekarski: 'Ljekarski pregledi',
+        ozo: 'Zadužena Oprema/OZO',
+        ozoLbl: 'Zadužena OZO',
+        yes: 'DA',
+        no: 'NE',
+        active: 'Aktivan',
+        former: 'Bivši radnik'
+    },
+    hr: {
+        sheetName: 'Popis radnika',
+        fileName: 'Popis_radnika',
+        ime: 'Ime',
+        prezime: 'Prezime',
+        imeRoditelja: 'Ime roditelja',
+        jmbg: 'JMBG',
+        oib: 'OIB/Osobni br.',
+        oibLbl: 'OIB',
+        evidencijskiBroj: 'Evidencijski broj',
+        evidencijskiBrojLbl: 'Evid. br.',
+        datumRodenja: 'Datum rođenja',
+        miestoRodenja: 'Mjesto rođenja',
+        spol: 'Spol',
+        zivotnaDob: 'Životna dob',
+        orgJedinicaId: 'Organizacijska jedinica',
+        orgJedinicaIdLbl: 'Organizacijska jed.',
+        radnoMjestoId: 'Radno mjesto',
+        lokacija: 'Lokacija',
+        datumZaposlenja: 'Datum zaposlenja',
+        datumZaposlenjaLbl: 'Datum zapošlj.',
+        stazDoDolaska: 'Staž do dolaska',
+        datumOdlaska: 'Datum odlaska',
+        ukupniStaz: 'Ukupni radni staž',
+        ukupniStazLbl: 'Ukupni staž',
+        koef: 'Koeficijent',
+        ulica: 'Ulica',
+        kucniBroj: 'Kućni broj',
+        mjestoId: 'Mjesto',
+        opcina: 'Općina',
+        telefonTvrtki: 'Telefon (Tvrtka)',
+        telefonTvrtkiLbl: 'Tel (Firma)',
+        mobitel: 'Mobitel',
+        email: 'Email',
+        napomena: 'Napomena',
+        vanjskiSuradnik: 'Vanjski suradnik',
+        aktivan: 'Status',
+        aktivanLbl: 'Status (Aktivan)',
+        uvjerenja: 'Uvjerenja ZNR',
+        uvjerenjaLbl: 'Uvjerenja ZNR..',
+        ljekarski: 'Lječnički pregledi',
+        ozo: 'Zadužena Oprema/OZO',
+        ozoLbl: 'Zadužena OZO',
+        yes: 'DA',
+        no: 'NE',
+        active: 'Aktivan',
+        former: 'Bivši radnik'
+    },
+    sr: {
+        sheetName: 'Листа радника',
+        fileName: 'Lista_radnika',
+        ime: 'Име',
+        prezime: 'Презиме',
+        imeRoditelja: 'Име родитеља',
+        jmbg: 'ЈМБГ',
+        oib: 'ОИБ/Лични бр.',
+        oibLbl: 'ОИБ',
+        evidencijskiBroj: 'Евиденцијски број',
+        evidencijskiBrojLbl: 'Евид. бр.',
+        datumRodenja: 'Датум рођења',
+        miestoRodenja: 'Мјесто рођења',
+        spol: 'Пол',
+        zivotnaDob: 'Животна доб',
+        orgJedinicaId: 'Организацијска јединица',
+        orgJedinicaIdLbl: 'Организацијска јед.',
+        radnoMjestoId: 'Радно мјесто',
+        lokacija: 'Локација',
+        datumZaposlenja: 'Датум запосења',
+        datumZaposlenjaLbl: 'Датум запошљ.',
+        stazDoDolaska: 'Стаж до доласка',
+        datumOdlaska: 'Датум одласка',
+        ukupniStaz: 'Укупни радни стаж',
+        ukupniStazLbl: 'Укупни стаж',
+        koef: 'Коефицијент',
+        ulica: 'Улица',
+        kucniBroj: 'Кућни број',
+        mjestoId: 'Мјесто',
+        opcina: 'Општина',
+        telefonTvrtki: 'Телефон (Фирма)',
+        telefonTvrtkiLbl: 'Тел (Фирма)',
+        mobitel: 'Мобител',
+        email: 'Емаил',
+        napomena: 'Напомена',
+        vanjskiSuradnik: 'Спољни сарадник',
+        aktivan: 'Статус',
+        aktivanLbl: 'Статус (Активан)',
+        uvjerenja: 'Увјерења ЗНР',
+        uvjerenjaLbl: 'Увјерења ЗНР..',
+        ljekarski: 'Љекарски прегледи',
+        ozo: 'Задужена опрема/ОЗО',
+        ozoLbl: 'Задужена ОЗО',
+        yes: 'ДА',
+        no: 'НЕ',
+        active: 'Активан',
+        former: 'Бивши радник'
+    },
+    en: {
+        sheetName: 'Worker List',
+        fileName: 'Worker_List',
+        ime: 'First Name',
+        prezime: 'Last Name',
+        imeRoditelja: 'Parent Name',
+        jmbg: 'ID Number (JMBG)',
+        oib: 'Personal ID (OIB)',
+        oibLbl: 'OIB',
+        evidencijskiBroj: 'Record Number',
+        evidencijskiBrojLbl: 'Record No.',
+        datumRodenja: 'Date of Birth',
+        miestoRodenja: 'Place of Birth',
+        spol: 'Gender',
+        zivotnaDob: 'Age',
+        orgJedinicaId: 'Organizational Unit',
+        orgJedinicaIdLbl: 'Org. Unit',
+        radnoMjestoId: 'Workplace',
+        lokacija: 'Location',
+        datumZaposlenja: 'Employment Date',
+        datumZaposlenjaLbl: 'Employment Date',
+        stazDoDolaska: 'Experience Prior to Hire',
+        datumOdlaska: 'Termination Date',
+        ukupniStaz: 'Total Work Experience',
+        ukupniStazLbl: 'Total Experience',
+        koef: 'Coefficient',
+        ulica: 'Street',
+        kucniBroj: 'House Number',
+        mjestoId: 'City',
+        opcina: 'Municipality',
+        telefonTvrtki: 'Phone (Company)',
+        telefonTvrtkiLbl: 'Tel (Company)',
+        mobitel: 'Mobile',
+        email: 'Email',
+        napomena: 'Note',
+        vanjskiSuradnik: 'External Associate',
+        aktivan: 'Status',
+        aktivanLbl: 'Status (Active)',
+        uvjerenja: 'ZNR Certificates',
+        uvjerenjaLbl: 'ZNR Certificates',
+        ljekarski: 'Medical Exams',
+        ozo: 'Assigned PPE',
+        ozoLbl: 'Assigned PPE',
+        yes: 'YES',
+        no: 'NO',
+        active: 'Active',
+        former: 'Former Worker'
+    },
+    de: {
+        sheetName: 'Mitarbeiterliste',
+        fileName: 'Mitarbeiterliste',
+        ime: 'Vorname',
+        prezime: 'Nachname',
+        imeRoditelja: 'Elternteil Name',
+        jmbg: 'Identifikationsnummer (JMBG)',
+        oib: 'Persönliche ID (OIB)',
+        oibLbl: 'OIB',
+        evidencijskiBroj: 'Registrierungsnummer',
+        evidencijskiBrojLbl: 'Reg.-Nr.',
+        datumRodenja: 'Geburtsdatum',
+        miestoRodenja: 'Geburtsort',
+        spol: 'Geschlecht',
+        zivotnaDob: 'Alter',
+        orgJedinicaId: 'Organisationseinheit',
+        orgJedinicaIdLbl: 'Org.-Einheit',
+        radnoMjestoId: 'Arbeitsplatz',
+        lokacija: 'Standort',
+        datumZaposlenja: 'Einstellungsdatum',
+        datumZaposlenjaLbl: 'Einstellungsdatum',
+        stazDoDolaska: 'Dienstzeit vor Eintritt',
+        datumOdlaska: 'Austrittsdatum',
+        ukupniStaz: 'Gesamte Berufserfahrung',
+        ukupniStazLbl: 'Gesamte Dienstzeit',
+        koef: 'Koeffizient',
+        ulica: 'Straße',
+        kucniBroj: 'Hausnummer',
+        mjestoId: 'Ort',
+        opcina: 'Gemeinde',
+        telefonTvrtki: 'Telefon (Firma)',
+        telefonTvrtkiLbl: 'Tel. (Firma)',
+        mobitel: 'Mobiltelefon',
+        email: 'E-Mail',
+        napomena: 'Anmerkung',
+        vanjskiSuradnik: 'Externer Mitarbeiter',
+        aktivan: 'Status',
+        aktivanLbl: 'Status (Aktiv)',
+        uvjerenja: 'ZNR-Zertifikate',
+        uvjerenjaLbl: 'ZNR-Zertifikate',
+        ljekarski: 'Ärztliche Untersuchungen',
+        ozo: 'Zugewiesene PSA',
+        ozoLbl: 'Zugewiesene PSA',
+        yes: 'JA',
+        no: 'NEIN',
+        active: 'Aktiv',
+        former: 'Ehemaliger Mitarbeiter'
+    },
+    sl: {
+        sheetName: 'Seznam delavcev',
+        fileName: 'Seznam_delavcev',
+        ime: 'Ime',
+        prezime: 'Priimek',
+        imeRoditelja: 'Ime starša',
+        jmbg: 'EMŠO',
+        oib: 'Osebna št. (OIB)',
+        oibLbl: 'OIB',
+        evidencijskiBroj: 'Evidenčna številka',
+        evidencijskiBrojLbl: 'Evidenčna št.',
+        datumRodenja: 'Datum rojstva',
+        miestoRodenja: 'Kraj rojstva',
+        spol: 'Spol',
+        zivotnaDob: 'Starost',
+        orgJedinicaId: 'Organizacijska enota',
+        orgJedinicaIdLbl: 'Org. enota',
+        radnoMjestoId: 'Delovno mesto',
+        lokacija: 'Lokacija',
+        datumZaposlenja: 'Datum zaposlitve',
+        datumZaposlenjaLbl: 'Datum zaposl.',
+        stazDoDolaska: 'Delovna doba pred prihodom',
+        datumOdlaska: 'Datum odhoda',
+        ukupniStaz: 'Skupna delovna doba',
+        ukupniStazLbl: 'Skupna del. doba',
+        koef: 'Koeficient',
+        ulica: 'Ulica',
+        kucniBroj: 'Hišna številka',
+        mjestoId: 'Kraj',
+        opcina: 'Občina',
+        telefonTvrtki: 'Telefon (Podjetje)',
+        telefonTvrtkiLbl: 'Tel. (Podjetje)',
+        mobitel: 'Mobilni telefon',
+        email: 'E-pošta',
+        napomena: 'Opomba',
+        vanjskiSuradnik: 'Zunanji sodelavec',
+        aktivan: 'Status',
+        aktivanLbl: 'Status (Aktiven)',
+        uvjerenja: 'ZNR potrdila',
+        uvjerenjaLbl: 'ZNR potrdila',
+        ljekarski: 'Zdravniški pregledi',
+        ozo: 'Dodeljena OZO',
+        ozoLbl: 'Dodeljena OZO',
+        yes: 'DA',
+        no: 'NE',
+        active: 'Aktiven',
+        former: 'Bivši delavec'
+    }
+};
+
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
     imeRoditelja: '', jmbg: '', oib: '', zivotnaDob: 0,
@@ -41,6 +332,7 @@ const emptyWorker = {
 
 function WorkersPageInner() {
     const { t, lang } = useLanguage();
+    const getExp = useCallback((k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k] || k, [lang]);
     const { activeCompanyId } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -1574,23 +1866,23 @@ function WorkersPageInner() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px 16px', background: 'var(--bg-card)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                                     {[
-                                        { key: 'ime', label: 'Ime' }, { key: 'prezime', label: 'Prezime' }, { key: 'imeRoditelja', label: 'Ime roditelja' },
-                                        { key: 'jmbg', label: 'JMBG' }, { key: 'oib', label: 'OIB' },
-                                        { key: 'evidencijskiBroj', label: 'Evid. br.' },
-                                        { key: 'datumRodenja', label: 'Datum rođenja' }, { key: 'miestoRodenja', label: 'Mjesto rođenja' },
-                                        { key: 'spol', label: 'Spol' }, { key: 'zivotnaDob', label: 'Životna dob' },
-                                        { key: 'orgJedinicaId', label: 'Organizacijska jed.' }, { key: 'radnoMjestoId', label: 'Radno mjesto' },
-                                        { key: 'lokacija', label: 'Lokacija' },
-                                        { key: 'datumZaposlenja', label: 'Datum zapošlj.' }, { key: 'stazDoDolaska', label: 'Staž do dolaska' },
-                                        { key: 'datumOdlaska', label: 'Datum odlaska' }, { key: 'ukupniStaz', label: 'Ukupni staž' },
-                                        { key: 'koef', label: 'Koeficijent' },
-                                        { key: 'ulica', label: 'Ulica' }, { key: 'kucniBroj', label: 'Kućni broj' },
-                                        { key: 'mjestoId', label: 'Mjesto' }, { key: 'opcina', label: 'Općina' },
-                                        { key: 'telefonTvrtki', label: 'Tel (Firma)' }, { key: 'mobitel', label: 'Mobitel' },
-                                        { key: 'email', label: 'Email' }, { key: 'napomena', label: 'Napomena' },
-                                        { key: 'vanjskiSuradnik', label: 'Vanjski saradnik' }, { key: 'aktivan', label: 'Status (Aktivan)' },
-                                        { key: 'uvjerenja', label: 'Uvjerenja ZNR..' }, { key: 'ljekarski', label: 'Ljekarski pregledi' },
-                                        { key: 'ozo', label: 'Zadužena OZO' }
+                                        { key: 'ime', label: getExp('ime') }, { key: 'prezime', label: getExp('prezime') }, { key: 'imeRoditelja', label: getExp('imeRoditelja') },
+                                        { key: 'jmbg', label: getExp('jmbg') }, { key: 'oib', label: getExp('oibLbl') },
+                                        { key: 'evidencijskiBroj', label: getExp('evidencijskiBrojLbl') },
+                                        { key: 'datumRodenja', label: getExp('datumRodenja') }, { key: 'miestoRodenja', label: getExp('miestoRodenja') },
+                                        { key: 'spol', label: getExp('spol') }, { key: 'zivotnaDob', label: getExp('zivotnaDob') },
+                                        { key: 'orgJedinicaId', label: getExp('orgJedinicaIdLbl') }, { key: 'radnoMjestoId', label: getExp('radnoMjestoId') },
+                                        { key: 'lokacija', label: getExp('lokacija') },
+                                        { key: 'datumZaposlenja', label: getExp('datumZaposlenjaLbl') }, { key: 'stazDoDolaska', label: getExp('stazDoDolaska') },
+                                        { key: 'datumOdlaska', label: getExp('datumOdlaska') }, { key: 'ukupniStaz', label: getExp('ukupniStazLbl') },
+                                        { key: 'koef', label: getExp('koef') },
+                                        { key: 'ulica', label: getExp('ulica') }, { key: 'kucniBroj', label: getExp('kucniBroj') },
+                                        { key: 'mjestoId', label: getExp('mjestoId') }, { key: 'opcina', label: getExp('opcina') },
+                                        { key: 'telefonTvrtki', label: getExp('telefonTvrtkiLbl') }, { key: 'mobitel', label: getExp('mobitel') },
+                                        { key: 'email', label: getExp('email') }, { key: 'napomena', label: getExp('napomena') },
+                                        { key: 'vanjskiSuradnik', label: getExp('vanjskiSuradnik') }, { key: 'aktivan', label: getExp('aktivanLbl') },
+                                        { key: 'uvjerenja', label: getExp('uvjerenjaLbl') }, { key: 'ljekarski', label: getExp('ljekarski') },
+                                        { key: 'ozo', label: getExp('ozoLbl') }
                                     ].map(col => (
                                         <label key={col.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                             <input type="checkbox" checked={exportColumns[col.key]} onChange={e => setExportColumns(p => ({ ...p, [col.key]: e.target.checked }))} />
@@ -1599,6 +1891,7 @@ function WorkersPageInner() {
                                     ))}
                                 </div>
                             </div>
+                            <div className="modal-overlay" style={{ display: 'none' }}></div>
                             <div className="modal-footer">
                                 <button className="btn btn-ghost" onClick={() => setExcelExportMode(null)}>{t('cancel')}</button>
                                 <button className="btn btn-primary" style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }} onClick={() => {
@@ -1606,46 +1899,64 @@ function WorkersPageInner() {
                                     const allPpeList = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
                                     const dataRows = selectedWorkers.map(w => {
                                         const row = {};
-                                        if (exportColumns.ime) row['Ime'] = w.ime;
-                                        if (exportColumns.prezime) row['Prezime'] = w.prezime;
-                                        if (exportColumns.imeRoditelja) row['Ime roditelja'] = w.imeRoditelja;
-                                        if (exportColumns.jmbg) row['JMBG'] = w.jmbg;
-                                        if (exportColumns.oib) row['OIB/Osobni br.'] = w.oib;
-                                        if (exportColumns.evidencijskiBroj) row['Evidencijski broj'] = w.evidencijskiBroj;
-                                        if (exportColumns.datumRodenja) row['Datum rođenja'] = w.datumRodenja ? formatDate(w.datumRodenja) : '';
-                                        if (exportColumns.miestoRodenja) row['Mjesto rođenja'] = w.miestoRodenja || w.miestoRodenja_;
-                                        if (exportColumns.spol) row['Spol'] = w.spol;
-                                        if (exportColumns.zivotnaDob) row['Životna dob'] = w.zivotnaDob;
-                                        if (exportColumns.orgJedinicaId) row['Organizacijska jedinica'] = getOrgUnitName(w.orgJedinicaId);
-                                        if (exportColumns.radnoMjestoId) row['Radno mjesto'] = getWorkplaceName(w.radnoMjestoId);
-                                        if (exportColumns.lokacija) row['Lokacija'] = w.lokacija;
-                                        if (exportColumns.datumZaposlenja) row['Datum zaposlenja'] = w.datumZaposlenja ? formatDate(w.datumZaposlenja) : '';
-                                        if (exportColumns.datumOdlaska) row['Datum odlaska'] = w.datumOdlaska ? formatDate(w.datumOdlaska) : '';
-                                        if (exportColumns.stazDoDolaska) row['Staž do dolaska'] = w.stazDoDolaska;
-                                        if (exportColumns.ukupniStaz) row['Ukupni radni staž'] = w.ukupniStaz;
-                                        if (exportColumns.koef) row['Koeficijent'] = w.koef;
-                                        if (exportColumns.ulica) row['Ulica'] = w.ulica;
-                                        if (exportColumns.kucniBroj) row['Kućni broj'] = w.kucniBroj;
-                                        if (exportColumns.mjestoId) row['Mjesto'] = places.find(p => p.id === w.mjestoId)?.naziv || '';
-                                        if (exportColumns.opcina) row['Općina'] = w.opcina;
-                                        if (exportColumns.telefonTvrtki) row['Telefon (Firma)'] = w.telefonTvrtki;
-                                        if (exportColumns.mobitel) row['Mobitel'] = w.mobitel;
-                                        if (exportColumns.email) row['Email'] = w.email;
-                                        if (exportColumns.napomena) row['Napomena'] = w.napomena;
-                                        if (exportColumns.vanjskiSuradnik) row['Vanjski saradnik'] = w.vanjskiSuradnik ? 'DA' : 'NE';
-                                        if (exportColumns.aktivan) row['Status'] = w.aktivan ? 'Aktivan' : 'Bivši radnik';
+                                        if (exportColumns.ime) row[getExp('ime')] = w.ime;
+                                        if (exportColumns.prezime) row[getExp('prezime')] = w.prezime;
+                                        if (exportColumns.imeRoditelja) row[getExp('imeRoditelja')] = w.imeRoditelja;
+                                        if (exportColumns.jmbg) row[getExp('jmbg')] = w.jmbg;
+                                        if (exportColumns.oib) row[getExp('oibLbl')] = w.oib;
+                                        if (exportColumns.evidencijskiBroj) row[getExp('evidencijskiBrojLbl')] = w.evidencijskiBroj;
+                                        if (exportColumns.datumRodenja) row[getExp('datumRodenja')] = w.datumRodenja ? formatDate(w.datumRodenja) : '';
+                                        if (exportColumns.miestoRodenja) row[getExp('miestoRodenja')] = w.miestoRodenja || w.miestoRodenja_;
+                                        if (exportColumns.spol) row[getExp('spol')] = w.spol;
+                                        if (exportColumns.zivotnaDob) row[getExp('zivotnaDob')] = w.zivotnaDob;
+                                        if (exportColumns.orgJedinicaId) {
+                                            const val = getOrgUnitName(w.orgJedinicaId);
+                                            row[getExp('orgJedinicaIdLbl')] = t(val?.trim()) || val;
+                                        }
+                                        if (exportColumns.radnoMjestoId) {
+                                            const val = getWorkplaceName(w.radnoMjestoId);
+                                            row[getExp('radnoMjestoId')] = t(val?.trim()) || val;
+                                        }
+                                        if (exportColumns.lokacija) row[getExp('lokacija')] = w.lokacija;
+                                        if (exportColumns.datumZaposlenja) row[getExp('datumZaposlenjaLbl')] = w.datumZaposlenja ? formatDate(w.datumZaposlenja) : '';
+                                        if (exportColumns.datumOdlaska) row[getExp('datumOdlaska')] = w.datumOdlaska ? formatDate(w.datumOdlaska) : '';
+                                        if (exportColumns.stazDoDolaska) row[getExp('stazDoDolaska')] = w.stazDoDolaska;
+                                        if (exportColumns.ukupniStaz) row[getExp('ukupniStazLbl')] = w.ukupniStaz;
+                                        if (exportColumns.koef) row[getExp('koef')] = w.koef;
+                                        if (exportColumns.ulica) row[getExp('ulica')] = w.ulica;
+                                        if (exportColumns.kucniBroj) row[getExp('kucniBroj')] = w.kucniBroj;
+                                        if (exportColumns.mjestoId) {
+                                            const val = places.find(p => p.id === w.mjestoId)?.naziv || '';
+                                            row[getExp('mjestoId')] = t(val?.trim()) || val;
+                                        }
+                                        if (exportColumns.opcina) row[getExp('opcina')] = w.opcina;
+                                        if (exportColumns.telefonTvrtki) row[getExp('telefonTvrtkiLbl')] = w.telefonTvrtki;
+                                        if (exportColumns.mobitel) row[getExp('mobitel')] = w.mobitel;
+                                        if (exportColumns.email) row[getExp('email')] = w.email;
+                                        if (exportColumns.napomena) row[getExp('napomena')] = w.napomena;
+                                        if (exportColumns.vanjskiSuradnik) row[getExp('vanjskiSuradnik')] = w.vanjskiSuradnik ? getExp('yes') : getExp('no');
+                                        if (exportColumns.aktivan) row[getExp('aktivanLbl')] = w.aktivan ? getExp('active') : getExp('former');
 
                                         if (exportColumns.uvjerenja) {
                                             const wCerts = allCerts.filter(cx => cx.workerId === w.id);
-                                            row['Uvjerenja ZNR'] = wCerts.length> 0 ? wCerts.map(cx => cx.oznaka || cx.ime).join(', ') : '';
+                                            row[getExp('uvjerenjaLbl')] = wCerts.length > 0 ? wCerts.map(cx => cx.oznaka || t(cx.ime?.trim()) || cx.ime).join(', ') : '';
                                         }
                                         if (exportColumns.ljekarski) {
                                             const wMed = allMedExamsList.filter(mx => mx.workerId === w.id);
-                                            row['Ljekarski pregledi'] = wMed.length> 0 ? wMed.map(mx => mx.tipPregleda || 'Pregled').join(', ') : '';
+                                            row[getExp('ljekarski')] = wMed.length > 0 ? wMed.map(mx => {
+                                                const keyMap = {
+                                                    prethodni: 'prethodniPregled',
+                                                    periodicni: 'periodicniPregled',
+                                                    vanredni: 'vanredniPregled',
+                                                    nocniRad: 'pregledNocniRad',
+                                                    ostalo: 'ostalo'
+                                                };
+                                                return t(keyMap[mx.tipPregleda] || mx.tipPregleda) || mx.tipPregleda || 'Pregled';
+                                            }).join(', ') : '';
                                         }
                                         if (exportColumns.ozo) {
                                             const wPpe = allPpeList.filter(px => px.workerId === w.id);
-                                            row['Zadužena Oprema/OZO'] = wPpe.length> 0 ? wPpe.map(px => px.naziv + (px.kolicina> 1 ? ` (x${px.kolicina})` : '')).join(', ') : '';
+                                            row[getExp('ozoLbl')] = wPpe.length > 0 ? wPpe.map(px => (t(px.naziv?.trim()) || px.naziv) + (px.kolicina > 1 ? ` (x${px.kolicina})` : '')).join(', ') : '';
                                         }
 
                                         return row;
@@ -1658,8 +1969,8 @@ function WorkersPageInner() {
                                     ws['!cols'] = colWidths;
 
                                     const wb = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(wb, ws, "Lista radnika");
-                                    XLSX.writeFile(wb, `Lista_radnika_${formatDate(new Date())}.xlsx`);
+                                    XLSX.utils.book_append_sheet(wb, ws, getExp('sheetName'));
+                                    XLSX.writeFile(wb, `${getExp('fileName')}_${formatDate(new Date())}.xlsx`);
                                     setShowExportModal(false);
                                 }}>⬇️ {t('preuzmiExcel')}</button>
                             </div>

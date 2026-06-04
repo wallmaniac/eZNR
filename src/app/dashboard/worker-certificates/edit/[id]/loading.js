@@ -1,4 +1,8 @@
+'use client';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export default function Loading() {
+    const { t } = useLanguage();
     return (
         <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',

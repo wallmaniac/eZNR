@@ -12,12 +12,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
    ═══════════════════════════════════════════════════════ */
 
 const LANGUAGES = [
-    { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
-    { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
-    { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' },
-    { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png', title: 'Deutsch' },
-    { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png', title: 'Slovenščina' },
-    { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png', title: 'Srpski' }
+    { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/ba.svg', title: 'Bosanski' },
+    { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/hr.svg', title: 'Hrvatski' },
+    { code: 'en', label: 'EN', flag: 'https://flagcdn.com/gb.svg', title: 'English' },
+    { code: 'de', label: 'DE', flag: 'https://flagcdn.com/de.svg', title: 'Deutsch' },
+    { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/si.svg', title: 'Slovenščina' },
+    { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/rs.svg', title: 'Srpski' }
 ];
 
 export default function PublicTrainingPage({ params }) {
@@ -182,7 +182,7 @@ export default function PublicTrainingPage({ params }) {
                                     boxShadow: lang === l.code ? '0 0 8px rgba(99,102,241,0.4)' : 'none'
                                 }}
                             >
-                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (l.code === 'sl' || l.code === 'sr') ? '28% 50%' : 'center' }} />
                             </button>
                         ))}
                     </div>
@@ -361,7 +361,7 @@ export default function PublicTrainingPage({ params }) {
                                     boxShadow: lang === l.code ? '0 0 8px rgba(99,102,241,0.4)' : 'none'
                                 }}
                             >
-                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (l.code === 'sl' || l.code === 'sr') ? '28% 50%' : 'center' }} />
                             </button>
                         ))}
                     </div>
@@ -535,7 +535,7 @@ export default function PublicTrainingPage({ params }) {
                                     boxShadow: lang === l.code ? '0 0 8px rgba(99,102,241,0.4)' : 'none'
                                 }}
                             >
-                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                <img src={l.flag} width={16} height={16} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (l.code === 'sl' || l.code === 'sr') ? '28% 50%' : 'center' }} />
                             </button>
                         ))}
                     </div>

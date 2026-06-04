@@ -85,7 +85,7 @@ const menuItems = [
                     { key: 'nightWorkReferral',  icon: '🌙', path: '/dashboard/night-work' },
                 ],
             },
-            { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Zapisnici' },
+            { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Protocols' },
         ],
     },
 
@@ -227,7 +227,7 @@ const SIDEBAR_TOOLTIPS = {
         nightWorkReferral: 'Night Work Referral NR-1 — mandatory exam for night shifts',
         grpISZNR: 'ISZNR — Occupational Safety Information System (internal acts)',
         obrasciIUputnice: 'Forms & Referrals — official forms (OIR-1, RA-1, RO-1, RO-2, NR-1)',
-        zapisniciAlat: 'Minutes — create and manage inspection/examination records',
+        zapisniciAlat: 'Protocols — create and manage inspection/examination records',
         grpFleet: 'Fleet — vehicle management, travel orders, and documentation',
     },
 };

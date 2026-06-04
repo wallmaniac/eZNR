@@ -1979,7 +1979,7 @@ export default function SettingsContent() {
 
             {/* ── Country Migration ── */}
             <SectionHeader icon="🌍" title={t('migracijaJurisdikcijeBahr')} />
-            <CountryMigrationPanel lang={lang} />
+            <CountryMigrationPanel lang={lang} t={t} />
 
             <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
             <SectionHeader icon="☠️" title={t('opasnaZonaSuperAdmin')} />
@@ -2279,7 +2279,7 @@ export default function SettingsContent() {
 }
 
 /** Country migration panel — admin tool to set missing `country` on legacy companies */
-function CountryMigrationPanel({ lang }) {
+function CountryMigrationPanel({ lang, t }) {
   const [migrating, setMigrating] = useState(false);
   const [result, setResult] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState('BA');
