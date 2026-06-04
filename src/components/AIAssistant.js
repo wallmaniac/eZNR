@@ -27,7 +27,7 @@ function maskPIIInput(text, workers) {
             // Basic regex to match name regardless of some suffixes
             const escaped = fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             // Try to match the full name with optional suffixes (a, u, e, om, em, i)
-            const regex = new RegExp(`\\b${escaped}(a|u|e|om|em|i)?\\b`, 'gi');
+            const regex = new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(a|u|e|om|em|i)?(?![\\p{L}\\p{N}])`, 'gui');
             masked = masked.replace(regex, `W[${w.id}]`);
         }
         // Replace just first name if it's unique and long enough
@@ -35,7 +35,7 @@ function maskPIIInput(text, workers) {
             const sameFirstNameCount = workers.filter(x => x.ime === w.ime).length;
             if (sameFirstNameCount === 1) {
                 const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regexFirst = new RegExp(`\\b${escapedFirst}(a|u|e|om|em|i)?\\b`, 'gi');
+                const regexFirst = new RegExp(`(?<![\\p{L}\\p{N}])${escapedFirst}(a|u|e|om|em|i)?(?![\\p{L}\\p{N}])`, 'gui');
                 masked = masked.replace(regexFirst, `W[${w.id}]`);
             }
         }
