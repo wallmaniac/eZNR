@@ -203,6 +203,9 @@ export function getAdminNotifications() {
                 icon: '🔴',
                 title: `Kritično: ${totalRecords.toLocaleString()} zapisa u bazi`,
                 message: `Performanse mogu biti znatno smanjene. Potrebna je optimizacija upita (company-scoped queries). Kontaktirajte podršku.`,
+                titleKey: 'notif_db_critical_title',
+                titleArgs: [totalRecords.toLocaleString()],
+                messageKey: 'notif_db_critical_msg',
             });
         } else if (totalRecords >= settings.adminDbWarnThreshold) {
             notifications.push({
@@ -212,6 +215,10 @@ export function getAdminNotifications() {
                 icon: '⚠️',
                 title: `Baza podataka: ${totalRecords.toLocaleString()} zapisa`,
                 message: `Baza raste. Optimizacija potrebna na ${settings.adminDbCriticalThreshold.toLocaleString()} zapisa.`,
+                titleKey: 'notif_db_warn_title',
+                titleArgs: [totalRecords.toLocaleString()],
+                messageKey: 'notif_db_warn_msg',
+                messageArgs: [settings.adminDbCriticalThreshold.toLocaleString()],
             });
         }
     }
@@ -228,6 +235,10 @@ export function getAdminNotifications() {
                     icon: '🏢',
                     title: `${allCompanies.length} kompanija u sustavu`,
                     message: `Milestone dosegnut! Sustav ima ${allCompanies.length} registriranih kompanija.`,
+                    titleKey: 'notif_companies_milestone_title',
+                    titleArgs: [allCompanies.length],
+                    messageKey: 'notif_companies_milestone_msg',
+                    messageArgs: [allCompanies.length],
                 });
                 break;
             }
@@ -241,6 +252,10 @@ export function getAdminNotifications() {
                     icon: '👥',
                     title: `${allUsers.length} korisnika u sustavu`,
                     message: `Milestone dosegnut! Sustav ima ${allUsers.length} korisničkih računa.`,
+                    titleKey: 'notif_users_milestone_title',
+                    titleArgs: [allUsers.length],
+                    messageKey: 'notif_users_milestone_msg',
+                    messageArgs: [allUsers.length],
                 });
                 break;
             }
@@ -257,6 +272,9 @@ export function getAdminNotifications() {
                 icon: '🔴',
                 title: `${allWorkers.length.toLocaleString()} radnika u sustavu`,
                 message: 'Potrebno prebaciti na company-scoped upite za održavanje performansi.',
+                titleKey: 'notif_workers_critical_title',
+                titleArgs: [allWorkers.length.toLocaleString()],
+                messageKey: 'notif_workers_critical_msg',
             });
         } else if (allWorkers.length >= 5000) {
             notifications.push({
@@ -266,6 +284,9 @@ export function getAdminNotifications() {
                 icon: '📊',
                 title: `${allWorkers.length.toLocaleString()} radnika u sustavu`,
                 message: 'Planirajte optimizaciju kada dosegne 20.000.',
+                titleKey: 'notif_workers_warn_title',
+                titleArgs: [allWorkers.length.toLocaleString()],
+                messageKey: 'notif_workers_warn_msg',
             });
         }
     }
@@ -278,7 +299,12 @@ export function getAdminNotifications() {
         icon: '🚀',
         title: `Aplikacija v${APP_VERSION}`,
         message: `Zadnje ažuriranje: ${APP_BUILD_DATE}. ${CHANGELOG[0]?.changes?.length || 0} promjena.`,
+        titleKey: 'notif_app_version_title',
+        titleArgs: [APP_VERSION],
+        messageKey: 'notif_app_version_msg',
+        messageArgs: [APP_BUILD_DATE, CHANGELOG[0]?.changes?.length || 0],
         actionLabel: 'Pogledaj changelog',
+        actionLabelKey: 'notif_view_changelog',
         actionUrl: '/dashboard/settings?tab=system',
     });
 
@@ -342,7 +368,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '🚨',
                 title: `${expired} uvjerenja su istekla!`,
                 message: `Ukupno ${expired} radničkih uvjerenja su istekla i trebaju hitnu obnovu.`,
+                titleKey: 'notif_cert_expired_title',
+                titleArgs: [expired],
+                messageKey: 'notif_cert_expired_msg',
+                messageArgs: [expired],
                 actionLabel: 'Pogledaj uvjerenja',
+                actionLabelKey: 'notif_view_certs',
                 actionUrl: '/dashboard/worker-certificates',
             }, allCerts.find(c => new Date(c.vrijediDo) < today) || {}));
         }
@@ -354,7 +385,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '⏰',
                 title: `${urgentCount} uvjerenja ističu za manje od 7 dana`,
                 message: `Hitno obnovite ${urgentCount} uvjerenja.`,
+                titleKey: 'notif_cert_urgent_title',
+                titleArgs: [urgentCount],
+                messageKey: 'notif_cert_urgent_msg',
+                messageArgs: [urgentCount],
                 actionLabel: 'Pogledaj uvjerenja',
+                actionLabelKey: 'notif_view_certs',
                 actionUrl: '/dashboard/worker-certificates',
             }, allCerts.find(c => { const d = Math.floor((new Date(c.vrijediDo) - today) / 86400000); return d >= 0 && d <= 7; }) || {}));
         }
@@ -366,7 +402,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '📋',
                 title: `${warningCount} uvjerenja ističu u narednih ${settings.certExpiryDays} dana`,
                 message: `Planirajte obnovu za ${warningCount} uvjerenja.`,
+                titleKey: 'notif_cert_warning_title',
+                titleArgs: [warningCount, settings.certExpiryDays],
+                messageKey: 'notif_cert_warning_msg',
+                messageArgs: [warningCount],
                 actionLabel: 'Pogledaj uvjerenja',
+                actionLabelKey: 'notif_view_certs',
                 actionUrl: '/dashboard/worker-certificates',
             }, allCerts.find(c => { const d = Math.floor((new Date(c.vrijediDo) - today) / 86400000); return d > 7 && d <= settings.certExpiryDays; }) || {}));
         }
@@ -393,7 +434,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '🔧',
                 title: `${expired} oprema sa isteklim pregledom!`,
                 message: `${expired} komada radne opreme ima istekli rok pregleda.`,
+                titleKey: 'notif_equip_expired_title',
+                titleArgs: [expired],
+                messageKey: 'notif_equip_expired_msg',
+                messageArgs: [expired],
                 actionLabel: 'Pogledaj opremu',
+                actionLabelKey: 'notif_view_equip',
                 actionUrl: '/dashboard/equipment',
             }, allEquipment.find(e => new Date(e.iduci) < today) || {}));
         }
@@ -405,7 +451,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '⚙️',
                 title: `${urgentCount + warningCount} pregledi opreme ističu uskoro`,
                 message: `${urgentCount} hitno (7 dana), ${warningCount} uskoro (${settings.equipExpiryDays} dana).`,
+                titleKey: 'notif_equip_warning_title',
+                titleArgs: [urgentCount + warningCount],
+                messageKey: 'notif_equip_warning_msg',
+                messageArgs: [urgentCount, warningCount, settings.equipExpiryDays],
                 actionLabel: 'Pogledaj opremu',
+                actionLabelKey: 'notif_view_equip',
                 actionUrl: '/dashboard/equipment',
             }, allEquipment.find(e => { const d = Math.floor((new Date(e.iduci) - today) / 86400000); return d >= 0 && d <= settings.equipExpiryDays; }) || {}));
         }
@@ -431,7 +482,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '📄',
                 title: `${expired} dokumenta su istekla!`,
                 message: `${expired} dokumenta poslodavca su istekla i trebaju obnovu.`,
+                titleKey: 'notif_docs_expired_title',
+                titleArgs: [expired],
+                messageKey: 'notif_docs_expired_msg',
+                messageArgs: [expired],
                 actionLabel: 'Pogledaj dokumenta',
+                actionLabelKey: 'notif_view_docs',
                 actionUrl: '/dashboard/employer-docs',
             }, allDocs.find(d => new Date(d.datumIsteka) < today) || {}));
         }
@@ -443,7 +499,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '📑',
                 title: `${warningCount} dokumenta ističu uskoro`,
                 message: `${warningCount} dokumenta ističu u narednih ${settings.docExpiryDays} dana.`,
+                titleKey: 'notif_docs_warning_title',
+                titleArgs: [warningCount],
+                messageKey: 'notif_docs_warning_msg',
+                messageArgs: [warningCount, settings.docExpiryDays],
                 actionLabel: 'Pogledaj dokumenta',
+                actionLabelKey: 'notif_view_docs',
                 actionUrl: '/dashboard/employer-docs',
             }, allDocs.find(d => { const diff = Math.floor((new Date(d.datumIsteka) - today) / 86400000); return diff >= 0 && diff <= settings.docExpiryDays; }) || {}));
         }
@@ -460,28 +521,40 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
             else if (days <= 7) { medUrgent++; if (!medUrgItem) medUrgItem = me; }
             else if (days <= settings.certExpiryDays) medWarn++;
         });
+
         if (medExpired > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_med_expired', severity: 'urgent', category: 'medical', icon: '',
+                id: 'user_med_expired', severity: 'urgent', category: 'medical', icon: '🩺',
                 title: medExpired + ' ljekarskih pregleda isteklo!',
                 message: `Zakonska obaveza poslodavca - zakaz. preglede hitno (${getCitation(country, 'medical')}).`,
-                actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
+                titleKey: 'notif_med_expired_title',
+                titleArgs: [medExpired],
+                messageKey: 'notif_med_expired_msg',
+                messageArgs: [getCitation(country, 'medical')],
+                actionLabel: 'Pregledi', actionLabelKey: 'notif_view_med', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
             }, medExpItem || {}));
         }
         if (medUrgent > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_med_urgent', severity: 'urgent', category: 'medical', icon: '',
-                title: medUrgent + ' ljekarskih pregleda istice za 7 dana',
+                id: 'user_med_urgent', severity: 'urgent', category: 'medical', icon: '🩺',
+                title: medUrgent + ' ljekarskih pregleda ističe za 7 dana',
                 message: 'Hitno zakazati preglede.',
-                actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
+                titleKey: 'notif_med_urgent_title',
+                titleArgs: [medUrgent],
+                messageKey: 'notif_med_urgent_msg',
+                actionLabel: 'Pregledi', actionLabelKey: 'notif_view_med', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
             }, medUrgItem || {}));
         }
         if (medWarn > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_med_warning', severity: 'warning', category: 'medical', icon: '',
-                title: medWarn + ' ljekarskih pregleda uskoro istice',
+                id: 'user_med_warning', severity: 'warning', category: 'medical', icon: '🩺',
+                title: medWarn + ' ljekarskih pregleda uskoro ističe',
                 message: 'Planirajte preglede za ' + medWarn + ' radnika.',
-                actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
+                titleKey: 'notif_med_warning_title',
+                titleArgs: [medWarn],
+                messageKey: 'notif_med_warning_msg',
+                messageArgs: [medWarn],
+                actionLabel: 'Pregledi', actionLabelKey: 'notif_view_med', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
             }, {}));
         }
     }
@@ -514,7 +587,11 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 id: 'user_fleet_expired', severity: 'urgent', category: 'fleet', icon: '🚨',
                 title: `${expired} vozila zahtijeva hitnu akciju!`,
                 message: `Registracija, tehnički pregled ili osiguranje je isteklo za ${expired} vozila.`,
-                actionLabel: 'Vozni park', actionUrl: '/dashboard/fleet',
+                titleKey: 'notif_fleet_expired_title',
+                titleArgs: [expired],
+                messageKey: 'notif_fleet_expired_msg',
+                messageArgs: [expired],
+                actionLabel: 'Vozni park', actionLabelKey: 'notif_view_fleet', actionUrl: '/dashboard/fleet',
             }, allVehicles[0]));
         }
         if (urgentCount > 0) {
@@ -522,7 +599,10 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 id: 'user_fleet_urgent', severity: 'urgent', category: 'fleet', icon: '🚙',
                 title: `${urgentCount} vozila ističe za 7 dana!`,
                 message: `Registracija, pregled ili osiguranje ističe uskoro.`,
-                actionLabel: 'Vozni park', actionUrl: '/dashboard/fleet',
+                titleKey: 'notif_fleet_urgent_title',
+                titleArgs: [urgentCount],
+                messageKey: 'notif_fleet_urgent_msg',
+                actionLabel: 'Vozni park', actionLabelKey: 'notif_view_fleet', actionUrl: '/dashboard/fleet',
             }, allVehicles[0]));
         }
         if (warningCount > 0) {
@@ -530,7 +610,11 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 id: 'user_fleet_warning', severity: 'warning', category: 'fleet', icon: '🚗',
                 title: `${warningCount} vozila ističe u narednih ${settings.fleetExpiryDays} dana`,
                 message: `Planirajte registraciju i tehnički za ${warningCount} vozila.`,
-                actionLabel: 'Vozni park', actionUrl: '/dashboard/fleet',
+                titleKey: 'notif_fleet_warning_title',
+                titleArgs: [warningCount, settings.fleetExpiryDays],
+                messageKey: 'notif_fleet_warning_msg',
+                messageArgs: [warningCount],
+                actionLabel: 'Vozni park', actionLabelKey: 'notif_view_fleet', actionUrl: '/dashboard/fleet',
             }, allVehicles[0]));
         }
     }
@@ -551,7 +635,12 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '📝',
                 title: `${missing.length} radnika bez uvjerenja`,
                 message: `${missing.length} aktivnih radnika nema uneseno niti jedno uvjerenje.`,
+                titleKey: 'notif_no_certs_title',
+                titleArgs: [missing.length],
+                messageKey: 'notif_no_certs_msg',
+                messageArgs: [missing.length],
                 actionLabel: 'Pogledaj radnike',
+                actionLabelKey: 'notif_view_workers',
                 actionUrl: '/dashboard/workers',
             }, missing[0]));
         }
@@ -572,10 +661,79 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 icon: '🦺',
                 title: `${missing.length} radnika bez zaštitne opreme`,
                 message: `${missing.length} aktivnih radnika nema dodijeljenu zaštitnu opremu.`,
+                titleKey: 'notif_no_ppe_title',
+                titleArgs: [missing.length],
+                messageKey: 'notif_no_ppe_msg',
+                messageArgs: [missing.length],
                 actionLabel: 'Pogledaj radnike',
+                actionLabelKey: 'notif_view_workers',
                 actionUrl: '/dashboard/workers',
             }, missing[0]));
         }
+    }
+
+    // ── Pending Questionnaires ──
+    const allQuestionnaires = filterByCompany(getAll(COLLECTIONS.QUESTIONNAIRES));
+    let expiredQ = 0, urgentQ = 0, warningQ = 0;
+    let sampleQ = null;
+    allQuestionnaires.forEach(q => {
+        if (q.predlozak || !q.rokIsteka) return;
+        const days = Math.floor((new Date(q.rokIsteka) - today) / (1000 * 60 * 60 * 24));
+        if (days < 0) { expiredQ++; if (!sampleQ) sampleQ = q; }
+        else if (days <= 7) { urgentQ++; if (!sampleQ) sampleQ = q; }
+        else if (days <= 30) { warningQ++; if (!sampleQ) sampleQ = q; }
+    });
+
+    if (expiredQ > 0) {
+        notifications.push(addCompanyBadge({
+            id: 'user_quest_expired',
+            severity: 'urgent',
+            category: 'documents',
+            icon: '❓',
+            title: `${expiredQ} upitnika je isteklo!`,
+            message: `Rok za ispunjavanje ${expiredQ} upitnika je prošao.`,
+            titleKey: 'notif_quest_expired_title',
+            titleArgs: [expiredQ],
+            messageKey: 'notif_quest_expired_msg',
+            messageArgs: [expiredQ],
+            actionLabel: 'Pogledaj upitnike',
+            actionLabelKey: 'notif_view_quests',
+            actionUrl: '/dashboard/questionnaires',
+        }, sampleQ || {}));
+    }
+    if (urgentQ > 0) {
+        notifications.push(addCompanyBadge({
+            id: 'user_quest_urgent',
+            severity: 'urgent',
+            category: 'documents',
+            icon: '❓',
+            title: `${urgentQ} upitnika ističe za manje od 7 dana`,
+            message: `Planirajte ispunjavanje ili produženje za ${urgentQ} upitnika.`,
+            titleKey: 'notif_quest_urgent_title',
+            titleArgs: [urgentQ],
+            messageKey: 'notif_quest_urgent_msg',
+            messageArgs: [urgentQ],
+            actionLabel: 'Pogledaj upitnike',
+            actionLabelKey: 'notif_view_quests',
+            actionUrl: '/dashboard/questionnaires',
+        }, sampleQ || {}));
+    }
+    if (warningQ > 0) {
+        notifications.push(addCompanyBadge({
+            id: 'user_quest_warning',
+            severity: 'warning',
+            category: 'documents',
+            icon: '❓',
+            title: `${warningQ} upitnika ističe uskoro`,
+            message: `${warningQ} upitnika ističe u narednih 30 dana.`,
+            titleKey: 'notif_quest_warning_title',
+            titleArgs: [warningQ],
+            messageKey: 'notif_quest_warning_msg',
+            messageArgs: [warningQ],
+            actionLabel: 'Pogledaj upitnike',
+            actionLabelKey: 'notif_view_quests',
+            actionUrl: '/dashboard/questionnaires',
+        }, sampleQ || {}));
     }
 
     const severityOrder = { critical: 0, urgent: 1, warning: 2, info: 3 };

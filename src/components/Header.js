@@ -126,8 +126,47 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
     const notifications = useMemo(() => {
         const { notifications: notifs } = getHeaderNotifications(isAdmin, activeCompanyId, user?.companyIds || []);
-        return notifs.map(n => ({ ...n, icon: n.icon, text: n.text || n.title, detail: n.detail || n.message, date: '', path: n.path || n.actionUrl || '/dashboard', severity: n.severity, id: n.id, actionLabel: n.actionLabel, companyName: n.companyName }));
-    }, [isAdmin, activeCompanyId, user?.companyIds]);
+        return notifs.map(n => {
+            let text = n.text || n.title;
+            let detail = n.detail || n.message;
+            let actionLabel = n.actionLabel;
+
+            if (n.titleKey) {
+                let tStr = t(n.titleKey) || n.title;
+                if (n.titleArgs) {
+                    n.titleArgs.forEach((arg, idx) => {
+                        tStr = tStr.replace(`{${idx}}`, arg);
+                    });
+                }
+                text = tStr;
+            }
+            if (n.messageKey) {
+                let mStr = t(n.messageKey) || n.message;
+                if (n.messageArgs) {
+                    n.messageArgs.forEach((arg, idx) => {
+                        mStr = mStr.replace(`{${idx}}`, arg);
+                    });
+                }
+                detail = mStr;
+            }
+            if (n.actionLabelKey) {
+                actionLabel = t(n.actionLabelKey) || n.actionLabel;
+            }
+
+            return {
+                ...n,
+                icon: n.icon,
+                text,
+                detail,
+                date: '',
+                path: n.path || n.actionUrl || '/dashboard',
+                severity: n.severity,
+                id: n.id,
+                actionLabel,
+                companyName: n.companyName
+            };
+        });
+    }, [isAdmin, activeCompanyId, user?.companyIds, t]);
 
     const handleSearchNav = (result) => {
         setSearchTerm(''); setSearchFocused(false);
@@ -595,7 +634,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                         {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 3 }}>{n.detail}</div>}
                                                         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                                                             {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
-                                                            {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {t('odbaci')}</button>}
+                                                            {n.id && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {t('odbaci')}</button>}
                                                         </div>
                                                     </div>
                                                 </div>
