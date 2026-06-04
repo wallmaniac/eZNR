@@ -288,7 +288,7 @@ function TrainingsInner() {
         }
         setGeneratingQuiz(true);
         try {
-            const data = await apiGenerateQuiz(slides);
+            const data = await apiGenerateQuiz(slides, lang);
             if (data.error) {
                 await alert(data.error || 'Greška pri generiranju testa.');
                 return;

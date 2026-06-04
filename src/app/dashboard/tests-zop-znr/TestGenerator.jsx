@@ -3,6 +3,15 @@ import { useState, useEffect } from 'react';
 import { zopQuestions_BA, zopQuestions_HR, znrQuestions_BA, znrQuestions_HR } from './defaultQuestions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountry } from '@/contexts/CountryContext';
+
+const LANG_MAP = {
+    bs: 'Bosnian (bosanski)',
+    hr: 'Croatian (hrvatski)',
+    sr: 'Serbian Latin (srpski latinica)',
+    en: 'English (engleski)',
+    de: 'German (njemački)',
+    sl: 'Slovenian (slovenski)'
+};
 import { useAuth } from '@/contexts/AuthContext';
 import { getById, COLLECTIONS } from '@/lib/dataStore';
 import JSZip from 'jszip';
@@ -13,7 +22,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { apiExtractQuestionsFromDocument } from '@/lib/testGeneratorAI';
 
 export default function TestGenerator() {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const country = useCountry();
     const { activeCompanyId } = useAuth();
 
@@ -34,8 +43,10 @@ export default function TestGenerator() {
                 reader.readAsDataURL(file);
             });
             
+            const targetLanguage = LANG_MAP[lang] || LANG_MAP.bs;
             const systemPrompt = `Ti si asistent za ekstrakciju ispitnih pitanja.
 Iz priloženog dokumenta izvuci sva pitanja sa višestrukim izborom (Multiple Choice Questions) i njihove ponuđene odgovore.
+KLJUČNO: Sva pitanja i odgovori moraju biti generisani i vraćeni na jeziku: ${targetLanguage}. Ako je priloženi dokument na drugom jeziku, prevedi pitanja i odgovore na ${targetLanguage}.
 Odgovori ISKLJUČIVO u JSON formatu na sljedeći način:
 [
   {

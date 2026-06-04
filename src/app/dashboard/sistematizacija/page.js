@@ -67,6 +67,7 @@ export default function SistematizacijaPage() {
                 radnoVrijemeOd: wp.radnoVrijemeOd || '',
                 radnoVrijemeDo: wp.radnoVrijemeDo || '',
                 additionalInfo: wp.opis || '',
+                lang,
             });
             
             if (data) {

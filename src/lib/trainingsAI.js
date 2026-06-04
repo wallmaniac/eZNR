@@ -11,10 +11,10 @@ import { callFirebaseFunction } from '@/lib/firebaseCallable';
  * @param {Array<{naslov: string, sadrzaj: string}>} slides 
  * @returns {Promise<{questions: Array, error?: string}>}
  */
-export async function apiGenerateQuiz(slides) {
+export async function apiGenerateQuiz(slides, lang = 'bs') {
     try {
         const payload = slides.map(s => ({ naslov: s.naslov || '', sadrzaj: s.sadrzaj || '' }));
-        const res = await callFirebaseFunction('generateQuiz', { slides: payload });
+        const res = await callFirebaseFunction('generateQuiz', { slides: payload, lang });
         return res;
     } catch (err) {
         console.error('[trainingsAI] apiGenerateQuiz error:', err);

@@ -1,6 +1,14 @@
-// src/lib/riskAI.js
 import { apiCallZia } from '@/lib/ziaAPI';
 import { callFirebaseFunction } from '@/lib/firebaseCallable';
+
+const LANG_MAP = {
+    bs: 'Bosnian (bosanski)',
+    hr: 'Croatian (hrvatski)',
+    sr: 'Serbian Latin (srpski latinica)',
+    en: 'English (engleski)',
+    de: 'German (njemački)',
+    sl: 'Slovenian (slovenski)'
+};
 
 export const riskLevel = (score) => {
     if (score <= 5) return { label: 'Neznatan', color: '#4caf50', bg: 'rgba(76,175,80,0.15)' };
@@ -10,7 +18,7 @@ export const riskLevel = (score) => {
     return { label: 'Nedopustiv', color: '#b71c1c', bg: 'rgba(183,28,28,0.2)' };
 };
 
-export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
+export const fetchAiOpisProcesa = async (companyData, workplaces, hazards, lang = 'bs') => {
     try {
         const wNames = workplaces.map(w => w.naziv);
         const hNames = hazards.map(h => h.naziv).join(', ');
@@ -30,6 +38,7 @@ export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
             userAnalizaOrganizacije: companyData.userAnalizaOrganizacije || '',
             // Sistematizacija data for accurate role-specific descriptions
             sistematizacijaKontekst: companyData.sistematizacijaKontekst || '',
+            lang,
         };
 
         const response = await callFirebaseFunction('generateOpisProcesa', payload);
@@ -68,9 +77,9 @@ export const fetchAiMeasures = async (payload) => {
     }
 };
 
-export const fetchAiDocAnalyze = async (documents, companyName) => {
+export const fetchAiDocAnalyze = async (documents, companyName, lang = 'bs') => {
     try {
-        const data = await callFirebaseFunction('analyzeRiskDocs', { documents, companyName });
+        const data = await callFirebaseFunction('analyzeRiskDocs', { documents, companyName, lang });
         if (!data.success || !data.analysis) {
             throw new Error(data.error || 'Nepoznata greška');
         }
@@ -80,7 +89,7 @@ export const fetchAiDocAnalyze = async (documents, companyName) => {
     }
 };
 
-export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA') => {
+export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA', lang = 'bs') => {
     const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
     const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
     const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
@@ -89,9 +98,10 @@ export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA')
     // PII Sanitization
     const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
 
+    const targetLanguage = LANG_MAP[lang] || LANG_MAP.bs;
     const sysPrompt = country === 'HR'
-        ? 'Ti si stručnjak za zaštitu na radu u Republici Hrvatskoj. Tvoj zadatak je napisati zaključak akta o procjeni rizika. Piši formalno, profesionalno, na hrvatskom jeziku. Pozivaj se na Zakon o zaštiti na radu (NN 71/14, 118/14, 94/18, 96/18) i Pravilnik o izradi procjene rizika (NN 112/14). VAŽNO: Odmah napiši tekst zaključka. NE PIŠI nikakav uvod poput "U redu" ili "Slijedi zaključak". Započni direktno s tekstom zaključka.'
-        : 'Ti si stručnjak za zaštitu na radu u FBiH. Tvoj zadatak je napisati zaključak akta o procjeni rizika. Piši formalno, profesionalno, na bosanskom jeziku. VAŽNO: Odmah napiši tekst zaključka. NE PIŠI nikakav uvod poput "U redu" ili "Slijedi zaključak". Započni direktno s tekstom zaključka.';
+        ? `Ti si stručnjak za zaštitu na radu u Republici Hrvatskoj. Tvoj zadatak je napisati zaključak akta o procjeni rizika na jeziku: ${targetLanguage}. Piši formalno, profesionalno. Pozivaj se na Zakon o zaštiti na radu (NN 71/14, 118/14, 94/18, 96/18) i Pravilnik o izradi procjene rizika (NN 112/14). VAŽNO: Odmah napiši tekst zaključka na tom jeziku. NE PIŠI nikakav uvod poput "U redu" ili "Slijedi zaključak". Započni direktno s tekstom zaključka.`
+        : `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini. Tvoj zadatak je napisati zaključak akta o procjeni rizika na jeziku: ${targetLanguage}. Piši formalno, profesionalno. VAŽNO: Odmah napiši tekst zaključka na tom jeziku. NE PIŠI nikakav uvod poput "U redu" ili "Slijedi zaključak". Započni direktno s tekstom zaključka.`;
 
     const data = await apiCallZia({
         systemPrompt: sysPrompt,
@@ -214,7 +224,7 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
     }
 };
 
-export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sistContext) => {
+export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sistContext, lang = 'bs') => {
     // Route through Firebase Cloud Functions
     // This avoids Vercel's 10-second timeout limit and uses Firebase's 5-minute timeout.
     try {
@@ -223,6 +233,7 @@ export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sist
             companyName: companyName || '',
             industry: industry || 'Opća djelatnost',
             sistematizacijaKontekst: sistContext || '',
+            lang,
         });
 
         if (!data.success || !data.items) {
@@ -235,14 +246,7 @@ export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sist
     }
 };
 
-const LANG_MAP = {
-    bs: 'Bosnian (bosanski)',
-    hr: 'Croatian (hrvatski)',
-    sr: 'Serbian Latin (srpski latinica)',
-    en: 'English (engleski)',
-    de: 'German (njemački)',
-    sl: 'Slovenian (slovenski)'
-};
+// LANG_MAP has been moved to top
 
 function tryParseJson(str) {
     if (!str) return null;

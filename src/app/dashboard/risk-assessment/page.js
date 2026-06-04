@@ -11,7 +11,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
 import { generateSafeWordDoc, RISK_REPORT_T } from '@/lib/riskExportDocx';
 import { t as translateGlobal } from '@/i18n/translations';
-import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable, apiTranslateRiskAssessment } from '@/lib/riskAI';
+import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
@@ -194,31 +194,6 @@ export default function RiskAssessmentPage() {
     const [showRiForm, setShowRiForm] = useState(false);
     const [workplaces, setWorkplaces] = useState([]);
     const [aiLoading, setAiLoading] = useState(false);
-    const [translating, setTranslating] = useState(false);
-
-    useEffect(() => {
-        if (view === 'form') {
-            const docLang = formData.jezik || (['bs', 'hr', 'sr'].includes(lang) ? lang : 'bs');
-            if (docLang !== lang && (formData.opisProcesa || formData.nazivTvrtke || riskItems.length > 0)) {
-                const performTranslation = async () => {
-                    setTranslating(true);
-                    try {
-                        const result = await apiTranslateRiskAssessment(formData, riskItems, lang);
-                        setFormData(result.metadata);
-                        setRiskItems(result.items);
-                        markDirty();
-                        isDirtyRef.current = true;
-                        showFlash();
-                    } catch (e) {
-                        console.error('Translation failed:', e);
-                    } finally {
-                        setTranslating(false);
-                    }
-                };
-                performTranslation();
-            }
-        }
-    }, [lang, view, editingId, formData.id]);
     const [aiOpisLoading, setAiOpisLoading] = useState(false);
     const [aiDocument, setAiDocument] = useState(null);
     // AI Document Analyzer
@@ -526,7 +501,7 @@ export default function RiskAssessmentPage() {
                 companyDataWithContext.sistematizacijaKontekst = sistContext;
             }
             
-            const result = await fetchAiOpisProcesa(companyDataWithContext, wps, hazards);
+            const result = await fetchAiOpisProcesa(companyDataWithContext, wps, hazards, lang);
             setFormData(prev => ({
                 ...prev,
                 opisProcesa: result.opisProcesa || prev.opisProcesa,
@@ -735,6 +710,7 @@ export default function RiskAssessmentPage() {
                     radnaOprema: sist.radnaOprema,
                     zdravstveniZahtjevi: sist.zdravstveniZahtjevi,
                 } : null,
+                lang
             });
 
             if (data?.items) {
@@ -839,7 +815,8 @@ export default function RiskAssessmentPage() {
                         wp.naziv, 
                         formData.nazivTvrtke, 
                         formData.djelatnost,
-                        sistContext
+                        sistContext,
+                        lang
                     );
                     for (const item of items) {
                         const rizik = item.vjerovatnoca * item.posljedica;
@@ -898,19 +875,7 @@ export default function RiskAssessmentPage() {
     const handleGenerateDocx = async (saveToFile = true, overrideData = null, overrideItems = null) => {
         let data = overrideData || formData;
         let items = overrideItems || riskItems;
-        const docLang = data.jezik || (['bs', 'hr', 'sr'].includes(lang) ? lang : 'bs');
-        if (docLang !== lang) {
-            setTranslating(true);
-            try {
-                const result = await apiTranslateRiskAssessment(data, items, lang);
-                data = result.metadata;
-                items = result.items;
-            } catch (e) {
-                console.error('On-the-fly DOCX translation failed:', e);
-            } finally {
-                setTranslating(false);
-            }
-        }
+        // No on-the-fly translation
         return generateSafeWordDoc(
             data, 
             items, 
@@ -927,7 +892,7 @@ export default function RiskAssessmentPage() {
         if (riskItems.length === 0) return;
         setConclusionLoading(true);
         try {
-            const text = await fetchAiAutoConclusion(riskItems, formData, country);
+            const text = await fetchAiAutoConclusion(riskItems, formData, country, lang);
             if (text) {
                 set('zakljucak', text);
             }
@@ -940,19 +905,7 @@ export default function RiskAssessmentPage() {
         let data = (overrideData && !overrideData.nativeEvent) ? overrideData : formData;
         let items = (overrideItems && !overrideItems.nativeEvent) ? overrideItems : riskItems;
         
-        const docLang = data.jezik || (['bs', 'hr', 'sr'].includes(lang) ? lang : 'bs');
-        if (docLang !== lang) {
-            setTranslating(true);
-            try {
-                const result = await apiTranslateRiskAssessment(data, items, lang);
-                data = result.metadata;
-                items = result.items;
-            } catch (e) {
-                console.error('On-the-fly PDF translation failed:', e);
-            } finally {
-                setTranslating(false);
-            }
-        }
+        // No on-the-fly translation
         
         const itemsWithScores = items.filter(ri => ri.rizik > 0);
         const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
@@ -1216,34 +1169,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 <style>{`.hover-row:hover { background: rgba(0,0,0,0.02); }`}</style>
                 <PageHeader icon="📊" title={t('procjeneRizika')} />
                 <DialogRenderer />
-                {translating && (
-                    <div style={{
-                        position: 'fixed', inset: 0, zIndex: 99999,
-                        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', gap: 16
-                    }}>
-                        <style>{`
-                            @keyframes spin {
-                                0% { transform: rotate(0deg); }
-                                100% { transform: rotate(360deg); }
-                            }
-                        `}</style>
-                        <div style={{ width: 50, height: 50, borderRadius: '50%', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: '#fff', animation: 'spin 1s linear infinite' }} />
-                        <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                            {lang === 'en' ? 'Translating risk assessment...' :
-                             lang === 'de' ? 'Gefährdungsbeurteilung wird übersetzt...' :
-                             lang === 'sl' ? 'Prevajanje ocene tveganja...' :
-                             'Prevođenje procjene rizika pomoću AI...'}
-                        </div>
-                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
-                            {lang === 'en' ? 'Please wait, translating content and measures...' :
-                             lang === 'de' ? 'Bitte warten, Inhalte und Maßnahmen werden übersetzt...' :
-                             lang === 'sl' ? 'Prosimo, počakajte, prevajanje vsebine in ukrepov...' :
-                             'Molimo sačekajte, prevodimo sadržaj i mjere...'}
-                        </div>
-                    </div>
-                )}
+
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                         <button className="btn btn-primary btn-sm" title="Započnite kreiranje nove procjene rizika od nule" onClick={handleNew}>+ {t('novaProcjena')}</button>
@@ -1373,34 +1299,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     <h1 style={{ margin: 0 }}>📊 {editingId ? (t('urediProcjenu')) : (t('novaProcjenaRizika'))}</h1>
                 </div>
                 <DialogRenderer />
-                {translating && (
-                    <div style={{
-                        position: 'fixed', inset: 0, zIndex: 99999,
-                        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', gap: 16
-                    }}>
-                        <style>{`
-                            @keyframes spin {
-                                0% { transform: rotate(0deg); }
-                                100% { transform: rotate(360deg); }
-                            }
-                        `}</style>
-                        <div style={{ width: 50, height: 50, borderRadius: '50%', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: '#fff', animation: 'spin 1s linear infinite' }} />
-                        <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                            {lang === 'en' ? 'Translating risk assessment...' :
-                             lang === 'de' ? 'Gefährdungsbeurteilung wird übersetzt...' :
-                             lang === 'sl' ? 'Prevajanje ocene tveganja...' :
-                             'Prevođenje procjene rizika pomoću AI...'}
-                        </div>
-                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
-                            {lang === 'en' ? 'Please wait, translating content and measures...' :
-                             lang === 'de' ? 'Bitte warten, Inhalte und Maßnahmen werden übersetzt...' :
-                             lang === 'sl' ? 'Prosimo, počakajte, prevajanje vsebine in ukrepov...' :
-                             'Molimo sačekajte, prevodimo sadržaj i mjere...'}
-                        </div>
-                    </div>
-                )}
+
 
                 {/* Tabs */}
                 <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
@@ -1522,7 +1421,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     <button className="btn btn-outline btn-sm" onClick={async () => {
                                                         setSistAiLoading(true); setSistSelectedWp(wp.id);
                                                         try {
-                                                            const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '' });
+                                                            const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '', lang });
                                                             if (data) { const existing = sistematizacije.find(s => s.radnoMjestoId === wp.id); if (existing) { update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); } else { create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); } loadData(); showFlash(); }
                                                             else { alert('AI greška: ' + error); }
                                                         } catch (err) { alert('Greška: ' + err.message); }
@@ -1547,7 +1446,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     <button className="btn btn-outline btn-sm" onClick={async () => {
                                                         setSistAiLoading(true); setSistSelectedWp(wp.id);
                                                         try {
-                                                            const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '' });
+                                                            const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '', lang });
                                                             if (data) { create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); loadData(); showFlash(); }
                                                             else { alert('AI greška: ' + error); }
                                                         } catch (err) { alert('Greška: ' + err.message); }

@@ -385,6 +385,16 @@ function buildDataContext(lang, activeCompanyId, userCompanies, t) {
 }
 
 function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies, country, t) {
+    const LANG_MAP = {
+        bs: 'Bosnian (bosanski)',
+        hr: 'Croatian (hrvatski)',
+        sr: 'Serbian Latin (srpski latinica)',
+        en: 'English (engleski)',
+        de: 'German (njemački)',
+        sl: 'Slovenian (slovenski)'
+    };
+    const targetLanguage = LANG_MAP[lang] || LANG_MAP.bs;
+
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
         ? (t('userIsCurrentlyOn').replace('{0}', currentPage.label_bs).replace('{1}', currentPage.desc_bs).replace('{2}', currentPage.label_en).replace('{3}', currentPage.desc_en))
@@ -397,7 +407,7 @@ function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, user
     const today = new Date().toLocaleDateString(t('bsba'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     if (lang !== 'en') {
-        return `Ti si Zia, napredni AI AGENT za eZNR — digitalnu platformu za zaštitu na radu u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku. Danas je ${today}.
+        return `Ti si Zia, napredni AI AGENT za eZNR — digitalnu platformu za zaštitu na radu. Razgovaraš na jeziku: ${targetLanguage}. UVIJEK odgovaraj isključivo na tom jeziku. Danas je ${today}.
 
 NISI SAMO CHATBOT I NAVIGATOR — TI SI NAPREDNI ANALITIČAR PODATAKA (DATA ANALYST). 
 Tvoj zadatak je da direktno odgovaraš na pitanja korisnika o njihovoj firmi čitajući 'ŽIVE PODATKE' koji su ti proslijeđeni ispod.
@@ -503,7 +513,7 @@ VIŠEKORAČNI ZADACI:
 
 ODGOVORI kratko i akcijski, bez dugih uvoda`;
     } else {
-        return `You are Zia, an advanced AI AGENT for eZNR — a digital platform for occupational safety in Bosnia and Herzegovina. You communicate in English. Today is ${today}.
+        return `You are Zia, an advanced AI AGENT for eZNR — a digital platform for occupational safety. You communicate in language: ${targetLanguage}. ALWAYS reply in this language. Today is ${today}.
 
 YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers complete tasks:
 - Navigate to pages on their behalf (use navigate_to tool)
