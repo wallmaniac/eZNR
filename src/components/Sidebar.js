@@ -13,6 +13,7 @@ const menuItems = [
     // ── Top-level standalone ───────────────────────────────────────────────────
     { key: 'dashboard', icon: '📊', path: '/dashboard' },
     { key: 'home',      icon: '🏠', path: '/dashboard/news' },
+    { key: 'reports',   icon: '📈', path: '/dashboard/reports' },
 
     // ── 👷 RADNICI — everything about people ──────────────────────────────────
     {
@@ -138,6 +139,7 @@ const SIDEBAR_TOOLTIPS = {
     bs: {
         dashboard: 'Kontrolna ploča — pregled svih ključnih podataka na jednom mjestu',
         home: 'Početna stranica s novostima iz zaštite na radu',
+        reports: 'Izvještajni modul — godišnji izvještaji, statistike i compliance pregledi',
         workers: 'Evidencija svih radnika u firmi',
         workerCertificates: 'Pregled svih uvjerenja (ZOS, ZOP, obuke) za radnike',
         workerPPE: 'Osobna zaštitna oprema — pregled zaduživanja OZO za radnike',
@@ -209,6 +211,7 @@ const SIDEBAR_TOOLTIPS = {
     en: {
         dashboard: 'Dashboard — overview of all key data in one place',
         home: 'Home page with occupational safety news',
+        reports: 'Reporting module — annual reports, statistics and compliance overviews',
         workers: 'Staff registry for all employees',
         workerCertificates: 'All worker certificates (training, fire safety, etc.)',
         workerPPE: 'Personal Protective Equipment — PPE assignment tracking',
