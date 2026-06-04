@@ -158,7 +158,7 @@ export const apiGenerateRiskQuestionnaire = async (payload) => {
 
 export const apiAnalyzeQuestionnaire = async (payload) => {
     try {
-        const { workplaceName, surveyJson, responses, sistematizacija } = payload;
+        const { workplaceName, surveyJson, responses, sistematizacija, lang } = payload;
         
         let allQuestions = [];
         try {
@@ -211,7 +211,8 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
             workplaceName,
             responseSummary,
             sistContext,
-            sistematizacija
+            sistematizacija,
+            lang
         });
 
         if (!result.success || !result.analysis) {
