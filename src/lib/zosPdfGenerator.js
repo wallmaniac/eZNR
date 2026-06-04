@@ -1,6 +1,7 @@
 'use client';
 
 import { LAWS, getArticleWord } from '@/lib/lawConfig';
+import { t as _t } from '@/i18n/translations';
 
 // Dictionary mapping document labels for 6 languages
 const ZOS_T = {
@@ -587,7 +588,7 @@ export function printZosPdf(params, lang = 'bs') {
     const html = generateZosPdf({ ...params, lang });
     const printWindow = window.open('', '_blank', 'width=800,height=1100');
     if (!printWindow) {
-        alert(lang === 'en' ? 'Please enable popups for printing.' : 'Molimo omogućite popup prozore za ispis ZOS dokumenta.');
+        alert(_t('allowPopupsPrint', lang));
         return;
     }
     printWindow.document.write(html);

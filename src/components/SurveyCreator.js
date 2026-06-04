@@ -153,7 +153,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
     const selectedQuestion = questions.find(q => q.id === selectedId);
     const getTypeLabel = (type) => {
         const t = QUESTION_TYPES.find(qt => qt.type === type);
-        return t ? (lang !== 'en' ? t.label : t.labelEn) : type;
+        return t ? _t('questionType_' + type, lang) : type;
     };
     const getTypeIcon = (type) => {
         const t = QUESTION_TYPES.find(qt => qt.type === type);
@@ -202,7 +202,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                 onMouseLeave={e => { e.target.style.background = 'var(--bg-input)'; e.target.style.color = 'var(--text)'; }}
                             >
                                 <span style={{ fontSize: '1rem' }}>{qt.icon}</span>
-                                {lang !== 'en' ? qt.label : qt.labelEn}
+                                {_t('questionType_' + qt.type, lang)}
                             </button>
                         ))}
                     </div>

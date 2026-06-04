@@ -1,5 +1,4 @@
 'use client';
-import { t } from '@/i18n/translations';
 import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getQuestionnaireResponse } from '@/lib/firebaseSync';
@@ -105,9 +104,9 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {[
                     { key: 'total', label: _t('ukupno', lang), value: stats.total, color: '#8b5cf6', icon: '📋', bg: 'rgba(139,92,246,0.1)' },
-                    { key: 'sent', ...STATUS_CONFIG.sent, value: stats.sent, label: lang !== 'en' ? STATUS_CONFIG.sent.label : STATUS_CONFIG.sent.labelEn },
-                    { key: 'opened', ...STATUS_CONFIG.opened, value: stats.opened, label: lang !== 'en' ? STATUS_CONFIG.opened.label : STATUS_CONFIG.opened.labelEn },
-                    { key: 'completed', ...STATUS_CONFIG.completed, value: stats.completed, label: lang !== 'en' ? STATUS_CONFIG.completed.label : STATUS_CONFIG.completed.labelEn },
+                    { key: 'sent', ...STATUS_CONFIG.sent, value: stats.sent, label: _t('statusSent', lang) },
+                    { key: 'opened', ...STATUS_CONFIG.opened, value: stats.opened, label: _t('statusOpened', lang) },
+                    { key: 'completed', ...STATUS_CONFIG.completed, value: stats.completed, label: _t('statusCompleted', lang) },
                 ].map(s => (
                     <div key={s.key} className="card" style={{ textAlign: 'center' }}>
                         <div className="card-body" style={{ padding: '16px 12px' }}>
@@ -193,7 +192,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                                                         background: sc.bg, color: sc.color,
                                                         fontSize: '0.8rem', fontWeight: 600,
                                                     }}>
-                                                        {sc.icon} {lang !== 'en' ? sc.label : sc.labelEn}
+                                                        {sc.icon} {_t('status' + s.status.charAt(0).toUpperCase() + s.status.slice(1), lang)}
                                                     </span>
                                                 </td>
                                                 <td>

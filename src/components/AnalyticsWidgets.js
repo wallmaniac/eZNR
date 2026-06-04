@@ -157,9 +157,15 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
     const injuryMonths = useMemo(() => {
         const allIncidents = [...(injuries || []), ...(diseases || [])];
         const months = [];
-        const monthLabels = lang !== 'en'
-            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
-            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const localizedMonths = {
+            bs: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+            hr: ['Jan', 'Feb', 'Ožu', 'Tra', 'Svi', 'Lip', 'Srp', 'Kol', 'Ruj', 'Lis', 'Stu', 'Pro'],
+            sr: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'],
+            en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+            sl: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec']
+        };
+        const monthLabels = localizedMonths[lang] || localizedMonths.bs;
 
         for (let i = 11; i >= 0; i--) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -170,7 +176,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             months.push({ label: monthLabels[m], value: count });
         }
         return months;
-    }, [injuries, diseases]);
+    }, [injuries, diseases, lang]);
 
     // ── Risk Score Distribution ─────────────────────────────────────────────
     const riskDistribution = useMemo(() => {

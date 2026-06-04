@@ -1,6 +1,6 @@
 'use client';
 import { t } from '@/i18n/translations';
-import { t as _t } from '@/i18n/translations';
+const _t = t;
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getSessionsForTraining } from '@/lib/firebaseSync';
 import { sendReminderEmail } from '@/lib/emailService';
@@ -139,10 +139,9 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     {!loading && sessions.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '2rem', marginBottom: 12 }}>📭</div>
-                            <p>{lang !== 'en'
-                                ? (isTraining ? 'Nema poslatih sesija za ovu obuku.' : 'Nema poslatih sesija za ovaj upitnik.')
-                                : (isTraining ? 'No sessions sent for this training.' : 'No sessions sent for this questionnaire.')}
-                        </p>
+                            <p>
+                                {isTraining ? _t('nemaPoslatihSesijaZaObuku', lang) : _t('nemaPoslatihSesijaZaUpitnik', lang)}
+                            </p>
                         </div>
                     )}
 
@@ -231,10 +230,9 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             ) : (
                                 <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
                                     <div style={{ fontSize: '2rem', marginBottom: 8 }}>🎉</div>
-                                    <p style={{ fontWeight: 600 }}>{lang !== 'en'
-                                        ? (isTraining ? 'Svi su završili obuku!' : 'Svi su ispunili upitnik!')
-                                        : 'Everyone completed!'}
-                                </p>
+                                    <p style={{ fontWeight: 600 }}>
+                                        {isTraining ? _t('sviZavrsiliObuku', lang) : _t('sviIspuniliUpitnik', lang)}
+                                    </p>
                                 </div>
                             )}
                         </>
