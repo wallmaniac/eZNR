@@ -598,6 +598,9 @@ Keep responses short and action-focused`;
 // ────────────────── Dynamic suggestion chips based on live data ──────────────────
 function buildDynamicSuggestions(lang, pathname) {
     const chips = [];
+    const resolveStr = (obj, currentLang) => {
+        return obj[currentLang] || obj.bs || '';
+    };
     try {
         const get = (key) => getRawAll(key);
         const certificates = get('certificates');
@@ -611,11 +614,6 @@ function buildDynamicSuggestions(lang, pathname) {
         const expiring = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30);
         const sickLeave = [...injuries, ...diseases].filter(i => i.bolovanje && i.status !== 'zatvorena');
         const overdueEq = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
-
-        // Helper to resolve string based on language
-        const resolveStr = (obj, currentLang) => {
-            return obj[currentLang] || obj.bs || '';
-        };
 
         // ALWAYS show urgent issues first
         if (expired.length > 0) {
