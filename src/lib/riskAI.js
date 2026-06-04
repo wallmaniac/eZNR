@@ -235,3 +235,124 @@ export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sist
     }
 };
 
+const LANG_MAP = {
+    bs: 'Bosnian (bosanski)',
+    hr: 'Croatian (hrvatski)',
+    sr: 'Serbian Latin (srpski latinica)',
+    en: 'English (engleski)',
+    de: 'German (njemački)',
+    sl: 'Slovenian (slovenski)'
+};
+
+function tryParseJson(str) {
+    if (!str) return null;
+    try { return JSON.parse(str); } catch {}
+    try { return JSON.parse(str.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()); } catch {}
+    try {
+        const f = str.indexOf('{'), l = str.lastIndexOf('}');
+        if (f !== -1 && l > f) return JSON.parse(str.substring(f, l + 1));
+    } catch {}
+    try {
+        const f = str.indexOf('['), l = str.lastIndexOf(']');
+        if (f !== -1 && l > f) return JSON.parse(str.substring(f, l + 1));
+    } catch {}
+    return null;
+}
+
+export const apiTranslateRiskAssessment = async (metadata, items, targetLangCode) => {
+    const targetLanguage = LANG_MAP[targetLangCode] || LANG_MAP.bs;
+    
+    // 1. Translate metadata
+    const metaToTranslate = {
+        nazivProcjene: metadata.nazivProcjene || '',
+        opisProcesa: metadata.opisProcesa || '',
+        analizaOrganizacije: metadata.analizaOrganizacije || '',
+        zakljucak: metadata.zakljucak || ''
+    };
+    
+    let translatedMeta = { ...metaToTranslate };
+    if (metaToTranslate.nazivProcjene || metaToTranslate.opisProcesa || metaToTranslate.analizaOrganizacije || metaToTranslate.zakljucak) {
+        const sysPromptMeta = `You are a professional safety at work (ZNR) translator.
+Translate all text values in the following JSON object to the language: ${targetLanguage}.
+Return ONLY the translated JSON object. Do not include markdown code block syntax (like \`\`\`json) or any other text. Keep JSON keys exactly as they are.`;
+        
+        try {
+            const response = await apiCallZia({
+                systemPrompt: sysPromptMeta,
+                messages: [{ role: 'user', parts: [{ text: JSON.stringify(metaToTranslate) }] }]
+            });
+            const text = response?.text || '';
+            const parsed = tryParseJson(text);
+            if (parsed) {
+                translatedMeta = parsed;
+            }
+        } catch (e) {
+            console.error('Error translating metadata:', e);
+        }
+    }
+    
+    // 2. Translate risk items in batches of 15
+    const translatedItems = [];
+    const BATCH_SIZE = 15;
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+        const batch = items.slice(i, i + BATCH_SIZE).map(item => ({
+            id: item.id,
+            opisOpasnosti: item.opisOpasnosti || '',
+            postojeceMjere: item.postojeceMjere || '',
+            predlozeneMjere: item.predlozeneMjere || ''
+        }));
+        
+        const sysPromptItems = `You are a professional safety at work (ZNR) translator.
+Translate the text values (opisOpasnosti, postojeceMjere, predlozeneMjere) in the following array of JSON objects to the language: ${targetLanguage}.
+Keep 'id' values exactly as they are.
+Return ONLY the translated array of JSON objects. Do not include markdown code block syntax (like \`\`\`json) or any other text. Keep JSON keys exactly as they are.`;
+        
+        try {
+            const response = await apiCallZia({
+                systemPrompt: sysPromptItems,
+                messages: [{ role: 'user', parts: [{ text: JSON.stringify(batch) }] }]
+            });
+            const text = response?.text || '';
+            const parsed = tryParseJson(text);
+            if (Array.isArray(parsed)) {
+                parsed.forEach(translatedItem => {
+                    const original = items.find(it => it.id === translatedItem.id);
+                    if (original) {
+                        translatedItems.push({
+                            ...original,
+                            opisOpasnosti: translatedItem.opisOpasnosti || '',
+                            postojeceMjere: translatedItem.postojeceMjere || '',
+                            predlozeneMjere: translatedItem.predlozeneMjere || ''
+                        });
+                    }
+                });
+            } else {
+                // fallback to original if parsing fails
+                batch.forEach(item => {
+                    const original = items.find(it => it.id === item.id);
+                    if (original) translatedItems.push(original);
+                });
+            }
+        } catch (e) {
+            console.error(`Error translating items batch starting at ${i}:`, e);
+            batch.forEach(item => {
+                const original = items.find(it => it.id === item.id);
+                if (original) translatedItems.push(original);
+            });
+        }
+    }
+    
+    return {
+        metadata: {
+            ...metadata,
+            nazivProcjene: translatedMeta.nazivProcjene || '',
+            opisProcesa: translatedMeta.opisProcesa || '',
+            analizaOrganizacije: translatedMeta.analizaOrganizacije || '',
+            zakljucak: translatedMeta.zakljucak || '',
+            jezik: targetLangCode
+        },
+        items: translatedItems
+    };
+};
+
+

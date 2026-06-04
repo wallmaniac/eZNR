@@ -113,7 +113,7 @@ export function extractNameTokens(text) {
     const seen = new Set();
 
     // Pattern: 2-3 consecutive words starting with uppercase (including Bosnian chars)
-    const CAP_WORD = '[A-ZČĆĐŠŽА-ЯЉЊЋЂЏЈИЕa-z][a-zčćđšžа-яA-Z]*';
+    const CAP_WORD = '[A-ZČĆĐŠŽA-ЯLjNjĆĐDžJIEa-z][a-zčćđšža-яA-Z]*';
     const pattern = new RegExp(`(${CAP_WORD}(?:\\s+${CAP_WORD}){1,2})`, 'g');
 
     for (const line of lines) {
@@ -122,7 +122,7 @@ export function extractNameTokens(text) {
             const token = m[1].trim();
             const words = token.split(/\s+/);
             // All words must start uppercase
-            if (!words.every(w => /^[A-ZČĆĐŠŽЉњћђ]/.test(w))) continue;
+            if (!words.every(w => /^[A-ZČĆĐŠŽLjnjćđ]/.test(w))) continue;
             // No stop words
             if (words.some(w => STOP_WORDS.has(w.toLowerCase()))) continue;
             // Min 2 chars per word

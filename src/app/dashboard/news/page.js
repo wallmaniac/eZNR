@@ -138,9 +138,68 @@ const FORM_CATEGORIES_MAP = {
             icon: '🚑',
             legal: 'Pravilnik o sadržaju i načinu podnošenja izvještaja — Sl. novine FBiH br. 9/23',
             items: [
-                { name: 'Obrazac br. 1 — Izvještaj o povredi na radu', shortName: 'Prijava povrede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Pravilnik 9/23, Čl. 2', printBlank: 'obrazac1' },
-                { name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Pravilnik 9/23, Čl. 3', printBlank: 'obrazac2' },
-                { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 63. Zakona 79/20' },
+                {
+                    name: 'Obrazac br. 1 — Izvještaj o povredi na radu',
+                    name_bs: 'Obrazac br. 1 — Izvještaj o povredi na radu',
+                    name_hr: 'Obrazac br. 1 — Izvještaj o ozljedi na radu',
+                    name_sr: 'Obrazac br. 1 — Izveštaj o povredi na radu',
+                    name_en: 'Form No. 1 — Report on Workplace Injury',
+                    name_de: 'Formular Nr. 1 — Bericht über Arbeitsunfälle',
+                    name_sl: 'Obrazec št. 1 — Poročilo o poškodbi pri delu',
+                    shortName: 'Prijava povrede (OR)',
+                    icon: '🩹',
+                    route: '/dashboard/injuries',
+                    type: 'page',
+                    desc: 'Pravilnik 9/23, Čl. 2',
+                    desc_bs: 'Pravilnik 9/23, Čl. 2',
+                    desc_hr: 'Pravilnik 9/23, Čl. 2',
+                    desc_sr: 'Pravilnik 9/23, Čl. 2',
+                    desc_en: 'Rulebook 9/23, Art. 2',
+                    desc_de: 'Regelwerk 9/23, Art. 2',
+                    desc_sl: 'Pravilnik 9/23, 2. člen',
+                    printBlank: 'obrazac1'
+                },
+                {
+                    name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju',
+                    name_bs: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju',
+                    name_hr: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju',
+                    name_sr: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju',
+                    name_en: 'Form No. 2 — Report on Occupational Disease',
+                    name_de: 'Formular Nr. 2 — Bericht über Berufskrankheiten',
+                    name_sl: 'Obrazec št. 2 — Poročilo o poklicni bolezni',
+                    shortName: 'Profesionalna bolest (PB)',
+                    icon: '🫁',
+                    route: '/dashboard/diseases',
+                    type: 'page',
+                    desc: 'Pravilnik 9/23, Čl. 3',
+                    desc_bs: 'Pravilnik 9/23, Čl. 3',
+                    desc_hr: 'Pravilnik 9/23, Čl. 3',
+                    desc_sr: 'Pravilnik 9/23, Čl. 3',
+                    desc_en: 'Rulebook 9/23, Art. 3',
+                    desc_de: 'Regelwerk 9/23, Art. 3',
+                    desc_sl: 'Pravilnik 9/23, 3. člen',
+                    printBlank: 'obrazac2'
+                },
+                {
+                    name: 'Obrazac OIR-1 — Obavijest o događaju na radu',
+                    name_bs: 'Obrazac OIR-1 — Obavijest o događaju na radu',
+                    name_hr: 'Obrazac OIR-1 — Obavijest o događaju na radu',
+                    name_sr: 'Obrazac OIR-1 — Obaveštenje o događaju na radu',
+                    name_en: 'Form OIR-1 — Notification of Workplace Incident',
+                    name_de: 'Formular OIR-1 — Meldung über ein Ereignis bei der Arbeit',
+                    name_sl: 'Obrazec OIR-1 — Obvestilo o dogodku pri delu',
+                    shortName: 'Obavijest (OIR-1)',
+                    icon: '📑',
+                    route: '/dashboard/form-oir1',
+                    type: 'page',
+                    desc: 'Čl. 63. Zakona 79/20',
+                    desc_bs: 'Čl. 63. Zakona 79/20',
+                    desc_hr: 'Čl. 63. Zakona 79/20',
+                    desc_sr: 'Čl. 63. Zakona 79/20',
+                    desc_en: 'Art. 63 of Law 79/20',
+                    desc_de: 'Art. 63 des Gesetzes 79/20',
+                    desc_sl: '63. člen Zakona 79/20'
+                },
             ]
         },
         {
@@ -152,10 +211,88 @@ const FORM_CATEGORIES_MAP = {
             icon: '🩺',
             legal: 'Pravilnik o raspoređivanju radnika na poslove s povećanim rizikom — Sl. novine FBiH',
             items: [
-                { name: 'Uputnica za prethodni ljekarski pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 1 Pravilnika', printBlank: 'uputnica-prethodni' },
-                { name: 'Uputnica za periodični ljekarski pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 3 Pravilnika', printBlank: 'uputnica-periodicni' },
-                { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Obrazac br. 2 Pravilnika' },
-                { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Obrazac br. 4 Pravilnika' },
+                {
+                    name: 'Uputnica za prethodni ljekarski pregled',
+                    name_bs: 'Uputnica za prethodni ljekarski pregled',
+                    name_hr: 'Uputnica za prethodni liječnički pregled',
+                    name_sr: 'Uputnica za prethodni lekarski pregled',
+                    name_en: 'Referral for Preliminary Medical Examination',
+                    name_de: 'Überweisung zur Erstuntersuchung',
+                    name_sl: 'Napotnica za predhodni zdravstveni pregled',
+                    shortName: 'Uputnica (prethodni)',
+                    icon: '📋',
+                    route: '/dashboard/referral-ra1',
+                    type: 'page',
+                    desc: 'Obrazac br. 1 Pravilnika',
+                    desc_bs: 'Obrazac br. 1 Pravilnika',
+                    desc_hr: 'Obrazac br. 1 Pravilnika',
+                    desc_sr: 'Obrazac br. 1 Pravilnika',
+                    desc_en: 'Form No. 1 of the Rulebook',
+                    desc_de: 'Formular Nr. 1 des Regelwerks',
+                    desc_sl: 'Obrazec št. 1 pravilnika',
+                    printBlank: 'uputnica-prethodni'
+                },
+                {
+                    name: 'Uputnica za periodični ljekarski pregled',
+                    name_bs: 'Uputnica za periodični ljekarski pregled',
+                    name_hr: 'Uputnica za periodični liječnički pregled',
+                    name_sr: 'Uputnica za periodični lekarski pregled',
+                    name_en: 'Referral for Periodic Medical Examination',
+                    name_de: 'Überweisung zur Folgeuntersuchung',
+                    name_sl: 'Napotnica za periodični zdravstveni pregled',
+                    shortName: 'Uputnica (periodični)',
+                    icon: '📋',
+                    route: '/dashboard/referral-ra1',
+                    type: 'page',
+                    desc: 'Obrazac br. 3 Pravilnika',
+                    desc_bs: 'Obrazac br. 3 Pravilnika',
+                    desc_hr: 'Obrazac br. 3 Pravilnika',
+                    desc_sr: 'Obrazac br. 3 Pravilnika',
+                    desc_en: 'Form No. 3 of the Rulebook',
+                    desc_de: 'Formular Nr. 3 des Regelwerks',
+                    desc_sl: 'Obrazec št. 3 pravilnika',
+                    printBlank: 'uputnica-periodicni'
+                },
+                {
+                    name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)',
+                    name_bs: 'Obrazac RO1 — Ljekarski nalaz (ocjena radne sposobnosti)',
+                    name_hr: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)',
+                    name_sr: 'Obrazac RO1 — Lekarski nalaz (ocena radne sposobnosti)',
+                    name_en: 'Form RO1 — Medical Report (Evaluation of Work Capacity)',
+                    name_de: 'Formular RO1 — Ärztlicher Befund (Beurteilung der Arbeitsfähigkeit)',
+                    name_sl: 'Obrazec RO1 — Zdravstveno poročilo (ocena delovne sposobnosti)',
+                    shortName: 'Liječnički nalaz (RO1)',
+                    icon: '🏥',
+                    route: '/dashboard/form-ro1',
+                    type: 'page',
+                    desc: 'Obrazac br. 2 Pravilnika',
+                    desc_bs: 'Obrazac br. 2 Pravilnika',
+                    desc_hr: 'Obrazac br. 2 Pravilnika',
+                    desc_sr: 'Obrazac br. 2 Pravilnika',
+                    desc_en: 'Form No. 2 of the Rulebook',
+                    desc_de: 'Formular Nr. 2 des Regelwerks',
+                    desc_sl: 'Obrazec št. 2 pravilnika'
+                },
+                {
+                    name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_bs: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_hr: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_sr: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_en: 'Form RO2 — Certificate of Temporary Incapacity',
+                    name_de: 'Formular RO2 — Bescheinigung über vorübergehende Arbeitsunfähigkeit',
+                    name_sl: 'Obrazec RO2 — Potrdilo o začasni nesposobnosti za delo',
+                    shortName: 'Privremena nesposobnost (RO2)',
+                    icon: '📄',
+                    route: '/dashboard/form-ro2',
+                    type: 'page',
+                    desc: 'Obrazac br. 4 Pravilnika',
+                    desc_bs: 'Obrazac br. 4 Pravilnika',
+                    desc_hr: 'Obrazac br. 4 Pravilnika',
+                    desc_sr: 'Obrazac br. 4 Pravilnika',
+                    desc_en: 'Form No. 4 of the Rulebook',
+                    desc_de: 'Formular Nr. 4 des Regelwerks',
+                    desc_sl: 'Obrazec št. 4 pravilnika'
+                },
             ]
         },
         {
@@ -167,8 +304,48 @@ const FORM_CATEGORIES_MAP = {
             icon: '📝',
             legal: 'Čl. 34., 48., 49. Zakona o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)',
             items: [
-                { name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način', shortName: 'Zapisnik ZOS', icon: '📝', route: '/dashboard/trainings', type: 'page', desc: 'Čl. 48-49 Zakona 79/20', printBlank: 'zos' },
-                { name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara', shortName: 'Zapisnik ZOP', icon: '🔥', route: '/dashboard/trainings', type: 'page', desc: 'Zakon o zaštiti od požara FBiH 64/09', printBlank: 'zop' },
+                {
+                    name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način',
+                    name_bs: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način',
+                    name_hr: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način',
+                    name_sr: 'Zapisnik ZOS — Ocena osposobljenosti za rad na siguran način',
+                    name_en: 'ZOS Record — Evaluation of Competence for Safe Work',
+                    name_de: 'ZOS-Protokoll — Bewertung der Befähigung für sicheres Arbeiten',
+                    name_sl: 'Zapisnik ZOS — Ocena usposobljenosti za varno delo',
+                    shortName: 'Zapisnik ZOS',
+                    icon: '📝',
+                    route: '/dashboard/trainings',
+                    type: 'page',
+                    desc: 'Čl. 48-49 Zakona 79/20',
+                    desc_bs: 'Čl. 48-49 Zakona 79/20',
+                    desc_hr: 'Čl. 48-49 Zakona 79/20',
+                    desc_sr: 'Čl. 48-49 Zakona 79/20',
+                    desc_en: 'Art. 48-49 of Law 79/20',
+                    desc_de: 'Art. 48-49 des Gesetzes 79/20',
+                    desc_sl: '48.-49. člen Zakona 79/20',
+                    printBlank: 'zos'
+                },
+                {
+                    name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara',
+                    name_bs: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara',
+                    name_hr: 'Zapisnik ZOS — Ocjena osposobljenosti za zaštitu od požara',
+                    name_sr: 'Zapisnik ZOP — Ocena osposobljenosti za zaštitu od požara',
+                    name_en: 'ZOP Record — Evaluation of Competence for Fire Protection',
+                    name_de: 'ZOP-Protokoll — Bewertung der Befähigung für Brandschutz',
+                    name_sl: 'Zapisnik ZOP — Ocena usposobljenosti za varstvo pred požarom',
+                    shortName: 'Zapisnik ZOP',
+                    icon: '🔥',
+                    route: '/dashboard/trainings',
+                    type: 'page',
+                    desc: 'Zakon o zaštiti od požara FBiH 64/09',
+                    desc_bs: 'Zakon o zaštiti od požara FBiH 64/09',
+                    desc_hr: 'Zakon o zaštiti od požara FBiH 64/09',
+                    desc_sr: 'Zakon o zaštiti od požara FBiH 64/09',
+                    desc_en: 'FBiH Fire Protection Act 64/09',
+                    desc_de: 'FBiH-Brandschutzgesetz 64/09',
+                    desc_sl: 'Zakon o varstvu pred požarom FBiH 64/09',
+                    printBlank: 'zop'
+                },
             ]
         },
         {
@@ -180,7 +357,26 @@ const FORM_CATEGORIES_MAP = {
             icon: '📊',
             legal: 'Zakon o radu FBiH (Sl. novine FBiH br. 26/16) + Pravilnik 92/16',
             items: [
-                { name: 'Evidencija noćnog rada (NR1)', shortName: 'Noćni rad (NR1)', icon: '🌙', route: '/dashboard/night-work', type: 'page', desc: 'Pravilnik 92/16, Čl. 36-38 ZoR' },
+                {
+                    name: 'Evidencija noćnog rada (NR1)',
+                    name_bs: 'Evidencija noćnog rada (NR1)',
+                    name_hr: 'Evidencija noćnog rada (NR1)',
+                    name_sr: 'Evidencija noćnog rada (NR1)',
+                    name_en: 'Night Work Log (NR1)',
+                    name_de: 'Nachtarbeitsnachweis (NR1)',
+                    name_sl: 'Evidenca nočnega dela (NR1)',
+                    shortName: 'Noćni rad (NR1)',
+                    icon: '🌙',
+                    route: '/dashboard/night-work',
+                    type: 'page',
+                    desc: 'Pravilnik 92/16, Čl. 36-38 ZoR',
+                    desc_bs: 'Pravilnik 92/16, Čl. 36-38 ZoR',
+                    desc_hr: 'Pravilnik 92/16, Čl. 36-38 ZoR',
+                    desc_sr: 'Pravilnik 92/16, Čl. 36-38 ZoR',
+                    desc_en: 'Rulebook 92/16, Art. 36-38 of Labor Act',
+                    desc_de: 'Regelwerk 92/16, Art. 36-38 des Arbeitsgesetzes',
+                    desc_sl: 'Pravilnik 92/16, 36.-38. člen Zakona o delovnih razmerjih'
+                },
             ]
         },
     ],
@@ -194,9 +390,68 @@ const FORM_CATEGORIES_MAP = {
             icon: '🚑',
             legal: 'Pravilnik o evidenciji, ispravama, izvještajima i knjizi nadz. iz ZNR — NN 52/84',
             items: [
-                { name: 'Obrazac br. 1 — Prijava ozljede na radu', shortName: 'Prijava ozljede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Čl. 65. ZoZNR (NN 71/14)', printBlank: 'obrazac1' },
-                { name: 'Obrazac br. 2 — Prijava profesionalne bolesti', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Čl. 65. ZoZNR (NN 71/14)', printBlank: 'obrazac2' },
-                { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 65. ZoZNR (NN 71/14)' },
+                {
+                    name: 'Obrazac br. 1 — Prijava ozljede na radu',
+                    name_bs: 'Obrazac br. 1 — Prijava povreda na radu',
+                    name_hr: 'Obrazac br. 1 — Prijava ozljede na radu',
+                    name_sr: 'Obrazac br. 1 — Prijava povrede na radu',
+                    name_en: 'Form No. 1 — Report on Workplace Injury',
+                    name_de: 'Formular Nr. 1 — Bericht über Arbeitsunfälle',
+                    name_sl: 'Obrazec št. 1 — Poročilo o poškodbi pri delu',
+                    shortName: 'Prijava ozljede (OR)',
+                    icon: '🩹',
+                    route: '/dashboard/injuries',
+                    type: 'page',
+                    desc: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_bs: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_hr: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_sr: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_en: 'Art. 65 of OSH Act (NN 71/14)',
+                    desc_de: 'Art. 65 des Arbeitsschutzgesetzes (NN 71/14)',
+                    desc_sl: '65. člen Zakona o varnosti in zdravju pri delu (NN 71/14)',
+                    printBlank: 'obrazac1'
+                },
+                {
+                    name: 'Obrazac br. 2 — Prijava profesionalne bolesti',
+                    name_bs: 'Obrazac br. 2 — Prijava profesionalne bolesti',
+                    name_hr: 'Obrazac br. 2 — Prijava profesionalne bolesti',
+                    name_sr: 'Obrazac br. 2 — Prijava profesionalne bolesti',
+                    name_en: 'Form No. 2 — Report on Occupational Disease',
+                    name_de: 'Formular Nr. 2 — Bericht über Berufskrankheiten',
+                    name_sl: 'Obrazec št. 2 — Poročilo o poklicni bolezni',
+                    shortName: 'Profesionalna bolest (PB)',
+                    icon: '🫁',
+                    route: '/dashboard/diseases',
+                    type: 'page',
+                    desc: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_bs: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_hr: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_sr: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_en: 'Art. 65 of OSH Act (NN 71/14)',
+                    desc_de: 'Art. 65 des Arbeitsschutzgesetzes (NN 71/14)',
+                    desc_sl: '65. člen Zakona o varnosti in zdravju pri delu (NN 71/14)',
+                    printBlank: 'obrazac2'
+                },
+                {
+                    name: 'Obrazac OIR-1 — Obavijest o događaju na radu',
+                    name_bs: 'Obrazac OIR-1 — Obavijest o događaju na radu',
+                    name_hr: 'Obrazac OIR-1 — Obavijest o događaju na radu',
+                    name_sr: 'Obrazac OIR-1 — Obaveštenje o događaju na radu',
+                    name_en: 'Form OIR-1 — Notification of Workplace Incident',
+                    name_de: 'Formular OIR-1 — Meldung über ein Ereignis bei der Arbeit',
+                    name_sl: 'Obrazec OIR-1 — Obvestilo o dogodku pri delu',
+                    shortName: 'Obavijest (OIR-1)',
+                    icon: '📑',
+                    route: '/dashboard/form-oir1',
+                    type: 'page',
+                    desc: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_bs: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_hr: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_sr: 'Čl. 65. ZoZNR (NN 71/14)',
+                    desc_en: 'Art. 65 of OSH Act (NN 71/14)',
+                    desc_de: 'Art. 65 des Arbeitsschutzgesetzes (NN 71/14)',
+                    desc_sl: '65. člen Zakona o varnosti in zdravju pri delu (NN 71/14)'
+                },
             ]
         },
         {
@@ -208,10 +463,88 @@ const FORM_CATEGORIES_MAP = {
             icon: '🩺',
             legal: 'Pravilnik o poslovima s posebnim uvjetima rada — NN 5/84',
             items: [
-                { name: 'Uputnica za prethodni liječnički pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Čl. 36. ZoZNR (NN 71/14)', printBlank: 'uputnica-prethodni' },
-                { name: 'Uputnica za periodični liječnički pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Čl. 36. ZoZNR (NN 71/14)', printBlank: 'uputnica-periodicni' },
-                { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Pravilnik NN 5/84' },
-                { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Pravilnik NN 5/84' },
+                {
+                    name: 'Uputnica za prethodni liječnički pregled',
+                    name_bs: 'Uputnica za prethodni ljekarski pregled',
+                    name_hr: 'Uputnica za prethodni liječnički pregled',
+                    name_sr: 'Uputnica za prethodni lekarski pregled',
+                    name_en: 'Referral for Preliminary Medical Examination',
+                    name_de: 'Überweisung zur Erstuntersuchung',
+                    name_sl: 'Napotnica za predhodni zdravstveni pregled',
+                    shortName: 'Uputnica (prethodni)',
+                    icon: '📋',
+                    route: '/dashboard/referral-ra1',
+                    type: 'page',
+                    desc: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_bs: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_hr: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_sr: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_en: 'Art. 36 of OSH Act (NN 71/14)',
+                    desc_de: 'Art. 36 des Arbeitsschutzgesetzes (NN 71/14)',
+                    desc_sl: '36. člen Zakona o varnosti in zdravju pri delu (NN 71/14)',
+                    printBlank: 'uputnica-prethodni'
+                },
+                {
+                    name: 'Uputnica za periodični liječnički pregled',
+                    name_bs: 'Uputnica za periodični ljekarski pregled',
+                    name_hr: 'Uputnica za periodični liječnički pregled',
+                    name_sr: 'Uputnica za periodični lekarski pregled',
+                    name_en: 'Referral for Periodic Medical Examination',
+                    name_de: 'Überweisung zur Folgeuntersuchung',
+                    name_sl: 'Napotnica za periodični zdravstveni pregled',
+                    shortName: 'Uputnica (periodični)',
+                    icon: '📋',
+                    route: '/dashboard/referral-ra1',
+                    type: 'page',
+                    desc: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_bs: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_hr: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_sr: 'Čl. 36. ZoZNR (NN 71/14)',
+                    desc_en: 'Art. 36 of OSH Act (NN 71/14)',
+                    desc_de: 'Art. 36 des Arbeitsschutzgesetzes (NN 71/14)',
+                    desc_sl: '36. člen Zakona o varnosti in zdravju pri delu (NN 71/14)',
+                    printBlank: 'uputnica-periodicni'
+                },
+                {
+                    name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)',
+                    name_bs: 'Obrazac RO1 — Ljekarski nalaz (ocjena radne sposobnosti)',
+                    name_hr: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)',
+                    name_sr: 'Obrazac RO1 — Lekarski nalaz (ocena radne sposobnosti)',
+                    name_en: 'Form RO1 — Medical Report (Evaluation of Work Capacity)',
+                    name_de: 'Formular RO1 — Ärztlicher Befund (Beurteilung der Arbeitsfähigkeit)',
+                    name_sl: 'Obrazec RO1 — Zdravstveno poročilo (ocena delovne sposobnosti)',
+                    shortName: 'Liječnički nalaz (RO1)',
+                    icon: '🏥',
+                    route: '/dashboard/form-ro1',
+                    type: 'page',
+                    desc: 'Pravilnik NN 5/84',
+                    desc_bs: 'Pravilnik NN 5/84',
+                    desc_hr: 'Pravilnik NN 5/84',
+                    desc_sr: 'Pravilnik NN 5/84',
+                    desc_en: 'Rulebook NN 5/84',
+                    desc_de: 'Regelwerk NN 5/84',
+                    desc_sl: 'Pravilnik NN 5/84'
+                },
+                {
+                    name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_bs: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_hr: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_sr: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti',
+                    name_en: 'Form RO2 — Certificate of Temporary Incapacity',
+                    name_de: 'Formular RO2 — Bescheinigung über vorübergehende Arbeitsunfähigkeit',
+                    name_sl: 'Obrazec RO2 — Potrdilo o začasni nesposobnosti za delo',
+                    shortName: 'Privremena nesposobnost (RO2)',
+                    icon: '📄',
+                    route: '/dashboard/form-ro2',
+                    type: 'page',
+                    desc: 'Pravilnik NN 5/84',
+                    desc_bs: 'Pravilnik NN 5/84',
+                    desc_hr: 'Pravilnik NN 5/84',
+                    desc_sr: 'Pravilnik NN 5/84',
+                    desc_en: 'Rulebook NN 5/84',
+                    desc_de: 'Regelwerk NN 5/84',
+                    desc_sl: 'Pravilnik NN 5/84'
+                },
             ]
         },
         {
@@ -223,8 +556,48 @@ const FORM_CATEGORIES_MAP = {
             icon: '📝',
             legal: 'Pravilnik o osposobljavanju iz zaštite na radu — NN 142/21',
             items: [
-                { name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način', shortName: 'Zapisnik ZOS', icon: '📝', route: '/dashboard/trainings', type: 'page', desc: 'Čl. 27-30 ZoZNR (NN 71/14)', printBlank: 'zos' },
-                { name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara', shortName: 'Zapisnik ZOP', icon: '🔥', route: '/dashboard/trainings', type: 'page', desc: 'Zakon o zaštiti od požara (NN 92/10)', printBlank: 'zop' },
+                {
+                    name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način',
+                    name_bs: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način',
+                    name_hr: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način',
+                    name_sr: 'Zapisnik ZOS — Ocena osposobljenosti za rad na siguran način',
+                    name_en: 'ZOS Record — Evaluation of Competence for Safe Work',
+                    name_de: 'ZOS-Protokoll — Bewertung der Befähigung für sicheres Arbeiten',
+                    name_sl: 'Zapisnik ZOS — Ocena usposobljenosti za varno delo',
+                    shortName: 'Zapisnik ZOS',
+                    icon: '📝',
+                    route: '/dashboard/trainings',
+                    type: 'page',
+                    desc: 'Čl. 27-30 ZoZNR (NN 71/14)',
+                    desc_bs: 'Čl. 27-30 ZoZNR (NN 71/14)',
+                    desc_hr: 'Čl. 27-30 ZoZNR (NN 71/14)',
+                    desc_sr: 'Čl. 27-30 ZoZNR (NN 71/14)',
+                    desc_en: 'Art. 27-30 of OSH Act (NN 71/14)',
+                    desc_de: 'Art. 27-30 des Arbeitsschutzgesetzes (NN 71/14)',
+                    desc_sl: '27.-30. člen Zakona o varnosti in zdravju pri delu (NN 71/14)',
+                    printBlank: 'zos'
+                },
+                {
+                    name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara',
+                    name_bs: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara',
+                    name_hr: 'Zapisnik ZOS — Ocjena osposobljenosti za zaštitu od požara',
+                    name_sr: 'Zapisnik ZOP — Ocena osposobljenosti za zaštitu od požara',
+                    name_en: 'ZOP Record — Evaluation of Competence for Fire Protection',
+                    name_de: 'ZOP-Protokoll — Bewertung der Befähigung für Brandschutz',
+                    name_sl: 'Zapisnik ZOP — Ocena usposobljenosti za varstvo pred požarom',
+                    shortName: 'Zapisnik ZOP',
+                    icon: '🔥',
+                    route: '/dashboard/trainings',
+                    type: 'page',
+                    desc: 'Zakon o zaštiti od požara (NN 92/10)',
+                    desc_bs: 'Zakon o zaštiti od požara (NN 92/10)',
+                    desc_hr: 'Zakon o zaštiti od požara (NN 92/10)',
+                    desc_sr: 'Zakon o zaštiti od požara (NN 92/10)',
+                    desc_en: 'Fire Protection Act (NN 92/10)',
+                    desc_de: 'Brandschutzgesetz (NN 92/10)',
+                    desc_sl: 'Zakon o varstvu pred požarom (NN 92/10)',
+                    printBlank: 'zop'
+                },
             ]
         },
         {
@@ -236,7 +609,26 @@ const FORM_CATEGORIES_MAP = {
             icon: '📊',
             legal: 'Zakon o radu (NN 93/14, 151/22, 64/23)',
             items: [
-                { name: 'Evidencija noćnog rada (NR1)', shortName: 'Noćni rad (NR1)', icon: '🌙', route: '/dashboard/night-work', type: 'page', desc: 'Čl. 69-72 ZoR (NN 93/14)' },
+                {
+                    name: 'Evidencija noćnog rada (NR1)',
+                    name_bs: 'Evidencija noćnog rada (NR1)',
+                    name_hr: 'Evidencija noćnog rada (NR1)',
+                    name_sr: 'Evidencija noćnog rada (NR1)',
+                    name_en: 'Night Work Log (NR1)',
+                    name_de: 'Nachtarbeitsnachweis (NR1)',
+                    name_sl: 'Evidenca nočnega dela (NR1)',
+                    shortName: 'Noćni rad (NR1)',
+                    icon: '🌙',
+                    route: '/dashboard/night-work',
+                    type: 'page',
+                    desc: 'Čl. 69-72 ZoR (NN 93/14)',
+                    desc_bs: 'Čl. 69-72 ZoR (NN 93/14)',
+                    desc_hr: 'Čl. 69-72 ZoR (NN 93/14)',
+                    desc_sr: 'Čl. 69-72 ZoR (NN 93/14)',
+                    desc_en: 'Labor Act (NN 93/14, 151/22, 64/23)',
+                    desc_de: 'Arbeitsgesetz (NN 93/14, 151/22, 64/23)',
+                    desc_sl: 'Zakon o delovnih razmerjih (NN 93/14, 151/22, 64/23)'
+                },
             ]
         },
     ],
@@ -573,6 +965,131 @@ function FormsTab({ lang, country }) {
     const { t } = useLanguage();
     const { activeCompanyId, user } = useAuth();
 
+    const getHeroTitle = () => {
+        const countryStr = country === 'HR' 
+            ? (lang === 'en' ? 'Republic of Croatia' : lang === 'de' ? 'Republik Kroatien' : lang === 'sl' ? 'Republika Hrvaška' : 'Republika Hrvatska')
+            : (lang === 'en' ? 'Bosnia and Herzegovina' : lang === 'de' ? 'Bosnien und Herzegowina' : lang === 'sl' ? 'Bosna in Hercegovina' : 'Bosna i Hercegovina');
+            
+        if (lang === 'en') return `Official OSH Forms — ${countryStr}`;
+        if (lang === 'de') return `Offizielle Arbeitsschutzformulare — ${countryStr}`;
+        if (lang === 'sl') return `Uradni obrazci ZVD — ${countryStr}`;
+        if (lang === 'sr') return `Službeni obrasci BZN — ${countryStr}`;
+        return `Službeni obrasci ZNR — ${countryStr}`;
+    };
+
+    const getHeroDesc = () => {
+        if (country === 'HR') {
+            if (lang === 'en') return 'All forms are compliant with the Occupational Safety and Health Act (NN 71/14, 118/14, 94/18, 96/18), the Training Regulation (NN 142/21) and the Labor Act (NN 93/14). Fill out and print or download blank templates for manual entry.';
+            if (lang === 'de') return 'Alle Formulare entsprechen dem Arbeitsschutzgesetz (NN 71/14, 118/14, 94/18, 96/18), der Schulungsverordnung (NN 142/21) und dem Arbeitsgesetz (NN 93/14). Ausfüllen und ausdrucken oder leere Vorlagen herunterladen.';
+            if (lang === 'sl') return 'Vsi obrazci so skladni z Zakonom o varnosti in zdravju pri delu (NN 71/14, 118/14, 94/18, 96/18), Pravilnikom o usposabljanju (NN 142/21) in Zakonom o delovnih razmerjih (NN 93/14). Izpolnite in natisnite ali prenesite prazne obrazce.';
+            if (lang === 'sr') return 'Svi obrasci su usklađeni sa Zakonom o bezbednosti i zdravlju na radu (NN 71/14, 118/14, 94/18, 96/18), Pravilnikom o osposobljavanju (NN 142/21) i Zakonom o radu (NN 93/14). Popunite i odštampajte ili preuzmite prazne obrasce za ručno popunjavanje.';
+            return 'Svi obrasci su usklađeni sa Zakonom o zaštiti na radu (NN 71/14, 118/14, 94/18, 96/18), Pravilnikom o osposobljavanju (NN 142/21) i Zakonom o radu (NN 93/14). Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.';
+        } else {
+            if (lang === 'en') return 'All forms are compliant with the FBiH Occupational Safety and Health Act (Sl. novine FBiH 79/20), Regulation 9/23, the Fire Protection Act (64/09) and the Labor Act (26/16). Fill out and print or download blank templates for manual entry.';
+            if (lang === 'de') return 'Alle Formulare entsprechen dem FBiH-Arbeitsschutzgesetz (Sl. novine FBiH 79/20), der Verordnung 9/23, dem Brandschutzgesetz (64/09) und dem Arbeitsgesetz (26/16). Ausfüllen und ausdrucken oder leere Vorlagen herunterladen.';
+            if (lang === 'sl') return 'Vsi obrazci so skladni z Zakonom o varnosti in zdravju pri delu FBiH (Sl. novine FBiH 79/20), Pravilnikom 9/23, Zakonom o varstvu pred požarom (64/09) in Zakonom o delovnih razmerjih (26/16). Izpolnite in natisnite ali prenesite prazne obrazce.';
+            if (lang === 'sr') return 'Svi obrasci su usklađeni sa Zakonom o bezbednosti i zdravlju na radu FBiH (Sl. novine FBiH br. 79/20), Pravilnikom 9/23, Zakonom o zaštiti od požara (64/09) i Zakonom o radu (26/16). Popunite i odštampajte ili preuzmite prazne obrasce za ručno popunjavanje.';
+            return 'Svi obrasci su usklađeni sa Zakonom o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20), Pravilnikom 9/23, Zakonom o zaštiti od požara (64/09) i Zakonom o radu (26/16). Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.';
+        }
+    };
+
+    const getFooterText = () => {
+        if (country === 'HR') {
+            if (lang === 'en') {
+                return (
+                    <>
+                        All forms are based on current regulations of the Republic of Croatia. ZOS and ZOP records are compliant with the Occupational Safety and Health Act (NN 71/14) and the Fire Protection Act (NN 92/10).
+                        For official text of regulations, see <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> or
+                        Narodne novine at <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
+                    </>
+                );
+            }
+            if (lang === 'de') {
+                return (
+                    <>
+                        Alle Formulare basieren auf den geltenden Vorschriften der Republik Kroatien. Die ZOS- und ZOP-Protokolle entsprechen dem Arbeitsschutzgesetz (NN 71/14) und dem Brandschutzgesetz (NN 92/10).
+                        Die offiziellen Texte der Vorschriften finden Sie unter <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> oder
+                        in Narodne novine unter <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
+                    </>
+                );
+            }
+            if (lang === 'sl') {
+                return (
+                    <>
+                        Vsi obrazci temeljijo na veljavnih predpisih Republike Hrvaške. Zapisnika ZOS in ZOP sta skladna z Zakonom o varnosti in zdravju pri delu (NN 71/14) in Zakonom o varstvu pred požarom (NN 92/10).
+                        Za uradna besedila predpisov glejte <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> ali
+                        Narodne novine na <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
+                    </>
+                );
+            }
+            if (lang === 'sr') {
+                return (
+                    <>
+                        Svi obrasci se zasnivaju na važećim propisima Republike Hrvatske. Zapisnici ZOS i ZOP su usklađeni sa Zakonom o bezbednosti i zdravlju na radu (NN 71/14) i Zakonom o zaštiti od požara (NN 92/10).
+                        Za zvanične tekstove propisa pogledajte <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> or
+                        Narodne novine na <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
+                    </>
+                );
+            }
+            return (
+                <>
+                    Svi obrasci temelje se na važećim propisima RH. Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (NN 71/14) i Zakonom o zaštiti od požara (NN 92/10).
+                    Za službene tekstove propisa pogledajte <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> or
+                    Narodne novine na <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
+                </>
+            );
+        } else {
+            if (lang === 'en') {
+                return (
+                    <>
+                        All forms are based on current regulations of FBiH. Regulation 9/23 replaces previous injury report forms.
+                        ZOS and ZOP records are compliant with the Occupational Safety and Health Act (79/20) and the Fire Protection Act (64/09).
+                        For official text of regulations, see <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> or
+                        Službene novine FBiH at <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                    </>
+                );
+            }
+            if (lang === 'de') {
+                return (
+                    <>
+                        Alle Formulare basieren auf den geltenden Vorschriften der FBiH. Die Verordnung 9/23 ersetzt frühere Unfallanzeigeformulare.
+                        Die ZOS- und ZOP-Protokolle entsprechen dem Arbeitsschutzgesetz (79/20) und dem Brandschutzgesetz (64/09).
+                        Die offiziellen Texte der Vorschriften finden Sie unter <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> or
+                        in Službene novine FBiH unter <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                    </>
+                );
+            }
+            if (lang === 'sl') {
+                return (
+                    <>
+                        Vsi obrazci temeljijo na veljavnih predpisih FBiH. Pravilnik 9/23 nadomešča prejšnje obrazce za prijavu poškodb.
+                        Zapisnika ZOS in ZOP sta skladna z Zakonom o varnosti in zdravju pri delu (79/20) in Zakonom o varstvu pred požarom (64/09).
+                        Za uradna besedila predpisov glejte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> or
+                        Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                    </>
+                );
+            }
+            if (lang === 'sr') {
+                return (
+                    <>
+                        Svi obrasci se zasnivaju na važećim propisima FBiH. Pravilnik 9/23 zamenjuje ranije obrasce za prijavu povreda.
+                        Zapisnici ZOS i ZOP su usklađeni sa Zakonom o bezbednosti i zdravlju na radu (79/20) i Zakonom o zaštiti od požara (64/09).
+                        Za zvanične tekstove propisa pogledajte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> or
+                        Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                    </>
+                );
+            }
+            return (
+                <>
+                    Svi obrasci temelje se na važećim propisima FBiH. Pravilnik 9/23 zamjenjuje ranije obrasce za prijavu povreda.
+                    Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (79/20) i Zakonom o zaštiti od požara (64/09).
+                    Za zvanične tekstove propisa pogledajte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> or
+                    Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                </>
+            );
+        }
+    };
+
     /** Generate a blank ZOS template and open in a print window */
     const printBlankZos = () => {
         const companies = getUserCompanies(user?.id);
@@ -598,112 +1115,16 @@ function FormsTab({ lang, country }) {
         const country = company.country || 'BA';
         const fireLaw = LAWS[country]?.fire || LAWS.BA.fire;
         // Build a ZOP-specific HTML (fire safety variant of ZOS)
-        const formattedDate = '__.__.____.';
-        const logoHtml = company.logo ? `<img src="${company.logo}" style="max-height:60px; max-width:180px; object-fit:contain;" />` : '';
-        const html = `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>ZOP - Prazan obrazac</title>
-<style>
-    @page { size: A4; margin: 20mm 18mm 20mm 18mm; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1a1a1a; line-height: 1.5; background: #fff; }
-    .page { width: 100%; max-width: 210mm; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #b71c1c; padding-bottom: 12px; margin-bottom: 8px; }
-    .company-info { flex: 1; }
-    .company-name { font-size: 14pt; font-weight: 800; color: #b71c1c; }
-    .company-details { font-size: 8.5pt; color: #555; margin-top: 3px; line-height: 1.4; }
-    .logo-area { text-align: right; }
-    .doc-title { text-align: center; margin: 18px 0 6px; font-size: 13pt; font-weight: 800; text-transform: uppercase; color: #b71c1c; letter-spacing: 0.5px; }
-    .doc-subtitle { text-align: center; font-size: 9pt; color: #666; margin-bottom: 16px; }
-    .doc-ref { text-align: center; font-size: 8.5pt; color: #888; margin-bottom: 20px; }
-    .section { margin-bottom: 14px; }
-    .section-title { font-size: 10pt; font-weight: 700; color: #b71c1c; border-bottom: 1.5px solid #ddd; padding-bottom: 3px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
-    .data-row { display: flex; border-bottom: 1px solid #eee; padding: 4px 0; font-size: 10pt; }
-    .data-label { width: 220px; font-weight: 600; color: #444; flex-shrink: 0; }
-    .data-value { flex: 1; font-weight: 400; }
-    .checklist { margin: 8px 0; }
-    .check-item { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; font-size: 9.5pt; line-height: 1.4; }
-    .check-box { width: 14px; height: 14px; border: 1.5px solid #b71c1c; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: #b71c1c; flex-shrink: 0; margin-top: 2px; }
-    .assessment-box { border: 2px solid #b71c1c; border-radius: 6px; padding: 12px 16px; margin: 14px 0; background: #fff5f5; }
-    .assessment-text { font-size: 10.5pt; font-weight: 600; text-align: center; color: #b71c1c; }
-    .signatures { display: flex; justify-content: space-between; margin-top: 30px; gap: 20px; }
-    .sig-block { flex: 1; text-align: center; }
-    .sig-role { font-size: 8.5pt; color: #666; margin-bottom: 4px; font-weight: 600; }
-    .sig-line { border-top: 1.5px solid #333; margin-top: 40px; padding-top: 4px; font-size: 9.5pt; font-weight: 600; }
-    .sig-note { font-size: 7.5pt; color: #999; margin-top: 2px; }
-    .footer { border-top: 2px solid #b71c1c; margin-top: 20px; padding-top: 8px; font-size: 7.5pt; color: #999; text-align: center; }
-    .legal-ref { font-size: 8pt; color: #888; font-style: italic; text-align: center; margin: 6px 0; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } }
-</style></head><body>
-<div class="page">
-    <div class="header">
-        <div class="company-info">
-            <div class="company-name">${company.naziv || '________________________________'}</div>
-            <div class="company-details">${company.adresa ? company.adresa + ', ' : ''}${company.mjesto || ''} ${company.postanskiBroj || ''}<br>${company.oib ? 'ID broj: ' + company.oib : ''}</div>
-        </div>
-        <div class="logo-area">${logoHtml}</div>
-    </div>
-    <div class="doc-title">Zapisnik o ocjeni osposobljenosti<br>radnika za zaštitu od požara</div>
-    <div class="doc-subtitle">Obrazac ZOP — u skladu sa ${fireLaw.name} ("${fireLaw.gazette}")</div>
-    <div class="doc-ref">Broj: ________ &nbsp;&nbsp;|&nbsp;&nbsp; Datum: ${formattedDate}</div>
-    <div class="section">
-        <div class="section-title">I. Podaci o radniku</div>
-        <div class="data-row"><span class="data-label">Ime i prezime:</span><span class="data-value">________________________</span></div>
-        <div class="data-row"><span class="data-label">JMBG:</span><span class="data-value">________________________</span></div>
-        <div class="data-row"><span class="data-label">OIB / ID broj radnika:</span><span class="data-value">________________________</span></div>
-        <div class="data-row"><span class="data-label">Radno mjesto:</span><span class="data-value">________________________</span></div>
-    </div>
-    <div class="section">
-        <div class="section-title">II. Podaci o osposobljavanju za zaštitu od požara</div>
-        <div class="data-row"><span class="data-label">Program osposobljavanja:</span><span class="data-value">________________________</span></div>
-        <div class="data-row"><span class="data-label">Mjesto provođenja:</span><span class="data-value">${company.adresa || ''}, ${company.mjesto || ''}</span></div>
-        <div class="data-row"><span class="data-label">Datum osposobljavanja:</span><span class="data-value">${formattedDate}</span></div>
-        <div class="data-row"><span class="data-label">Rezultat provjere znanja:</span><span class="data-value">________</span></div>
-        <div class="data-row"><span class="data-label">Stručnjak zaštite od požara:</span><span class="data-value">${company.strucnoLice || '________________________'}</span></div>
-    </div>
-    <div class="section">
-        <div class="section-title">III. Teoretski dio — zaštita od požara</div>
-        <p style="font-size:9.5pt; margin-bottom:6px; color:#333;">
-            Stručnjak zaštite od požara ocjenjuje da je radnik <strong>________________________</strong>
-            u teoretskom dijelu <strong>osposobljen/a</strong> za zaštitu od požara za poslove radnog mjesta
-            <strong>________________________</strong>.
-        </p>
-        <p style="font-size:9pt; color:#666;">
-            Tijekom osposobljavanja radnik je upoznat sa: uzrocima nastanka požara na radnom mjestu,
-            mjerama za sprečavanje požara, postupcima u slučaju požara, upotrebom PP aparata i hidranata,
-            planom evakuacije i spašavanja, te pravima i dužnostima u provođenju propisa zaštite od požara.
-        </p>
-    </div>
-    <div class="section">
-        <div class="section-title">IV. Provjera praktične osposobljenosti</div>
-        <p style="font-size:9pt; color:#666; margin-bottom:8px;">Neposredni ovlaštenik i stručnjak potvrđuju da radnik:</p>
-        <div class="checklist">
-            <div class="check-item"><span class="check-box">☐</span> Poznaje i primjenjuje mjere zaštite od požara na svom radnom mjestu</div>
-            <div class="check-item"><span class="check-box">☐</span> Pravilno koristi PP aparat (S-9, CO2) i zna lokacije PP opreme</div>
-            <div class="check-item"><span class="check-box">☐</span> Poznaje plan evakuacije i zna evakuacijske puteve</div>
-            <div class="check-item"><span class="check-box">☐</span> Zna postupak dojave požara (telefon 123, vatrodojavni sistem)</div>
-            <div class="check-item"><span class="check-box">☐</span> Odmah obavještava neposrednog rukovodioca o uočenim opasnostima od požara</div>
-            <div class="check-item"><span class="check-box">☐</span> Poznaje zabranu pušenja i korištenja otvorenog plamena na mjestima s povećanim rizikom od požara</div>
-            <div class="check-item"><span class="check-box">☐</span> Zna postupke pružanja prve pomoći u slučaju opeklina</div>
-        </div>
-    </div>
-    <div class="section">
-        <div class="section-title">V. Zaključna ocjena</div>
-        <div class="assessment-box">
-            <div class="assessment-text">
-                Na osnovu provedenog teoretskog i praktičnog osposobljavanja, ocjenjuje se da je radnik/ca<br>
-                <strong style="font-size:12pt;">________________________</strong><br>
-                <strong>OSPOSOBLJEN/A</strong> za zaštitu od požara<br>
-                na poslovima radnog mjesta: <strong>________________________</strong>
-            </div>
-        </div>
-    </div>
-    <div class="legal-ref">${fireLaw.name} ("${fireLaw.gazette}")</div>
-    <div class="signatures">
-        <div class="sig-block"><div class="sig-role">Osposobljeni radnik</div><div class="sig-line">________________________</div><div class="sig-note">(potpis radnika)</div></div>
-        <div class="sig-block"><div class="sig-role">Neposredni ovlaštenik poslodavca</div><div class="sig-line">${company.direktor || '________________________'}</div><div class="sig-note">(potpis ovlaštenika)</div></div>
-        <div class="sig-block"><div class="sig-role">Stručnjak zaštite od požara</div><div class="sig-line">${company.strucnoLice || '________________________'}</div><div class="sig-note">(potpis stručnjaka)</div></div>
-    </div>
-    <div class="footer">${company.naziv || ''} &nbsp;|&nbsp; ${company.adresa || ''}, ${company.mjesto || ''} &nbsp;|&nbsp; ${formattedDate}<br>Ovaj zapisnik se čuva trajno u evidencijama poslodavca i predočava inspektoru rada na zahtjev.</div>
-</div></body></html>`;
+        const html = generateZopPdf({
+            company: { naziv: company.naziv || '', adresa: company.adresa || '', mjesto: company.mjesto || '', postanskiBroj: company.postanskiBroj || '', oib: company.oib || '', direktor: company.direktor || '', logo: company.logo || '' },
+            worker: { ime: '', prezime: '', jmbg: '', oib: '' },
+            workplaceName: '',
+            training: { naziv: '' },
+            officer: company.strucnoLice || '',
+            date: '',
+            certOznaka: '',
+            testResult: '',
+        });
         const w = window.open('', '_blank', 'width=800,height=1100');
         if (w) { w.document.write(html); w.document.close(); }
     };
@@ -727,12 +1148,10 @@ function FormsTab({ lang, country }) {
                     <span style={{ fontSize: '2.2rem' }}>📋</span>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'white', marginBottom: 4 }}>
-                            Službeni obrasci ZNR — {country === 'HR' ? 'Republika Hrvatska' : 'Bosna i Hercegovina'}
+                            {getHeroTitle()}
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
-                            {country === 'HR'
-                                ? 'Svi obrasci su usklađeni sa Zakonom o zaštiti na radu (NN 71/14, 118/14, 94/18, 96/18), Pravilnikom o osposobljavanju (NN 142/21) i Zakonom o radu (NN 93/14). Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.'
-                                : 'Svi obrasci su usklađeni sa Zakonom o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20), Pravilnikom 9/23, Zakonom o zaštiti od požara (64/09) i Zakonom o radu (26/16). Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.'}
+                            {getHeroDesc()}
                         </div>
                     </div>
                 </div>
@@ -760,8 +1179,12 @@ function FormsTab({ lang, country }) {
                                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
                                     <span style={{ fontSize: '1.5rem', flexShrink: 0, marginTop: 2 }}>{form.icon}</span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 3, color: 'var(--text)' }}>{form.name}</div>
-                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 8 }}>{form.desc}</div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 3, color: 'var(--text)' }}>
+                                            {form[`name_${lang}`] || form.name}
+                                        </div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+                                            {form[`desc_${lang}`] || form.desc}
+                                        </div>
                                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                             <a href={form.route} style={{
                                                 display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -796,19 +1219,7 @@ function FormsTab({ lang, country }) {
             <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                 <span style={{ flexShrink: 0 }}>⚖️</span>
                 <span>
-                    {country === 'HR'
-                        ? <>
-                            Svi obrasci temelje se na važećim propisima RH. Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (NN 71/14) i Zakonom o zaštiti od požara (NN 92/10).
-                            Za službene tekstove propisa pogledajte <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> ili
-                            Narodne novine na <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
-                          </>
-                        : <>
-                            Svi obrasci temelje se na važećim propisima FBiH. Pravilnik 9/23 zamjenjuje ranije obrasce za prijavu povreda.
-                            Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (79/20) i Zakonom o zaštiti od požara (64/09).
-                            Za zvanične tekstove propisa pogledajte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> ili
-                            Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
-                          </>
-                    }
+                    {getFooterText()}
                 </span>
             </div>
         </div>

@@ -1191,7 +1191,7 @@ function TrainingsInner() {
                                     <option value="Engleski">English</option>
                                     <option value="Njemački">Deutsch</option>
                                     <option value="Slovenački">Slovenščina</option>
-                                    <option value="Makedonski">Македонски</option>
+                                    <option value="Makedonski">Makedonski</option>
                                 </select>
                                 {formData.jezik && (
                                     <button 

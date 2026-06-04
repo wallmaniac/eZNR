@@ -1035,7 +1035,7 @@ export default function QuestionnairesPage() {
                   <option value="Engleski">English</option>
                   <option value="Njemački">Deutsch</option>
                   <option value="Slovenački">Slovenščina</option>
-                  <option value="Makedonski">Македонски</option>
+                  <option value="Makedonski">Makedonski</option>
                 </select>
                 {formData.surveyJson && formData.jezik && (
                   <button 
