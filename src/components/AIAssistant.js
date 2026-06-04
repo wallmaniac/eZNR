@@ -1188,6 +1188,18 @@ export default function AIAssistant() {
         return () => { if (retryTimerRef.current) clearInterval(retryTimerRef.current); };
     }, []);
 
+    // ── Reset chat when language changes so Zia adopts new language instantly ──
+    const prevLangRef = useRef(lang);
+    useEffect(() => {
+        if (prevLangRef.current !== lang) {
+            prevLangRef.current = lang;
+            // Clear conversation & history so greeting regenerates in new language
+            setMessages([]);
+            chatHistoryRef.current = [];
+            setShowSuggestions(true);
+        }
+    }, [lang]);
+
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
         if (messagesEndRef.current) {

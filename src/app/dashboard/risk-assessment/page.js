@@ -42,14 +42,31 @@ const EMPTY_RISK_ITEM = {
     rizikNakon: 0, nivoRizikaNakon: '',
 };
 
-const V_LABELS = [
-    '', 'Zanemarivo — Ekstremno rijedak', 'Malo — Rijedak događaj',
-    'Moguće — Moguć događaj', 'Vjerovatno — Čest događaj', 'Gotovo sigurno',
-];
-const P_LABELS = [
-    '', 'Zanemarivo — Bez opasnosti', 'Malo — Privremena nesposobnost',
-    'Srednje — Značajno oštećenje', 'Ozbiljno — Trajna nesposobnost', 'Kritično — Smrt',
-];
+const getVLabel = (v, lang) => {
+    const labels = {
+        bs: ['', 'Zanemarivo — Ekstremno rijedak', 'Malo — Rijedak događaj', 'Moguće — Moguć događaj', 'Vjerovatno — Čest događaj', 'Gotovo sigurno'],
+        hr: ['', 'Zanemarivo — Ekstremno rijedak', 'Malo — Rijedak događaj', 'Moguće — Moguć događaj', 'Vjerovatno — Čest događaj', 'Gotovo sigurno'],
+        sr: ['', 'Zanemarljivo — Ekstremno redak', 'Malo — Redak događaj', 'Moguće — Moguć događaj', 'Verovatno — Čest događaj', 'Gotovo sigurno'],
+        en: ['', 'Negligible — Extremely rare', 'Low — Rare event', 'Possible — Possible event', 'Probable — Frequent event', 'Almost certain'],
+        de: ['', 'Vernachlässigbar — Extrem selten', 'Gering — Seltenes Ereignis', 'Möglich — Mögliches Ereignis', 'Wahrscheinlich — Häufiges Ereignis', 'Nahezu sicher'],
+        sl: ['', 'Zanemarljivo — Izjemno redek', 'Malo — Redek dogodek', 'Mogoče — Mogoč dogodek', 'Verjetno — Pogost dogodek', 'Skoraj zagotovo'],
+    };
+    const set = labels[lang] || labels.bs;
+    return set[v] || '';
+};
+
+const getPLabel = (p, lang) => {
+    const labels = {
+        bs: ['', 'Zanemarivo — Bez opasnosti', 'Malo — Privremena nesposobnost', 'Srednje — Značajno oštećenje', 'Ozbiljno — Trajna nesposobnost', 'Kritično — Smrt'],
+        hr: ['', 'Zanemarivo — Bez opasnosti', 'Malo — Privremena nesposobnost', 'Srednje — Značajno oštećenje', 'Ozbiljno — Trajna nesposobnost', 'Kritično — Smrt'],
+        sr: ['', 'Zanemarljivo — Bez opasnosti', 'Malo — Privremena nesposobnost', 'Srednje — Značajno oštećenje', 'Ozbiljno — Trajna nesposobnost', 'Kritično — Smrt'],
+        en: ['', 'Negligible — No danger', 'Minor — Temporary disability', 'Moderate — Significant damage', 'Serious — Permanent disability', 'Critical — Death'],
+        de: ['', 'Vernachlässigbar — Keine Gefahr', 'Gering — Vorübergehende Arbeitsunfähigkeit', 'Mäßig — Erhebliche Gesundheitsschädigung', 'Schwerwiegend — Dauerhafte Erwerbsunfähigkeit', 'Kritisch — Tod'],
+        sl: ['', 'Zanemarljivo — Brez nevarnosti', 'Malo — Začasna nesposobnost', 'Srednje — Znatna okvara', 'Resno — Trajna nesposobnost', 'Kritično — Smrt'],
+    };
+    const set = labels[lang] || labels.bs;
+    return set[p] || '';
+};
 
 // riskLevel is now imported from @/lib/riskAI
 
@@ -62,14 +79,22 @@ function cellColor(score) {
 }
 
 /* ── 5×5 Matrix Component ── */
-function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
+function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0, lang = 'bs' }) {
     const itemCounts = {};
     items.forEach(it => { const k = `${it.vjerovatnoca}-${it.posljedica}`; itemCounts[k] = (itemCounts[k] || 0) + 1; });
+    const trMatrix = (bsText, enText, deText = enText, slText = enText, hrText = bsText, srText = bsText) => {
+        if (lang === 'en') return enText;
+        if (lang === 'de') return deText;
+        if (lang === 'sl') return slText;
+        if (lang === 'hr') return hrText;
+        if (lang === 'sr') return srText;
+        return bsText;
+    };
     return (
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8, letterSpacing: '0.05em' }}>
-                    Matrica rizika 5×5 (Vjerovatnoća × Posljedica)
+                    {trMatrix('Matrica rizika 5×5 (Vjerovatnoća × Posljedica)', 'Risk Matrix 5×5 (Probability × Consequence)', 'Risikomatrix 5×5 (Wahrscheinlichkeit × Auswirkung)', 'Matrika tveganja 5×5 (Verjetnost × Posledica)', 'Matrica rizika 5×5 (Vjerojatnost × Posljedica)')}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '110px repeat(5, 64px)', gap: 2 }}>
                     <div />
@@ -79,8 +104,8 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
                         </div>
                     ))}
                     {[5, 4, 3, 2, 1].map(v => (
-                        <>
-                            <div key={`l${v}`} style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', paddingRight: 6, fontWeight: 600 }}>
+                        <React.Fragment key={`row-${v}`}>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', paddingRight: 6, fontWeight: 600 }}>
                                 V={v}
                             </div>
                             {[1, 2, 3, 4, 5].map(p => {
@@ -101,7 +126,7 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
                                         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
                                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                                         {score}
-                                        {count> 0 && (
+                                        {count > 0 && (
                                             <span style={{ position: 'absolute', top: -6, right: -6, background: '#fff', color: '#333', borderRadius: '50%', width: 18, height: 18, fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, border: '1px solid rgba(0,0,0,0.2)' }}>
                                                 {count}
                                             </span>
@@ -109,18 +134,20 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
                                     </div>
                                 );
                             })}
-                        </>
+                        </React.Fragment>
                     ))}
                 </div>
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Legenda</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>
+                    {trMatrix('Legenda', 'Legend', 'Legende', 'Legenda')}
+                </div>
                 {[
-                    { min: 1, max: 5, label: 'Neznatan (Prihvatljiv)', desc: 'Nema potrebe za akcijom' },
-                    { min: 6, max: 10, label: 'Dopustiv', desc: 'Praćenje, ekonomski isplativije mjere' },
-                    { min: 11, max: 15, label: 'Umjeren', desc: 'Planirane mjere, definisani rokovi' },
-                    { min: 16, max: 20, label: 'Znatan', desc: 'Brza reakcija, značajna ulaganja' },
-                    { min: 21, max: 25, label: 'Nedopustiv', desc: 'Obustava aktivnosti, hitne mjere' },
+                    { min: 1, max: 5, label: trMatrix('Neznatan (Prihvatljiv)', 'Trivial (Acceptable)', 'Geringfügig (Akzeptabel)', 'Neznatno (Sprejemljivo)'), desc: trMatrix('Nema potrebe za akcijom', 'No action needed', 'Keine Maßnahmen erforderlich', 'Ukrepanje ni potrebno') },
+                    { min: 6, max: 10, label: trMatrix('Dopustiv', 'Tolerable', 'Tolerierbar', 'Dopustno'), desc: trMatrix('Praćenje, ekonomski isplativije mjere', 'Monitoring, cost-effective measures', 'Überwachung, kostengünstige Maßnahmen', 'Spremljanje, stroškovno učinkoviti ukrepi') },
+                    { min: 11, max: 15, label: trMatrix('Umjeren', 'Moderate', 'Mäßig', 'Zmerno'), desc: trMatrix('Planirane mjere, definisani rokovi', 'Planned measures, defined deadlines', 'Geplante Maßnahmen, definierte Fristen', 'Načrtovani ukrepi, določeni roki') },
+                    { min: 16, max: 20, label: trMatrix('Znatan', 'Substantial', 'Erheblich', 'Znatno'), desc: trMatrix('Brza reakcija, značajna ulaganja', 'Quick response, significant investments', 'Schnelle Reaktion, erhebliche Investitionen', 'Hitra reakcija, znatna vlaganja') },
+                    { min: 21, max: 25, label: trMatrix('Nedopustiv', 'Unacceptable', 'Inakzeptabel', 'Nesprejemljivo'), desc: trMatrix('Obustava aktivnosti, hitne mjere', 'Suspension of activity, urgent measures', 'Einstellung der Tätigkeit, Sofortmaßnahmen', 'Zaustavitev aktivnosti, nujni ukrepi') },
                 ].map(r => (
                     <div key={r.min} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: '0.78rem' }}>
                         <div style={{ width: 28, height: 18, borderRadius: 4, background: cellColor(r.min), flexShrink: 0 }} />
@@ -138,6 +165,14 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
 
 export default function RiskAssessmentPage() {
     const { t, lang } = useLanguage();
+    const tr = (bsText, enText, deText = enText, slText = enText, hrText = bsText, srText = bsText) => {
+        if (lang === 'en') return enText;
+        if (lang === 'de') return deText;
+        if (lang === 'sl') return slText;
+        if (lang === 'hr') return hrText;
+        if (lang === 'sr') return srText;
+        return bsText;
+    };
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(async () => await handleSave());
@@ -544,7 +579,8 @@ export default function RiskAssessmentPage() {
                 vjerovatnoca: riForm.vjerovatnoca, posljedica: riForm.posljedica,
                 postojeceMjere: riForm.postojeceMjere || '',
                 documentData: docData,
-                documentMimeType: docMimeType
+                documentMimeType: docMimeType,
+                lang
             });
             setRiForm(prev => ({
                 ...prev,
@@ -577,7 +613,7 @@ export default function RiskAssessmentPage() {
                 documents.push({ data: base64, mimeType: file.type, name: file.name });
             }
 
-            const analysis = await fetchAiDocAnalyze(documents, formData.nazivTvrtke);
+            const analysis = await fetchAiDocAnalyze(documents, formData.nazivTvrtke, lang);
             setDocAiResult(analysis);
         } catch (err) {
             alert('Greška pri analizi: ' + err.message);
@@ -1108,12 +1144,12 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
     const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
 
     const tabs = [
-        { key: 'opsti', label: '📋 Opšti podaci', en: '📋 General' },
-        { key: 'sistematizacija', label: '📑 Sistematizacija', en: '📑 Systematization' },
-        { key: 'opis', label: '🏭 Opis procesa', en: '🏭 Process' },
-        { key: 'procjena', label: '📊 Procjena rizika', en: '📊 Assessment' },
-        { key: 'mjere', label: '🛡️ Mjere', en: '🛡️ Measures' },
-        { key: 'zakljucak', label: '📝 Zaključak', en: '📝 Conclusion' },
+        { key: 'opsti', label: tr('📋 Opšti podaci', '📋 General', '📋 Allgemeines', '📋 Splošno', '📋 Opći podaci') },
+        { key: 'sistematizacija', label: tr('📑 Sistematizacija', '📑 Systematization', '📑 Systematisierung', '📑 Sistematizacija') },
+        { key: 'opis', label: tr('🏭 Opis procesa', '🏭 Process Description', '🏭 Prozessbeschreibung', '🏭 Opis procesa') },
+        { key: 'procjena', label: tr('📊 Procjena rizika', '📊 Risk Assessment', '📊 Risikobeurteilung', '📊 Ocena tveganja', '📊 Procjena rizika', '📊 Procena rizika') },
+        { key: 'mjere', label: tr('🛡️ Mjere', '🛡️ Measures', '🛡️ Maßnahmen', '🛡️ Ukrepi') },
+        { key: 'zakljucak', label: tr('📝 Zaključak', '📝 Conclusion', '📝 Schlussfolgerung', '📝 Zaključek') },
     ];
 
     /* ━━━ LIST VIEW ━━━ */
@@ -1304,51 +1340,53 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {/* Tabs */}
                 <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
                     {tabs.map(tb => (
-                        <button key={tb.key} title={`Prikaži stranicu: ${lang !== 'en' ? tb.label : tb.en}`} onClick={() => setActiveTab(tb.key)}
-                            className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}>{lang !== 'en' ? tb.label : tb.en}</button>
+                        <button key={tb.key} title={tr(`Prikaži stranicu: ${tb.label}`, `Show page: ${tb.label}`, `Seite anzeigen: ${tb.label}`, `Prikaži stranico: ${tb.label}`)} onClick={() => setActiveTab(tb.key)}
+                            className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}>{tb.label}</button>
                     ))}
                 </div>
 
                 {/* ── TAB: Opšti podaci ── */}
                 {activeTab === 'opsti' && (
                     <div className="card"><div className="card-body">
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>PODACI O POSLODAVCU</div>
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>{tr('PODACI O POSLODAVCU', 'EMPLOYER DETAILS', 'ANGABEN ZUM ARBEITGEBER', 'PODATKI O DELODAJALCU')}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
                             <div>
-                                <div style={labelSt}>Naziv procjene *</div>
-                                <input className="form-input" title="Glavni naslov ovog dokumenta, npr. 'Procjena za sektor proizvodnje'" placeholder="Npr. Akt o procjeni rizika..." value={formData.nazivProcjene || ''} onChange={e => set('nazivProcjene', e.target.value)} />
+                                <div style={labelSt}>{tr('Naziv procjene *', 'Assessment name *', 'Name der Bewertung *', 'Naziv ocene *')}</div>
+                                <input className="form-input" title={tr('Glavni naslov ovog dokumenta, npr. \'Procjena za sektor proizvodnje\'', 'Main title of this document, e.g. \'Assessment for production sector\'', 'Haupttitel dieses Dokuments, z.B. \'Beurteilung für den Produktionsbereich\'', 'Glavni naslov tega dokumenta, npr. \'Ocena za proizvodni sektor\'')} placeholder={tr('Npr. Akt o procjeni rizika...', 'e.g. Risk Assessment Act...', 'z.B. Risikobeurteilung...', 'Npr. Akt o oceni tveganja...')} value={formData.nazivProcjene || ''} onChange={e => set('nazivProcjene', e.target.value)} />
                             </div>
                             <div>
-                                <div style={labelSt}>Naziv tvrtke *</div>
-                                <input className="form-input" title="Automatski preuzeto iz odabrane tvrtke, ali možete izmijeniti po potrebi" value={formData.nazivTvrtke || ''} onChange={e => set('nazivTvrtke', e.target.value)} />
+                                <div style={labelSt}>{tr('Naziv tvrtke *', 'Company name *', 'Firmenname *', 'Naziv podjetja *')}</div>
+                                <input className="form-input" title={tr('Automatski preuzeto iz odabrane tvrtke, ali možete izmijeniti po potrebi', 'Automatically taken from selected company, but you can modify if needed', 'Automatisch von der ausgewählten Firma übernommen, kann jedoch bei Bedarf geändert werden', 'Samodejno prevzeto iz izbranega podjetja, vendar lahko po potrebi spremenite')} value={formData.nazivTvrtke || ''} onChange={e => set('nazivTvrtke', e.target.value)} />
                             </div>
                             <div>
-                                <div style={labelSt}>Radno mjesto</div>
-                                <select className="form-input" title="Opcionalno povežite ovu procjenu sa specifičnim radnim mjestom iz sistematizacije" value={formData.radnoMjestoId || ''} onChange={e => set('radnoMjestoId', e.target.value)}>
-                                    <option value="">-- Cijela tvrtka ili nije povezano --</option>
+                                <div style={labelSt}>{tr('Radno mjesto', 'Workplace', 'Arbeitsplatz', 'Delovno mesto')}</div>
+                                <select className="form-input" title={tr('Opcionalno povežite ovu procjenu sa specifičnim radnim mjestom iz sistematizacije', 'Optionally link this assessment to a specific workplace from systematization', 'Optional verknüpfen Sie diese Beurteilung mit einem bestimmten Arbeitsplatz aus der Systematisierung', 'Izbirno povežite to oceno z določenim delovnim mestom iz sistematizacije')} value={formData.radnoMjestoId || ''} onChange={e => set('radnoMjestoId', e.target.value)}>
+                                    <option value="">{tr('-- Cijela tvrtka ili nije povezano --', '-- Entire company or unlinked --', '-- Gesamtes Unternehmen oder nicht verknüpft --', '-- Celotno podjetje ali ni povezano --')}</option>
                                     {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
                                 </select>
                             </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <div><div style={labelSt}>Sjedište / Adresa</div><input className="form-input" title="Adresa poslodavca" value={formData.sjediste || ''} onChange={e => set('sjediste', e.target.value)} /></div>
-                            <div><div style={labelSt}>Djelatnost</div><input className="form-input" title="Glavna djelatnost poslodavca" value={formData.djelatnost || ''} onChange={e => set('djelatnost', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Sjedište / Adresa', 'Headquarters / Address', 'Hauptsitz / Adresse', 'Sedež / Naslov')}</div><input className="form-input" title={tr('Adresa poslodavca', 'Employer address', 'Adresse des Arbeitgebers', 'Naslov delodajalca')} value={formData.sjediste || ''} onChange={e => set('sjediste', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Djelatnost', 'Industry', 'Branche', 'Dejavnost')}</div><input className="form-input" title={tr('Glavna djelatnost poslodavca', 'Main activity of the employer', 'Haupttätigkeit des Arbeitgebers', 'Glavna dejavnost delodajalca')} value={formData.djelatnost || ''} onChange={e => set('djelatnost', e.target.value)} /></div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <div><div style={labelSt}>Br. zaposlenih</div><input className="form-input" type="number" min="0" value={formData.ukupnoZaposlenih || ''} onChange={e => set('ukupnoZaposlenih', e.target.value)} /></div>
-                            <div><div style={labelSt}>Revizija</div><input className="form-input" value={formData.revizija} onChange={e => set('revizija', e.target.value)} /></div>
-                            <div><div style={labelSt}>Datum izrade</div><DateInput value={formData.datumIzrade} onChange={v => set('datumIzrade', v)} /></div>
+                            <div><div style={labelSt}>{tr('Br. zaposlenih', 'No. of employees', 'Mitarbeiterzahl', 'Št. zaposlenih')}</div><input className="form-input" type="number" min="0" value={formData.ukupnoZaposlenih || ''} onChange={e => set('ukupnoZaposlenih', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Revizija', 'Revision', 'Revision', 'Revizija')}</div><input className="form-input" value={formData.revizija} onChange={e => set('revizija', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Datum izrade', 'Creation date', 'Erstellungsdatum', 'Datum izdelave')}</div><DateInput value={formData.datumIzrade} onChange={v => set('datumIzrade', v)} /></div>
                         </div>
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>OVLAŠTENA ORGANIZACIJA</div>
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>{tr('OVLAŠTENA ORGANIZACIJA', 'AUTHORIZED ORGANIZATION', 'AUTORISIERTE ORGANISATION', 'POOBLAŠČENA ORGANIZACIJA')}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <div><div style={labelSt}>Naziv organizacije</div><input className="form-input" value={formData.ovlOrganizacija || ''} onChange={e => set('ovlOrganizacija', e.target.value)} /></div>
-                            <div><div style={labelSt}>Ovlaštena osoba</div><input className="form-input" value={formData.ovlOsobaIme || ''} onChange={e => set('ovlOsobaIme', e.target.value)} /></div>
-                            <div><div style={labelSt}>Kvalifikacije</div><input className="form-input" value={formData.ovlOsobaKvalifikacije || ''} onChange={e => set('ovlOsobaKvalifikacije', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Naziv organizacije', 'Organization name', 'Name der Organisation', 'Naziv organizacije')}</div><input className="form-input" value={formData.ovlOrganizacija || ''} onChange={e => set('ovlOrganizacija', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Ovlaštena osoba', 'Authorized person', 'Bevollmächtigte Person', 'Pooblaščena oseba')}</div><input className="form-input" value={formData.ovlOsobaIme || ''} onChange={e => set('ovlOsobaIme', e.target.value)} /></div>
+                            <div><div style={labelSt}>{tr('Kvalifikacije', 'Qualifications', 'Qualifikationen', 'Kvalifikacije')}</div><input className="form-input" value={formData.ovlOsobaKvalifikacije || ''} onChange={e => set('ovlOsobaKvalifikacije', e.target.value)} /></div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, marginBottom: 10 }}>
-                            <div><div style={labelSt}>Status<HelpTip text="Nacrt = procjena se još priprema, nije finalizirana. Aktivna = procjena je trenutno na snazi i važeća. Arhivirana = zamijenjena novijom verzijom ili istekla." /></div>
+                            <div><div style={labelSt}>{tr('Status', 'Status', 'Status', 'Status')}<HelpTip text={tr("Nacrt = procjena se još priprema, nije finalizirana. Aktivna = procjena je trenutno na snazi i važeća. Arhivirana = zamijenjena novijom verzijom ili istekla.", "Draft = assessment is still being prepared, not finalized. Active = assessment is currently in force and valid. Archived = replaced by a newer version or expired.", "Entwurf = die Beurteilung wird noch vorbereitet, nicht abgeschlossen. Aktiv = die Beurteilung ist derzeit in Kraft und gültig. Archiviert = durch eine neuere Version ersetzt oder abgelaufen.", "Osnutek = ocena se še pripravlja, ni dokončana. Aktivna = ocena je trenutno veljavna in v veljavi. Arhivirana = nadomeščena z novejšo različico ali pretekla.", "Nacrt = procjena se još priprema, nije finalizirana. Aktivna = procjena je trenutno na snazi i važeća. Arhivirana = zamijenjena novijom verzijom ili istekla.", "Nacrt = procena se još priprema, nije finalizovana. Aktivna = procena je trenutno na snazi i važeća. Arhivirana = zamenjena novijom verzijom ili istekla.")} /></div>
                                 <select className="form-select" value={formData.status || 'draft'} onChange={e => set('status', e.target.value)}>
-                                    <option value="draft">Nacrt</option><option value="active">Aktivna</option><option value="archived">Arhivirana</option>
+                                    <option value="draft">{tr('Nacrt', 'Draft', 'Entwurf', 'Osnutek')}</option>
+                                    <option value="active">{tr('Aktivna', 'Active', 'Aktiv', 'Aktivna')}</option>
+                                    <option value="archived">{tr('Arhivirana', 'Archived', 'Archiviert', 'Arhivirana')}</option>
                                 </select>
                             </div>
                         </div>
@@ -1360,19 +1398,19 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     <div className="card"><div className="card-body">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                             <div>
-                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 4 }}>SISTEMATIZACIJA RADNIH MJESTA</div>
+                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 4 }}>{tr('SISTEMATIZACIJA RADNIH MJESTA', 'WORKPLACE SYSTEMATIZATION', 'ARBEITSPLATZSYSTEMATISIERUNG', 'SISTEMATIZACIJA DELOVNIH MEST')}</div>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                    Definirajte poslove, uvjete rada i zahtjeve za svako radno mjesto — ovi podaci koriste se za generisanje opisa procesa.
+                                    {tr('Definirajte poslove, uvjete rada i zahtjeve za svako radno mjesto — ovi podaci koriste se za generisanje opisa procesa.', 'Define jobs, working conditions, and requirements for each workplace — this data is used to generate the process description.', 'Definieren Sie Tätigkeiten, Arbeitsbedingungen und Anforderungen für jeden Arbeitsplatz – diese Daten werden zur Erstellung der Prozessbeschreibung verwendet.', 'Določite dela, delovne pogoje in zahteve za vsako delovno mesto — ti podatki se uporabljajo za generiranje opisa procesa.')}
                                 </div>
                             </div>
                             <div style={{ padding: '6px 14px', borderRadius: 'var(--radius-md)', background: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length> 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length> 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.78rem', color: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length> 0 ? '#4caf50' : '#ffc107' }}>
-                                {workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length}/{workplaces.length} popunjeno
+                                {workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length}/{workplaces.length} {tr('popunjeno', 'completed', 'ausgefüllt', 'izpolnjeno')}
                             </div>
                         </div>
 
                         {workplaces.length === 0 && (
                             <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 30 }}>
-                                ⚠️ Nema radnih mjesta. Kreirajte ih u modulu Radna mjesta (Organizacija → Radna mjesta).
+                                {tr('⚠️ Nema radnih mjesta. Kreirajte ih u modulu Radna mjesta (Organizacija → Radna mjesta).', '⚠️ No workplaces found. Create them in the Workplaces module (Organization → Workplaces).', '⚠️ Keine Arbeitsplätze gefunden. Erstellen Sie diese im Modul Arbeitsplätze (Organisation → Arbeitsplätze).', '⚠️ Ni delovnih mest. Ustvarite jih v modulu Delovna mesta (Organizacija → Delovna mesta).')}
                             </div>
                         )}
 
@@ -1411,26 +1449,26 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     {(sist.potrebnaOZO || []).length> 2 && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>+{sist.potrebnaOZO.length - 2}</span>}
                                                 </div>
                                                 <div style={{ display: 'flex', gap: 4, fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                                                    <span>📋 {sist.certifikati?.length || 0} cert.</span>
-                                                    <span>⚙️ {sist.radnaOprema?.length || 0} oprema</span>
-                                                    <span>👥 {sist.brojIzvrsilaca || '?'} izvrš.</span>
+                                                    <span>📋 {sist.certifikati?.length || 0} {tr('cert.', 'certs', 'Zert.', 'cert.')}</span>
+                                                    <span>⚙️ {sist.radnaOprema?.length || 0} {tr('oprema', 'equipment', 'Geräte', 'oprema')}</span>
+                                                    <span>👥 {sist.brojIzvrsilaca || '?'} {tr('izvrš.', 'workers', 'Mitarb.', 'izvaj.')}</span>
                                                     {sist.aiGenerated && <span style={{ color: '#667eea' }}>🤖 AI</span>}
                                                 </div>
                                                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.7rem' }} onClick={() => setSistEditData({ ...sist })}>✏️ Detalji</button>
+                                                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.7rem' }} onClick={() => setSistEditData({ ...sist })}>{tr('✏️ Detalji', '✏️ Details', '✏️ Details', '✏️ Podrobnosti')}</button>
                                                     <button className="btn btn-outline btn-sm" onClick={async () => {
                                                         setSistAiLoading(true); setSistSelectedWp(wp.id);
                                                         try {
                                                             const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '', lang });
                                                             if (data) { const existing = sistematizacije.find(s => s.radnoMjestoId === wp.id); if (existing) { update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); } else { create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); } loadData(); showFlash(); }
-                                                            else { alert('AI greška: ' + error); }
-                                                        } catch (err) { alert('Greška: ' + err.message); }
+                                                            else { alert('AI error: ' + error); }
+                                                        } catch (err) { alert('Error: ' + err.message); }
                                                         setSistAiLoading(false); setSistSelectedWp(null);
-                                                    }} disabled={sistAiLoading && sistSelectedWp === wp.id} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.7rem' }}>
-                                                        {sistAiLoading && sistSelectedWp === wp.id ? '⏳ Regeneriše...' : '🤖 Regeneriši'}
+                                                     }} disabled={sistAiLoading && sistSelectedWp === wp.id} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.7rem' }}>
+                                                        {sistAiLoading && sistSelectedWp === wp.id ? tr('⏳ Regeneriše...', '⏳ Regenerating...', '⏳ Regeneriert...', '⏳ Regenerira...') : tr('🤖 Regeneriši', '🤖 Regenerate', '🤖 Regenerieren', '🤖 Regeneriraj')}
                                                     </button>
                                                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.7rem' }} onClick={async () => {
-                                                        if (await confirm('Obrisati sistematizaciju za ovo radno mjesto?')) {
+                                                        if (await confirm(tr('Obrisati sistematizaciju za ovo radno mjesto?', 'Delete systematization for this workplace?', 'Systematisierung für diesen Arbeitsplatz löschen?', 'Izbrišem sistematizacijo za to delovno mesto?'))) {
                                                             const s = sistematizacije.find(s => s.radnoMjestoId === wp.id);
                                                             if (s) { remove(COLLECTIONS.SISTEMATIZACIJE, s.id); loadData(); }
                                                         }
@@ -1440,7 +1478,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         ) : (
                                             <div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 10, padding: 8, textAlign: 'center', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
-                                                    Nema sistematizacije. Generiši putem AI ili popuni ručno.
+                                                    {tr('Nema sistematizacije. Generiši putem AI ili popuni ručno.', 'No systematization. Generate via AI or fill manually.', 'Keine Systematisierung. Per KI generieren oder manuell ausfüllen.', 'Ni sistematizacije. Generirajte z AI ali izpolnite ročno.')}
                                                 </div>
                                                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                                                     <button className="btn btn-outline btn-sm" onClick={async () => {
@@ -1448,14 +1486,14 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                         try {
                                                             const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '', lang });
                                                             if (data) { create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); loadData(); showFlash(); }
-                                                            else { alert('AI greška: ' + error); }
-                                                        } catch (err) { alert('Greška: ' + err.message); }
+                                                            else { alert('AI error: ' + error); }
+                                                        } catch (err) { alert('Error: ' + err.message); }
                                                         setSistAiLoading(false); setSistSelectedWp(null);
                                                     }} disabled={isLoading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
-                                                        {isLoading ? '⏳ Generiše...' : '🤖 AI Generiši'}
+                                                        {isLoading ? tr('⏳ Generiše...', '⏳ Generating...', '⏳ Generiert...', '⏳ Generira...') : tr('🤖 AI Generiši', '🤖 AI Generate', '🤖 KI Generieren', '🤖 AI Generiraj')}
                                                     </button>
                                                     <button className="btn btn-outline btn-sm" style={{ fontSize: '0.72rem' }} onClick={() => setSistEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: getDefaultPravniOsnov(country), uvjetiRada: {}, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
-                                                        ✏️ Ručno
+                                                        {tr('✏️ Ručno', '✏️ Manually', '✏️ Manuell', '✏️ Ročno')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1472,30 +1510,30 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, width: '90%', maxWidth: 700, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                                         <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-                                            📑 Sistematizacija — {workplaces.find(w => w.id === sistEditData.radnoMjestoId)?.naziv || ''}
+                                            {tr('📑 Sistematizacija — ', '📑 Systematization — ', '📑 Systematisierung — ', '📑 Sistematizacija — ')} {workplaces.find(w => w.id === sistEditData.radnoMjestoId)?.naziv || ''}
                                         </div>
                                         <button className="btn btn-ghost btn-icon" onClick={() => setSistEditData(null)} style={{ fontSize: '1.2rem', padding: 4 }}>✕</button>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
-                                        <div><div style={labelSt}>NAZIV POSLA</div><input className="form-input" value={sistEditData.nazivPosla || ''} onChange={e => setSistEditData(p => ({ ...p, nazivPosla: e.target.value }))} placeholder="npr. Stručni saradnik za ZNR" /></div>
-                                        <div><div style={labelSt}>KATEGORIJA RM</div><select className="form-select" value={sistEditData.kategorijaRM || ''} onChange={e => setSistEditData(p => ({ ...p, kategorijaRM: e.target.value }))}><option value="">—</option>{['Rukovodeće', 'Izvršno', 'Pomoćno'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                                        <div><div style={labelSt}>SLOŽENOST</div><select className="form-select" value={sistEditData.slozenostPoslova || ''} onChange={e => setSistEditData(p => ({ ...p, slozenostPoslova: e.target.value }))}><option value="">—</option>{['Jednostavni', 'Srednje složeni', 'Složeni', 'Visoko složeni'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                        <div><div style={labelSt}>{tr('NAZIV POSLA', 'JOB TITLE', 'JOBBEZEICHNUNG', 'NAZIV DELA')}</div><input className="form-input" value={sistEditData.nazivPosla || ''} onChange={e => setSistEditData(p => ({ ...p, nazivPosla: e.target.value }))} placeholder={tr('npr. Stručni saradnik za ZNR', 'e.g. OSH Specialist', 'z.B. Sicherheitsfachkraft', 'npr. Strokovni sodelavec za VZD')} /></div>
+                                        <div><div style={labelSt}>{tr('KATEGORIJA RM', 'WORKPLACE CATEGORY', 'ARBEITSPLATZKATEGORIE', 'KATEGORIJA DELOVNEGA MESTA')}</div><select className="form-select" value={sistEditData.kategorijaRM || ''} onChange={e => setSistEditData(p => ({ ...p, kategorijaRM: e.target.value }))}><option value="">—</option>{[tr('Rukovodeće', 'Managerial', 'Führungskraft', 'Vodstveno'), tr('Izvršno', 'Executive', 'Ausführend', 'Izvršno'), tr('Pomoćno', 'Support', 'Hilfskraft', 'Pomožno')].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                        <div><div style={labelSt}>{tr('SLOŽENOST', 'COMPLEXITY', 'KOMPLEXITÄT', 'ZAHTEVNOST')}</div><select className="form-select" value={sistEditData.slozenostPoslova || ''} onChange={e => setSistEditData(p => ({ ...p, slozenostPoslova: e.target.value }))}><option value="">—</option>{[tr('Jednostavni', 'Simple', 'Einfach', 'Enostavno'), tr('Srednje složeni', 'Medium', 'Mittelschwer', 'Srednje zahtevno'), tr('Složeni', 'Complex', 'Schwer', 'Zahtevno'), tr('Visoko složeni', 'Highly Complex', 'Sehr schwer', 'Visoko zahtevno')].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                                     </div>
-                                    <div style={labelSt}>OPIS POSLOVA I ZADATAKA</div>
+                                    <div style={labelSt}>{tr('OPIS POSLOVA I ZADATAKA', 'JOB AND TASK DESCRIPTION', 'STELLEN- UND AUFGABENBESCHREIBUNG', 'OPIS DEL IN NALOG')}</div>
                                     <textarea className="form-input" rows={3} value={sistEditData.opisPoslova || ''} onChange={e => setSistEditData(p => ({ ...p, opisPoslova: e.target.value }))} style={{ resize: 'vertical', marginBottom: 12 }} />
-                                    <div style={labelSt}>ODGOVORNOSTI</div>
-                                    <textarea className="form-input" rows={2} value={sistEditData.odgovornosti || ''} onChange={e => setSistEditData(p => ({ ...p, odgovornosti: e.target.value }))} placeholder="Ključne odgovornosti" style={{ resize: 'vertical', marginBottom: 12 }} />
+                                    <div style={labelSt}>{tr('ODGOVORNOSTI', 'RESPONSIBILITIES', 'VERANTWORTLICHKEITEN', 'ODGOVORNOSTI')}</div>
+                                    <textarea className="form-input" rows={2} value={sistEditData.odgovornosti || ''} onChange={e => setSistEditData(p => ({ ...p, odgovornosti: e.target.value }))} placeholder={tr('Ključne odgovornosti', 'Key responsibilities', 'Hauptverantwortlichkeiten', 'Ključne odgovornosti')} style={{ resize: 'vertical', marginBottom: 12 }} />
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px 1fr', gap: 10, marginBottom: 12 }}>
-                                        <div><div style={labelSt}>STRUČNA SPREMA</div><select className="form-select" value={sistEditData.strucnaSprema || ''} onChange={e => setSistEditData(p => ({ ...p, strucnaSprema: e.target.value }))}><option value="">—</option>{['NKV', 'PKV', 'KV', 'SSS', 'VŠS', 'VSS', 'Mr.', 'Dr.'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                                        <div><div style={labelSt}>RADNO ISKUSTVO</div><input className="form-input" value={sistEditData.radnoIskustvo || ''} onChange={e => setSistEditData(p => ({ ...p, radnoIskustvo: e.target.value }))} placeholder="npr. 2 godine" /></div>
-                                        <div><div style={labelSt}>IZVRŠILACA</div><input className="form-input" type="number" min={1} value={sistEditData.brojIzvrsilaca || 1} onChange={e => setSistEditData(p => ({ ...p, brojIzvrsilaca: +e.target.value }))} /></div>
-                                        <div><div style={labelSt}>PROBNI RAD</div><input className="form-input" value={sistEditData.probniRad || ''} onChange={e => setSistEditData(p => ({ ...p, probniRad: e.target.value }))} placeholder="npr. 3 mjeseca" /></div>
+                                        <div><div style={labelSt}>{tr('STRUČNA SPREMA', 'QUALIFICATION LEVEL', 'BILDUNGSABSCHLUSS', 'STROKOVNA IZOBRAZBA')}</div><select className="form-select" value={sistEditData.strucnaSprema || ''} onChange={e => setSistEditData(p => ({ ...p, strucnaSprema: e.target.value }))}><option value="">—</option>{['NKV', 'PKV', 'KV', 'SSS', 'VŠS', 'VSS', 'Mr.', 'Dr.'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                        <div><div style={labelSt}>{tr('RADNO ISKUSTVO', 'WORK EXPERIENCE', 'BERUFSERFAHRUNG', 'DELOVNE IZKUŠNJE')}</div><input className="form-input" value={sistEditData.radnoIskustvo || ''} onChange={e => setSistEditData(p => ({ ...p, radnoIskustvo: e.target.value }))} placeholder={tr('npr. 2 godine', 'e.g. 2 years', 'z.B. 2 Jahre', 'npr. 2 leti')} /></div>
+                                        <div><div style={labelSt}>{tr('IZVRŠILACA', 'EMPLOYEES', 'MITARBEITER', 'IZVAJALCEV')}</div><input className="form-input" type="number" min={1} value={sistEditData.brojIzvrsilaca || 1} onChange={e => setSistEditData(p => ({ ...p, brojIzvrsilaca: +e.target.value }))} /></div>
+                                        <div><div style={labelSt}>{tr('PROBNI RAD', 'PROBATION PERIOD', 'PROBEZEIT', 'POSKUSNO DELO')}</div><input className="form-input" value={sistEditData.probniRad || ''} onChange={e => setSistEditData(p => ({ ...p, probniRad: e.target.value }))} placeholder={tr('npr. 3 mjeseca', 'e.g. 3 months', 'z.B. 3 Monate', 'npr. 3 mesece')} /></div>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                                        <div><div style={labelSt}>POTREBNA OZO</div><textarea className="form-input" rows={2} value={(sistEditData.potrebnaOZO || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, potrebnaOZO: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
-                                        <div><div style={labelSt}>RADNA OPREMA</div><textarea className="form-input" rows={2} value={(sistEditData.radnaOprema || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, radnaOprema: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
-                                        <div><div style={labelSt}>ZDRAVSTVENI ZAHTJEVI</div><textarea className="form-input" rows={2} value={(sistEditData.zdravstveniZahtjevi || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, zdravstveniZahtjevi: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
-                                        <div><div style={labelSt}>POTREBNI CERTIFIKATI</div><textarea className="form-input" rows={2} value={(sistEditData.certifikati || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, certifikati: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>{tr('POTREBNA OZO', 'REQUIRED PPE', 'ERFORDERLICHE PSA', 'POTREBNA OZO')}</div><textarea className="form-input" rows={2} value={(sistEditData.potrebnaOZO || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, potrebnaOZO: e.target.value.split('\n').filter(Boolean) }))} placeholder={tr('Jedna stavka po redu', 'One item per line', 'Ein Eintrag pro Zeile', 'Ena postavka na vrstico')} style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>{tr('RADNA OPREMA', 'WORK EQUIPMENT', 'ARBEITSMITTEL', 'DELOVNA OPREMA')}</div><textarea className="form-input" rows={2} value={(sistEditData.radnaOprema || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, radnaOprema: e.target.value.split('\n').filter(Boolean) }))} placeholder={tr('Jedna stavka po redu', 'One item per line', 'Ein Eintrag pro Zeile', 'Ena postavka na vrstico')} style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>{tr('ZDRAVSTVENI ZAHTJEVI', 'MEDICAL REQUIREMENTS', 'GESUNDHEITSANFORDERUNGEN', 'ZDRAVSTVENI ZAHTEVI')}</div><textarea className="form-input" rows={2} value={(sistEditData.zdravstveniZahtjevi || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, zdravstveniZahtjevi: e.target.value.split('\n').filter(Boolean) }))} placeholder={tr('Jedna stavka po redu', 'One item per line', 'Ein Eintrag pro Zeile', 'Ena postavka na vrstico')} style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>{tr('POTREBNI CERTIFIKATI', 'REQUIRED CERTIFICATES', 'ERFORDERLICHE ZERTIFIKATE', 'POTREBNI CERTIFIKATI')}</div><textarea className="form-input" rows={2} value={(sistEditData.certifikati || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, certifikati: e.target.value.split('\n').filter(Boolean) }))} placeholder={tr('Jedna stavka po redu', 'One item per line', 'Ein Eintrag pro Zeile', 'Ena postavka na vrstico')} style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         <button className="btn btn-primary" onClick={() => {
@@ -1515,59 +1553,59 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {/* ── TAB: Opis procesa ── */}
                 {activeTab === 'opis' && (
                     <div className="card"><div className="card-body">
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>{tr('OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA', 'TECHNICAL-TECHNOLOGICAL PROCESS DESCRIPTION', 'TECHNISCH-TECHNOLOGISCHE PROZESSBESCHREIBUNG', 'OPIS TEHNIČNO-TEHNOLOŠKEGA PROCESA')}</div>
                         <textarea className="form-input" rows={8} value={formData.opisProcesa || ''} onChange={e => set('opisProcesa', e.target.value)}
-                            placeholder="Opišite tehničko-tehnološki i radni proces, sredstva rada, opremu... Možete pisati ručno ili koristiti AI generisanje ispod." style={{ resize: 'vertical', marginBottom: 20 }} />
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>ANALIZA ORGANIZACIJE RADA</div>
+                            placeholder={tr("Opišite tehničko-tehnološki i radni proces, sredstva rada, opremu... Možete pisati ručno ili koristiti AI generisanje ispod.", "Describe the technical-technological and work process, work tools, equipment... You can write manually or use AI generation below.", "Beschreiben Sie den technisch-technologischen und Arbeitsprozess, Arbeitsmittel, Ausrüstung... Sie können manuell schreiben oder die KI-Generierung unten verwenden.", "Opišite tehnično-tehnološki in delovni proces, delovna sredstva, opremo... Lahko pišete ročno ali uporabite spodnjo AI generiranje.")} style={{ resize: 'vertical', marginBottom: 20 }} />
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>{tr('ANALIZA ORGANIZACIJE RADA', 'WORK ORGANIZATION ANALYSIS', 'ARBEITSORGANISATION ANALYSIS', 'ANALIZA ORGANIZACIJE DELA')}</div>
                         <textarea className="form-input" rows={6} value={formData.analizaOrganizacije || ''} onChange={e => set('analizaOrganizacije', e.target.value)}
-                            placeholder="Opišite organizaciju rada, smjene, posebne uvjete... Možete pisati ručno ili koristiti AI generisanje ispod." style={{ resize: 'vertical', marginBottom: 20 }} />
+                            placeholder={tr("Opišite organizaciju rada, smjene, posebne uvjete... Možete pisati ručno ili koristiti AI generisanje ispod.", "Describe work organization, shifts, special conditions... You can write manually or use AI generation below.", "Beschreiben Sie die Arbeitsorganisation, Schichten, besondere Bedingungen... Sie können manuell schreiben oder die KI-Generierung unten verwenden.", "Opišite organizacijo dela, izmene, posebne pogoje... Lahko pišete ročno ali uporabite spodnjo AI generiranje.")} style={{ resize: 'vertical', marginBottom: 20 }} />
 
                         {/* ── AI Generation Section ── */}
                         <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'rgba(102,126,234,0.06)', marginBottom: 16 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                                 <span style={{ fontSize: '1.1rem' }}>✨</span>
-                                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>AI Generisanje opisa</div>
+                                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>{tr('AI Generisanje opisa', 'AI Process Description Generator', 'KI Prozessbeschreibung Generator', 'AI Generiranje opisa procesa')}</div>
                             </div>
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 14 }}>
                                 {(formData.opisProcesa || formData.analizaOrganizacije)
-                                    ? '💡 Već ste napisali tekst u gornjim poljima. AI može proširiti i poboljšati vaš tekst, ili generisati potpuno novi opis iz podataka aplikacije.'
-                                    : '💡 AI može generisati profesionalni opis na osnovu radnih mjesta, djelatnosti i opasnosti iz vaše aplikacije.'}
+                                    ? tr('💡 Već ste napisali tekst u gornjim poljima. AI može proširiti i poboljšati vaš tekst, ili generisati potpuno novi opis iz podataka aplikacije.', '💡 You have already written text in the fields above. AI can expand and improve your text, or generate a completely new description from application data.', '💡 Sie haben bereits Text in die obigen Felder eingegeben. Die KI kann Ihren Text erweitern und verbessern oder eine völlig neue Beschreibung aus Anwendungsdaten erstellen.', '💡 V zgornjih poljih ste že napisali besedilo. AI lahko razširi in izboljša vaše besedilo ali ustvari popolnoma nov opis iz podatkov aplikacije.')
+                                    : tr('💡 AI može generisati profesionalni opis na osnovu radnih mjesta, djelatnosti i opasnosti iz vaše aplikacije.', '💡 AI can generate a professional description based on workplaces, industry, and hazards in your application.', '💡 Die KI kann eine professionelle Beschreibung basierend auf den Arbeitsplätzen, Branchen und Gefahren in Ihrer Anwendung erstellen.', '💡 AI lahko ustvari profesionalen opis na podlagi delovnih mest, dejavnosti in nevarnosti v vaši aplikaciji.')}
                             </div>
                             {/* Data source indicators */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                                 <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 12, background: 'rgba(76,175,80,0.15)', color: '#4caf50', fontWeight: 600 }}>
-                                    📋 Radna mjesta: {formData.radnoMjestoId ? (workplaces.find(w => w.id === formData.radnoMjestoId)?.naziv || '1') : `Sva (${workplaces.length})`}
+                                    📋 {tr('Radna mjesta: ', 'Workplaces: ', 'Arbeitsplätze: ', 'Delovna mesta: ')}{formData.radnoMjestoId ? (workplaces.find(w => w.id === formData.radnoMjestoId)?.naziv || '1') : `${tr('Sva', 'All', 'Alle', 'Vsa')} (${workplaces.length})`}
                                 </span>
                                 <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 12, background: 'rgba(255,193,7,0.15)', color: '#ffc107', fontWeight: 600 }}>
-                                    ⚠️ Opasnosti: {hazards.length}
+                                    ⚠️ {tr('Opasnosti: ', 'Hazards: ', 'Gefahren: ', 'Nevarnosti: ')}{hazards.length}
                                 </span>
                                 <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 12, background: 'rgba(33,150,243,0.15)', color: '#2196f3', fontWeight: 600 }}>
-                                    🏢 Djelatnost: {formData.djelatnost || 'Nije navedeno'}
+                                    🏢 {tr('Djelatnost: ', 'Industry: ', 'Branche: ', 'Dejavnost: ')}{formData.djelatnost || tr('Nije navedeno', 'Not specified', 'Nicht angegeben', 'Ni navedeno')}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 <button className="btn btn-outline btn-sm" onClick={() => handleAiOpis('app')} disabled={aiOpisLoading}
-                                    title="Generiši opis iz podataka aplikacije (radna mjesta, djelatnost, sistematizacija)"
+                                    title={tr("Generiši opis iz podataka aplikacije (radna mjesta, djelatnost, sistematizacija)", "Generate description from application data (workplaces, industry, systematization)", "Beschreibung aus Anwendungsdaten generieren (Arbeitsplätze, Branche, Systematisierung)", "Generiraj opis iz podatkov aplikacije (delovna mesta, dejavnost, sistematizacija)")}
                                     style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                    {aiOpisLoading ? '⏳ Generišem...' : '🤖 Generiši iz podataka aplikacije'}
+                                    {aiOpisLoading ? tr('⏳ Generišem...', '⏳ Generating...', '⏳ Generiere...', '⏳ Generiram...') : tr('🤖 Generiši iz podataka aplikacije', '🤖 Generate from App Data', '🤖 Aus App-Daten generieren', '🤖 Generiraj iz podatkov aplikacije')}
                                 </button>
                                 {(formData.opisProcesa || formData.analizaOrganizacije) && (
                                     <button className="btn btn-outline btn-sm" onClick={() => handleAiOpis('text')} disabled={aiOpisLoading}
-                                        title="Proširi i poboljšaj tekst koji ste već napisali koristeći AI"
+                                        title={tr("Proširi i poboljšaj tekst koji ste već napisali koristeći AI", "Expand and improve your written text using AI", "Erweitern und verbessern Sie Ihren geschriebenen Text mit KI", "Razširi in izboljšaj svoje zapisano besedilo z AI")}
                                         style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                        {aiOpisLoading ? '⏳ Generišem...' : '📝 Proširi moj tekst s AI'}
+                                        {aiOpisLoading ? tr('⏳ Generišem...', '⏳ Generating...', '⏳ Generiere...', '⏳ Generiram...') : tr('📝 Proširi moj tekst s AI', '📝 Expand my text with AI', '📝 Meinen Text mit KI erweitern', '📝 Razširi moje besedilo z AI')}
                                     </button>
                                 )}
                                 <button className="btn btn-outline btn-sm" onClick={() => setShowDocAiModal(true)}
-                                    title="Automatski izvuci podatke o procesu, organizaciji i opasnostima iz priloženih word/pdf dokumenata (zapisnici, protokoli)"
+                                    title={tr("Automatski izvuci podatke o procesu, organizaciji i opasnostima iz priloženih word/pdf dokumenata (zapisnici, protokoli)", "Automatically extract process, organization, and hazard data from attached Word/PDF documents (reports, protocols)", "Automatisch Prozess-, Organisations- und Gefährdungsdaten aus angehängten Word/PDF-Dokumenten extrahieren (Berichte, Protokolle)", "Samodejno izvleci podatke o procesu, organizaciji in nevarnostih iz priloženih Word/PDF dokumentov (zapisniki, protokoli)")}
                                     style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                    📄 AI Analiza dokumenata
+                                    📄 {tr('AI Analiza dokumenata', 'AI Document Analysis', 'KI Dokumentenanalyse', 'AI Analiza dokumentov')}
                                 </button>
                             </div>
                         </div>
 
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {t('save')}</button>
+                            <button className="btn btn-primary" title={tr("Spasite sve dosadašnje promjene", "Save all changes so far", "Bisherige Änderungen speichern", "Shrani vse dosedanje spremembe")} onClick={handleSave}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
                         
@@ -1576,9 +1614,9 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
                                 onClick={(e) => { if (e.target === e.currentTarget && !docAiLoading) setShowDocAiModal(false); }}>
                                 <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 600, maxWidth: 800, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>🤖 AI Analiza dokumenata</div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>🤖 {tr('AI Analiza dokumenata', 'AI Document Analysis', 'KI Dokumentenanalyse', 'AI Analiza dokumentov')}</div>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.5 }}>
-                                        Učitajte zapisnike, mjerne protokole, tehničke listove ili drugu dokumentaciju. AI će ih pročitati i pokušati automatski formulisati Opis procesa, Organizaciju rada, te prepoznati opasnosti.
+                                        {tr("Učitajte zapisnike, mjerne protokole, tehničke listove ili drugu dokumentaciju. AI će ih pročitati i pokušati automatski formulisati Opis procesa, Organizaciju rada, te prepoznati opasnosti.", "Upload reports, measurement protocols, data sheets, or other documentation. AI will read them and try to automatically formulate the Process Description, Work Organization, and identify hazards.", "Laden Sie Berichte, Messprotokolle, Datenblätter oder andere Dokumente hoch. Die KI liest sie und versucht, die Prozessbeschreibung und die Arbeitsorganisation automatisch zu formulieren sowie Gefahren zu erkennen.", "Naložite zapisnike, merilne protokole, tehnične liste ali drugo dokumentacijo. AI jih bo prebral in poskusil samodejno oblikovati Opis procesa, Organizacijo dela ter prepoznati nevarnosti.")}
                                     </div>
                                     
                                     {!docAiResult ? (
@@ -1589,7 +1627,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     onChange={e => setDocAiFiles(Array.from(e.target.files))} />
                                                 <div style={{ fontSize: '2rem', marginBottom: 10 }}>📎</div>
                                                 <div style={{ fontWeight: 600, color: 'var(--text)' }}>
-                                                    {docAiFiles.length> 0 ? `${docAiFiles.length} dokument(a) spremno` : 'Klikni ili povuci dokumente ovdje (PDF, Word)'}
+                                                    {docAiFiles.length> 0 ? `${docAiFiles.length} ${tr('dokument(a) spremno', 'document(s) ready', 'Dokument(e) bereit', 'dokument(i) pripravljen(i)')}` : tr('Klikni ili povuci dokumente ovdje (PDF, Word)', 'Click or drag documents here (PDF, Word)', 'Klicken oder ziehen Sie Dokumente hierher (PDF, Word)', 'Kliknite ali povlecite dokumente sem (PDF, Word)')}
                                                 </div>
                                                 {docAiFiles.length> 0 && (
                                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 8 }}>
@@ -1601,28 +1639,28 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 <button className="btn btn-ghost" onClick={() => setShowDocAiModal(false)} disabled={docAiLoading}>{t('cancel')}</button>
                                                 <button className="btn btn-primary" onClick={handleDocAiAnalyze} disabled={docAiFiles.length === 0 || docAiLoading}
                                                     style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', border: 'none' }}>
-                                                    {docAiLoading ? '⏳ AI čita...' : '⚡ Analiziraj dokumente'}
+                                                    {docAiLoading ? tr('⏳ AI čita...', '⏳ AI Reading...', '⏳ KI liest...', '⏳ AI bere...') : tr('⚡ Analiziraj dokumente', '⚡ Analyze Documents', '⚡ Dokumente analysieren', '⚡ Analiziraj dokumente')}
                                                 </button>
                                             </div>
                                         </>
                                     ) : (
                                         <>
                                             <div style={{ padding: 16, background: 'rgba(76,175,80,0.1)', border: '1px solid #4caf50', borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
-                                                <div style={{ fontWeight: 700, color: '#4caf50', marginBottom: 12 }}>✅ Analiza završena! Pregledajte rezultate:</div>
+                                                <div style={{ fontWeight: 700, color: '#4caf50', marginBottom: 12 }}>{tr('✅ Analiza završena! Pregledajte rezultate:', '✅ Analysis complete! Review results:', '✅ Analyse abgeschlossen! Ergebnisse überprüfen:', '✅ Analiza končana! Preglejte rezultate:')}</div>
                                                 
-                                                <div style={{ ...labelSt, marginTop: 10 }}>Generisani opis procesa</div>
+                                                <div style={{ ...labelSt, marginTop: 10 }}>{tr('Generisani opis procesa', 'Generated process description', 'Generierte Prozessbeschreibung', 'Generirani opis procesa')}</div>
                                                 <textarea className="form-input" rows={4} value={docAiResult.opisProcesa || ''} 
                                                     onChange={e => setDocAiResult(prev => ({...prev, opisProcesa: e.target.value}))} 
                                                     style={{ width: '100%', marginBottom: 12, fontSize: '0.85rem' }} />
-                                                    
-                                                <div style={{ ...labelSt }}>Analiza organizacije</div>
+                                                     
+                                                <div style={{ ...labelSt }}>{tr('Analiza organizacije', 'Organization analysis', 'Organisationsanalyse', 'Analiza organizacije')}</div>
                                                 <textarea className="form-input" rows={2} value={docAiResult.analizaOrganizacije || ''} 
                                                     onChange={e => setDocAiResult(prev => ({...prev, analizaOrganizacije: e.target.value}))} 
                                                     style={{ width: '100%', marginBottom: 12, fontSize: '0.85rem' }} />
                                                 
                                                 {docAiResult.oprema && docAiResult.oprema.length> 0 && (
                                                     <div style={{ marginBottom: 12 }}>
-                                                        <div style={{ ...labelSt }}>Predloženi strojevi/alati (Bit će dodani u opis)</div>
+                                                        <div style={{ ...labelSt }}>{tr('Predloženi strojevi/alati (Bit će dodani u opis)', 'Suggested machines/tools (Will be added to description)', 'Vorgeschlagene Maschinen/Werkzeuge (Werden zur Beschreibung hinzugefügt)', 'Predlagani stroji/orodja (Dodano bo v opis)')}</div>
                                                         <div style={{ fontSize: '0.8rem', background: 'var(--bg-input)', padding: 8, borderRadius: 6 }}>
                                                             {docAiResult.oprema.join(', ')}
                                                         </div>
@@ -1631,7 +1669,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 
                                                 {docAiResult.opasnosti && docAiResult.opasnosti.length> 0 && (
                                                     <div style={{ marginBottom: 12 }}>
-                                                        <div style={{ ...labelSt }}>Predložene opasnosti ({docAiResult.opasnosti.length} - Bit će dodane u predloške)</div>
+                                                        <div style={{ ...labelSt }}>{tr('Predložene opasnosti (Bit će dodane u predloške)', 'Suggested hazards (Will be added to templates)', 'Vorgeschlagene Gefahren (Werden zu Vorlagen hinzugefügt)', 'Predlagane nevarnosti (Dodano bo v predloge)')} ({docAiResult.opasnosti.length})</div>
                                                         <div style={{ maxHeight: 100, overflow: 'auto', fontSize: '0.8rem', background: 'var(--bg-input)', padding: 8, borderRadius: 6 }}>
                                                             {docAiResult.opasnosti.map((op, i) => <div key={i}>⚠️ {op}</div>)}
                                                         </div>
@@ -1639,10 +1677,10 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 )}
                                             </div>
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                                                <button className="btn btn-ghost" onClick={() => { setDocAiResult(null); setDocAiFiles([]); }}>❌ Poništi</button>
+                                                <button className="btn btn-ghost" onClick={() => { setDocAiResult(null); setDocAiFiles([]); }}>❌ {tr('Poništi', 'Cancel', 'Abbrechen', 'Prekliči')}</button>
                                                 <button className="btn btn-primary" onClick={applyDocAiResults}
                                                     style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', border: 'none' }}>
-                                                    ✔ Potvrdi i integriraj u procjenu
+                                                    ✔ {tr('Potvrdi i integriraj u procjenu', 'Confirm and integrate into assessment', 'Bestätigen und in Beurteilung integrieren', 'Potrdi in integriraj v oceno')}
                                                 </button>
                                             </div>
                                         </>
@@ -1667,17 +1705,19 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
                             <div className="card" style={{ marginBottom: 16 }}><div className="card-body">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                                    <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>STAVKE PROCJENE ({riskItems.length})</div>
+                                    <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>
+                                        {tr('STAVKE PROCJENE', 'RISK ITEMS', 'BEWERTUNGSPUNKTE', 'OCENJEVALNE POSTAVKE', 'STAVKE PROCJENE', 'STAVKE PROCENE')} ({riskItems.length})
+                                    </div>
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                        {selectedRiIds.size> 0 && (
+                                        {selectedRiIds.size > 0 && (
                                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginRight: 8 }}>
                                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedRiIds.size} {t('odabrano')}:</span>
                                                 <button className="btn btn-danger btn-sm" onClick={handleBulkDeleteRi}>🗑️ {t('obrisi')}</button>
                                             </div>
                                         )}
-                                        <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)} title="Uvezite prepoznate opasnosti i nedostatke iz odgovora radnika na online upitnike"
+                                        <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)} title={tr('Uvezite prepoznate opasnosti i nedostatke iz odgovora radnika na online upitnike', 'Import recognized hazards and shortcomings from worker responses to online questionnaires', 'Importieren Sie erkannte Gefahren und Mängel aus den Antworten der Mitarbeiter auf Online-Fragebögen', 'Uvozite prepoznane nevarnosti in pomanjkljivosti iz odgovorov delavcev na spletne vprašalnike')}
                                             style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                            📋 Uvezi iz upitnika
+                                            {tr('📋 Uvezi iz upitnika', '📋 Import from Questionnaire', '📋 Aus Fragebogen importieren', '📋 Uvozi iz vprašalnika')}
                                         </button>
                                         <button className="btn btn-outline btn-sm" onClick={() => {
                                             // Auto-detect workplaces: if Cijela firma, pre-select all; otherwise just the selected one
@@ -1689,15 +1729,15 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             setAiGenCustomWp('');
                                             setAiGenJobTitle('');
                                             setShowAiGenTableModal(true);
-                                        }} title="Zia AI Automatski izrađuje tabelu rizika za odabrana radna mjesta sukladno normama"
+                                        }} title={tr('Zia AI Automatski izrađuje tabelu rizika za odabrana radna mjesta sukladno normama', 'Zia AI automatically generates a risk table for selected workplaces in accordance with standards', 'Zia AI erstellt automatisch eine Risikotabelle für ausgewählte Arbeitsplätze gemäß den Standards', 'Zia AI samodejno ustvari tabelo tveganj za izbrana delovna mesta v skladu s standardi', 'Zia AI Automatski izrađuje tablicu rizika za odabrana radna mjesta sukladno normama', 'Zia AI Automatski izrađuje tabelu rizika za odabrana radna mesta u skladu sa standardima')}
                                             style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                            ✨ Autoizradi s AI
+                                            {tr('✨ Autoizradi s AI', '✨ Auto-generate with AI', '✨ Automatisch mit KI erstellen', '✨ Samodejno ustvari z AI', '✨ Autoizradi s AI', '✨ Autoizradi sa AI')}
                                         </button>
-                                        <button className="btn btn-outline btn-sm" onClick={() => { setShowBulkModal(true); setBulkSelected([]); setBulkWpId(''); }} title="Brzo dodajte više gotovih rizika odjednom iz glavnog centralnog kataloga opasnosti"
+                                        <button className="btn btn-outline btn-sm" onClick={() => { setShowBulkModal(true); setBulkSelected([]); setBulkWpId(''); }} title={tr('Brzo dodajte više gotovih rizika odjednom iz glavnog centralnog kataloga opasnosti', 'Quickly add multiple pre-defined hazards at once from the main central hazard catalog', 'Fügen Sie schnell mehrere vordefinierte Gefahren auf einmal aus dem zentralen Gefahrenkatalog hinzu', 'Hitro dodajte več že pripravljenih tveganj hkrati iz glavnega osrednjega kataloga nevarnosti')}
                                             style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                            ⚠️ Dodaj iz kataloga
+                                            {tr('⚠️ Dodaj iz kataloga', '⚠️ Add from Catalog', '⚠️ Aus Katalog hinzufügen', '⚠️ Dodaj iz kataloga')}
                                         </button>
-                                        <button className="btn btn-outline btn-sm" title="Ručno popunite formu i napravite procjenu za jedan pojedinačni rizik" onClick={handleNewRi}>+ {t('dodajStavku')}</button>
+                                        <button className="btn btn-outline btn-sm" title={t('dodajStavku')} onClick={handleNewRi}>+ {t('dodajStavku')}</button>
                                     </div>
                                 </div>
 
@@ -1705,22 +1745,24 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
                                          onClick={(e) => { if (e.target === e.currentTarget && !aiGenLoading) setShowAiGenTableModal(false); }}>
                                         <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 500, maxWidth: 650, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
-                                            <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>✨ AI Generisanje Tabele Rizika</div>
+                                            <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>
+                                                {tr('✨ AI Generisanje Tabele Rizika', '✨ AI Risk Table Generation', '✨ KI-Risikotabellen-Generierung', '✨ AI Ustvarjanje tabele tveganj', '✨ AI Generiranje Tablice Rizika', '✨ AI Generisanje Tabele Rizika')}
+                                            </div>
                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.6 }}>
-                                                Zia AI će analizirati odabrana radna mjesta i kreirati standardne (8-15) opasnosti po radnom mjestu, zajedno sa standardiziranom procjenom posljedica, vjerovatnoće i listom mjera prevencije.
+                                                {tr('Zia AI će analizirati odabrana radna mjesta i kreirati standardne (8-15) opasnosti po radnom mjestu, zajedno sa standardiziranom procjenom posljedica, vjerovatnoće i listom mjera prevencije.', 'Zia AI will analyze the selected workplaces and create standard (8-15) hazards per workplace, along with standardized assessments of consequences, probabilities, and a list of preventive measures.', 'Zia AI analysiert die ausgewählten Arbeitsplätze und erstellt standardmäßig (8-15) Gefahren pro Arbeitsplatz, zusammen mit standardisierten Bewertungen von Auswirkungen, Wahrscheinlichkeiten und einer Liste von Präventionsmaßnahmen.', 'Zia AI bo analizirala izbrana delovna mesta in ustvarila standardne (8-15) nevarnosti na delovno mesto, skupaj s standardizirano oceno posledic, verjetnosti in seznamom preventivnih ukrepov.', 'Zia AI će analizirati odabrana radna mjesta i kreirati standardne (8-15) opasnosti po radnom mjestu, zajedno sa standardiziranom procjenom posljedica, vjerojatnosti i popisom mjera prevencije.', 'Zia AI će analizirati odabrana radna mesta i kreirati standardne (8-15) opasnosti po radnom mestu, zajedno sa standardizovanom procenom posledica, verovatnoće i listom mera prevencije.')}
                                             </div>
 
                                             {/* Workplace selection from app data */}
-                                            {workplaces.length> 0 && (
+                                            {workplaces.length > 0 && (
                                                 <div style={{ marginBottom: 16 }}>
                                                     <div style={{ ...labelSt, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <span>Radna mjesta iz aplikacije ({workplaces.length})</span>
+                                                        <span>{tr('Radna mjesta iz aplikacije', 'Workplaces from application', 'Arbeitsplätze aus der Anwendung', 'Delovna mesta iz aplikacije')} ({workplaces.length})</span>
                                                         <button style={{ fontSize: '0.7rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontWeight: 600 }}
                                                             onClick={() => {
                                                                 if (aiGenSelectedWps.length === workplaces.length) setAiGenSelectedWps([]);
                                                                 else setAiGenSelectedWps(workplaces.map(w => w.id));
                                                             }}>
-                                                            {aiGenSelectedWps.length === workplaces.length ? 'Odznači sve' : 'Označi sve'}
+                                                            {aiGenSelectedWps.length === workplaces.length ? tr('Odznači sve', 'Deselect all', 'Alle abwählen', 'Odznači vse') : tr('Označi sve', 'Select all', 'Alle auswählen', 'Označi vse')}
                                                         </button>
                                                     </div>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
@@ -1741,7 +1783,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                         transition: 'all 0.15s ease',
                                                                     }}>
                                                                     {isSelected ? '✓ ' : ''}{wp.naziv}
-                                                                    {wpWorkers> 0 && <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.7rem' }}>({wpWorkers}👤)</span>}
+                                                                    {wpWorkers > 0 && <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.7rem' }}>({wpWorkers}👤)</span>}
                                                                 </button>
                                                             );
                                                         })}
@@ -1754,11 +1796,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 <div style={labelSt}>{t('dodajVlastitoRadnoMjestoOpciono')}</div>
                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                     <input className="form-input" value={aiGenCustomWp} onChange={e => setAiGenCustomWp(e.target.value)}
-                                                        placeholder="Npr. Zavarivač, Monter, Čistačica..." disabled={aiGenLoading}
+                                                        placeholder={tr('Npr. Zavarivač, Monter, Čistačica...', 'e.g. Welder, Fitter, Cleaner...', 'z.B. Schweißer, Bergmann, Reinigungskraft...', 'Npr. Varilec, Monter, Čistilka...', 'Npr. Zavarivač, Monter, Čistačica...', 'Npr. Zavarivač, Monter, Spremačica...')} disabled={aiGenLoading}
                                                         style={{ flex: 1 }} />
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                                                    💡 Ako radno mjesto ne postoji u aplikaciji, možete ga upisati ručno.
+                                                    {tr('💡 Ako radno mjesto ne postoji u aplikaciji, možete ga upisati ručno.', '💡 If the workplace does not exist in the app, you can enter it manually.', '💡 Wenn der Arbeitsplatz in der App nicht existiert, können Sie ihn manuell eingeben.', '💡 Če delovnega mesta ni v aplikaciji, ga lahko vnesete ročno.', '💡 Ako radno mjesto ne postoji u aplikaciji, možete ga upisati ručno.', '💡 Ako radno mesto ne postoji u aplikaciji, možete ga upisati ručno.')}
                                                 </div>
                                             </div>
 
@@ -1769,16 +1811,18 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 const uniqueNames = new Set(allSelected.map(n => n.trim().toLowerCase()));
                                                 const totalSelected = allSelected.length;
                                                 const uniqueCount = uniqueNames.size;
-                                                const hasDuplicates = totalSelected> uniqueCount;
+                                                const hasDuplicates = totalSelected > uniqueCount;
                                                 return (
                                                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16, padding: '8px 12px', borderRadius: 8, background: 'rgba(102,126,234,0.06)', border: '1px solid var(--border)' }}>
-                                                        📊 Generisat će se procjena za <strong style={{ color: 'var(--primary)' }}>{uniqueCount}</strong> jedinstveno/a radno/a mjesto/a
-                                                        {uniqueCount> 0 && (
-                                                            <span> — oko {uniqueCount * 10} stavki ukupno</span>
+                                                        {tr('📊 Generisat će se procjena za ', '📊 Assessment will be generated for ', '📊 Bewertung wird generiert für ', '📊 Ocena bo ustvarjena za ', '📊 Generirat će se procjena za ', '📊 Generisaće se procena za ')}
+                                                        <strong style={{ color: 'var(--primary)' }}>{uniqueCount}</strong>
+                                                        {tr(' jedinstveno/a radno/a mjesto/a', ' unique workplace(s)', ' eindeutige(r) Arbeitsplatz/-plätze', ' edinstveno/ih delovno/ih mesto/t', ' jedinstveno/a radno/a mjesto/a', ' jedinstveno/a radno/a mjesto/a')}
+                                                        {uniqueCount > 0 && (
+                                                            <span>{tr(' — oko ', ' — about ', ' — ca. ', ' — skupaj približno ') + (uniqueCount * 10) + tr(' stavki ukupno', ' items total', ' Elemente insgesamt', ' postavk')}</span>
                                                         )}
                                                         {hasDuplicates && (
                                                             <div style={{ marginTop: 4, fontSize: '0.72rem', color: 'var(--warning)' }}>
-                                                                ⚠️ {totalSelected - uniqueCount} duplikat(a) preskočeno — ista radna mjesta se procjenjuju samo jednom.
+                                                                {'⚠️ ' + (totalSelected - uniqueCount) + tr(' duplikat(a) preskočeno — ista radna mjesta se procjenjuju samo jednom.', ' duplicate(s) skipped — the same workplaces are assessed only once.', ' Duplikat(e) übersprungen — dieselben Arbeitsplätze werden nur einmal bewertet.', ' dvojnik(ov) preskočen(ih) — ista delovna mesta se ocenijo le enkrat.', ' duplikat(a) preskočeno — ista radna mjesta se procjenjuju samo jednom.', ' duplikat(a) preskočeno — ista radna mesta se procenjuju samo jednom.')}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1790,7 +1834,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 <button className="btn btn-primary" onClick={handleAiGenerateTableSubmit}
                                                     disabled={(aiGenSelectedWps.length === 0 && !aiGenCustomWp.trim() && !aiGenJobTitle.trim()) || aiGenLoading}
                                                         style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
-                                                    {aiGenLoading ? '⏳ Generišem tabelu...' : '⚡ Generiši Tabelu'}
+                                                    {aiGenLoading ? tr('⏳ Generišem tabelu...', '⏳ Generating table...', '⏳ Tabelle wird generiert...', '⏳ Ustvarjam tabelo...', '⏳ Generiram tablicu...') : tr('⚡ Generiši Tabelu', '⚡ Generate Table', '⚡ Tabelle generieren', '⚡ Ustvari tabelo', '⚡ Generiraj Tablicu')}
                                                 </button>
                                             </div>
                                         </div>
@@ -1801,39 +1845,41 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     const riFormContent = (
                                         <div style={{ padding: 16, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary)', marginBottom: 16 }}>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                                                <div><div style={labelSt}>Radno mjesto</div>
+                                                <div><div style={labelSt}>{tr('Radno mjesto', 'Workplace', 'Arbeitsplatz', 'Delovno mesto')}</div>
                                                     <select className="form-select" value={riForm.radnoMjestoId || ''} onChange={e => setRi('radnoMjestoId', e.target.value)}>
-                                                        <option value="">— Odaberi —</option>
+                                                        <option value="">{tr('— Odaberi —', '— Select —', '— Auswählen —', '— Izberi —')}</option>
                                                         {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
                                                     </select>
                                                 </div>
-                                                <div><div style={labelSt}>Opasnost / Štetnost</div>
+                                                <div><div style={labelSt}>{tr('Opasnost / Štetnost', 'Hazard / Harmful factor', 'Gefahr / Schadstoff', 'Nevarnost / Škodljivost')}</div>
                                                     <select className="form-select" value={riForm.opasnostId || ''} onChange={e => setRi('opasnostId', e.target.value)}>
-                                                        <option value="">— Odaberi —</option>
+                                                        <option value="">{tr('— Odaberi —', '— Select —', '— Auswählen —', '— Izberi —')}</option>
                                                         {hazards.map(h => <option key={h.id} value={h.id}>{h.oznaka ? `${h.oznaka} — ` : ''}{h.naziv}</option>)}
                                                     </select>
                                                 </div>
                                             </div>
 
                                             {/* ── Sistematizacija + Equipment Context Panel ── */}
-                                            {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length> 0) && (
+                                            {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length > 0) && (
                                                 <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', marginBottom: 4 }}>
-                                                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 8 }}>📑 Kontekst radnog mjesta</div>
+                                                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 8 }}>
+                                                        {tr('📑 Kontekst radnog mjesta', '📑 Workplace Context', '📑 Arbeitsplatzkontext', '📑 Kontekst delovnega mesta', '📑 Kontekst radnog mjesta', '📑 Kontekst radnog mjesta')}
+                                                    </div>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                                         {selectedWpSist?.potrebnaOZO?.map((ozo, i) => (
                                                             <span key={`ozo-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + ozo)}
                                                                 style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-                                                                title="Klikni da dodaš u opis">🦺 {ozo}</span>
+                                                                title={tr('Klikni da dodaš u opis', 'Click to add to description', 'Klicken Sie hier, um der Beschreibung hinzuzufügen', 'Kliknite za dodajanje v opis')}>🦺 {ozo}</span>
                                                         ))}
                                                         {selectedWpSist?.radnaOprema?.map((op, i) => (
                                                             <span key={`rop-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + op)}
                                                                 style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(102,126,234,0.15)', color: '#667eea', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
-                                                                title="Klikni da dodaš u opis">⚙️ {op}</span>
+                                                                title={tr('Klikni da dodaš u opis', 'Click to add to description', 'Klicken Sie hier, um der Beschreibung hinzuzufügen', 'Kliknite za dodajanje v opis')}>⚙️ {op}</span>
                                                         ))}
                                                         {selectedWpEquipment.map(eq => (
                                                             <span key={eq.id} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + eq.naziv)}
                                                                 style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(96,125,139,0.15)', color: '#607d8b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
-                                                                title="Klikni da dodaš u opis">🏗️ {eq.naziv}</span>
+                                                                title={tr('Klikni da dodaš u opis', 'Click to add to description', 'Klicken Sie hier, um der Beschreibung hinzuzufügen', 'Kliknite za dodajanje v opis')}>🏗️ {eq.naziv}</span>
                                                         ))}
                                                         {selectedWpSist?.posebniUvjeti?.map((pu, i) => (
                                                             <span key={`pu-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(244,67,54,0.12)', color: '#f44336', fontSize: '0.7rem', fontWeight: 600 }}>⚠️ {pu}</span>
@@ -1847,29 +1893,32 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                             ))
                                                         )}
                                                     </div>
-                                                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 6 }}>💡 Kliknite na stavku da je dodate u opis opasnosti</div>
+                                                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 6 }}>
+                                                        {tr('💡 Kliknite na stavku da je dodate u opis opasnosti', '💡 Click on an item to add it to the hazard description', '💡 Klicken Sie auf ein Element, um es der Gefahrenbeschreibung hinzuzufügen', '💡 Kliknite na postavko, da jo dodate v opis nevarnosti')}
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            <div style={{ marginBottom: 12 }}><div style={labelSt}>Opis opasnosti na radnom mjestu</div>
-                                                <input className="form-input" value={riForm.opisOpasnosti || ''} onChange={e => setRi('opisOpasnosti', e.target.value)} placeholder="Kratak opis specifične opasnosti..." />
+                                            <div style={{ marginBottom: 12 }}><div style={labelSt}>{tr('Opis opasnosti na radnom mjestu', 'Description of hazard at workplace', 'Gefahrenbeschreibung am Arbeitsplatz', 'Opis nevarnosti na delovnem mestu', 'Opis opasnosti na radnom mjestu', 'Opis opasnosti na radnom mjestu')}</div>
+                                                <input className="form-input" value={riForm.opisOpasnosti || ''} onChange={e => setRi('opisOpasnosti', e.target.value)}
+                                                    placeholder={tr('Kratak opis specifične opasnosti...', 'Short description of specific hazard...', 'Kurze Beschreibung der spezifischen Gefahr...', 'Kratek opis specifične nevarnosti...')} />
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
-                                                <div><div style={labelSt}>Vjerovatnoća (V) 1–5<HelpTip text="Koliko je vjerovatno da će se opasnost dogoditi? 1 = Zanemarivo (gotovo nemoguće), 3 = Moguće, 5 = Gotovo sigurno da će se desiti." /></div>
+                                                <div><div style={labelSt}>{tr('Vjerovatnoća (V) 1–5', 'Probability (P) 1–5', 'Wahrscheinlichkeit (W) 1–5', 'Verjetnost (V) 1–5', 'Vjerojatnost (V) 1–5')}<HelpTip text={tr('Koliko je vjerovatno da će se opasnost dogoditi? 1 = Zanemarivo (gotovo nemoguće), 3 = Moguće, 5 = Gotovo sigurno da će se desiti.', 'How likely is it that the hazard will occur? 1 = Negligible (almost impossible), 3 = Possible, 5 = Almost certain to happen.', 'Wie wahrscheinlich ist es, dass die Gefahr eintritt? 1 = Vernachlässigbar (fast unmöglich), 3 = Möglich, 5 = Nahezu sicher, dass es passiert.', 'Ako verjetno je, da se bo nevarnost zgodila? 1 = Zanemarljivo (skoraj nemogoče), 3 = Mogoče, 5 = Skoraj zagotovo, da se bo zgodilo.', 'Koliko je vjerojatno da će se opasnost dogoditi? 1 = Zanemarivo (gotovo nemoguće), 3 = Moguće, 5 = Gotovo sigurno da će se dogoditi.')} /></div>
                                                     <select className="form-select" value={riForm.vjerovatnoca || 0} onChange={e => setRi('vjerovatnoca', +e.target.value)}>
                                                         <option value={0}>—</option>
-                                                        {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
+                                                        {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {getVLabel(v, lang)}</option>)}
                                                     </select>
                                                 </div>
-                                                <div><div style={labelSt}>Posljedica (P) 1–5<HelpTip text="Kolika bi bila šteta ako se opasnost dogodi? 1 = Zanemarivo (bez povrede), 3 = Značajno oštećenje zdravlja, 5 = Smrtni ishod." /></div>
+                                                <div><div style={labelSt}>{tr('Posljedica (P) 1–5', 'Consequence (C) 1–5', 'Auswirkung (A) 1–5', 'Posledica (P) 1–5')}<HelpTip text={tr('Kolika bi bila šteta ako se opasnost dogodi? 1 = Zanemarivo (bez povrede), 3 = Značajno oštećenje zdravlja, 5 = Smrtni ishod.', 'How much damage would occur if the hazard happens? 1 = Negligible (no injury), 3 = Significant damage to health, 5 = Fatal outcome.', 'Wie hoch wäre der Schaden, wenn die Gefahr eintritt? 1 = Vernachlässigbar (keine Verletzung), 3 = Erhebliche Gesundheitsschädigung, 5 = Todesfall.', 'Kakšna bi bila škoda, če se nevarnost zgodi? 1 = Zanemarljivo (brez poškodbe), 3 = Znatna okvara zdravja, 5 = Smrtni izid.', 'Kolika bi bila šteta ako se opasnost dogodi? 1 = Zanemarivo (bez ozljede), 3 = Značajno oštećenje zdravlja, 5 = Smrtni ishod.')} /></div>
                                                     <select className="form-select" value={riForm.posljedica || 0} onChange={e => setRi('posljedica', +e.target.value)}>
                                                         <option value={0}>—</option>
-                                                        {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
+                                                        {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {getPLabel(p, lang)}</option>)}
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <div style={labelSt}>Rizik (R=V×P)</div>
-                                                    {riForm.vjerovatnoca> 0 && riForm.posljedica> 0 ? (() => {
+                                                    <div style={labelSt}>{tr('Rizik (R=V×P)', 'Risk (R=P×C)', 'Risiko (R=W×A)', 'Tveganje (T=V×P)', 'Rizik (R=V×P)', 'Rizik (R=V×P)')}</div>
+                                                    {riForm.vjerovatnoca > 0 && riForm.posljedica > 0 ? (() => {
                                                         const sc = riForm.vjerovatnoca * riForm.posljedica;
                                                         const rl = riskLevel(sc);
                                                         return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl.color}` }}>{sc} — {rl.label}</div>;
@@ -1880,36 +1929,38 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 <input type="file" accept=".pdf,.doc,.docx" id="aiDocInput" style={{ display: 'none' }} onChange={e => setAiDocument(e.target.files[0] || null)} />
                                                 <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('aiDocInput').click()} disabled={aiLoading}
                                                     style={{ borderColor: aiDocument ? '#11998e' : 'var(--border)', color: aiDocument ? '#11998e' : 'var(--text)', background: aiDocument ? 'rgba(17,153,142,0.1)' : 'transparent', fontWeight: 600 }}>
-                                                    📎 {aiDocument ? aiDocument.name : 'Priloži dokument (PDF/Word)'}
+                                                    📎 {aiDocument ? aiDocument.name : tr('Priloži dokument (PDF/Word)', 'Attach document (PDF/Word)', 'Dokument anhängen (PDF/Word)', 'Priloži dokument (PDF/Word)')}
                                                 </button>
                                                 <button className="btn btn-outline btn-sm" onClick={handleAiSuggest} disabled={aiLoading}
                                                     style={{ background: aiLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                                    {aiLoading ? '⏳ AI analizira...' : '🤖 AI Predloži mjere'}
+                                                    {aiLoading ? tr('⏳ AI analizira...', '⏳ AI analyzing...', '⏳ KI analysiert...', '⏳ AI analizira...') : tr('🤖 AI Predloži mjere', '🤖 AI Suggest Measures', '🤖 KI Maßnahmen vorschlagen', '🤖 AI Predlagaj ukrepe', '🤖 AI Predloži mjere', '🤖 AI Predloži mere')}
                                                 </button>
-                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AI u obzir uzima i priloženi dokument</span>
-                                                {aiDocument && <button className="btn btn-ghost btn-sm" onClick={() => { setAiDocument(null); document.getElementById('aiDocInput').value = ''; }} style={{ color: 'var(--danger)', padding: '0 4px', fontSize: '1rem' }} title="Ukloni dokument">✖</button>}
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tr('AI u obzir uzima i priloženi dokument', 'AI also takes the attached document into account', 'Die KI berücksichtigt auch das angehängte Dokument', 'AI upošteva tudi priloženi dokument')}</span>
+                                                {aiDocument && <button className="btn btn-ghost btn-sm" onClick={() => { setAiDocument(null); document.getElementById('aiDocInput').value = ''; }} style={{ color: 'var(--danger)', padding: '0 4px', fontSize: '1rem' }} title={tr('Ukloni dokument', 'Remove document', 'Dokument entfernen', 'Odstrani dokument')}>✖</button>}
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                                                <div><div style={labelSt}>Postojeće mjere</div><textarea className="form-input" rows={2} value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
-                                                <div><div style={labelSt}>Predložene mjere</div><textarea className="form-input" rows={2} value={riForm.predlozeneMjere || ''} onChange={e => setRi('predlozeneMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
+                                                <div><div style={labelSt}>{tr('Postojeće mjere', 'Existing measures', 'Bestehende Maßnahmen', 'Obstoječi ukrepi', 'Postojeće mjere', 'Postojeće mere')}</div><textarea className="form-input" rows={2} value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
+                                                <div><div style={labelSt}>{tr('Predložene mjere', 'Proposed measures', 'Vorgeschlagene Maßnahmen', 'Predlagani ukrepi', 'Predložene mjere', 'Predložene mere')}</div><textarea className="form-input" rows={2} value={riForm.predlozeneMjere || ''} onChange={e => setRi('predlozeneMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
                                             </div>
-                                            <div style={{ ...labelSt, fontSize: '0.78rem', color: '#667eea', marginBottom: 10, marginTop: 6 }}>PREOSTALI RIZIK (NAKON MJERA)</div>
+                                            <div style={{ ...labelSt, fontSize: '0.78rem', color: '#667eea', marginBottom: 10, marginTop: 6 }}>
+                                                {tr('PREOSTALI RIZIK (NAKON MJERA)', 'RESIDUAL RISK (AFTER MEASURES)', 'RESTRISIKO (NACH MASSNAHMEN)', 'PREOSTALO TVEGANJE (PO UKREPIH)', 'PREOSTALI RIZIK (NAKON MJERA)', 'PREOSTALI RIZIK (NAKON MERA)')}
+                                            </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
-                                                <div><div style={labelSt}>V nakon mjera (1–5)</div>
+                                                <div><div style={labelSt}>{tr('V nakon mjera (1–5)', 'P after measures (1–5)', 'W nach Maßnahmen (1–5)', 'V po ukrepih (1–5)', 'V nakon mjera (1–5)', 'V nakon mera (1–5)')}</div>
                                                     <select className="form-select" value={riForm.vjerovatnocaNakon || 0} onChange={e => setRi('vjerovatnocaNakon', +e.target.value)}>
                                                         <option value={0}>—</option>
-                                                        {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
+                                                        {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {getVLabel(v, lang)}</option>)}
                                                     </select>
                                                 </div>
-                                                <div><div style={labelSt}>P nakon mjera (1–5)</div>
+                                                <div><div style={labelSt}>{tr('P nakon mjera (1–5)', 'C after measures (1–5)', 'A nach Maßnahmen (1–5)', 'P po ukrepih (1–5)', 'P nakon mjera (1–5)', 'P nakon mera (1–5)')}</div>
                                                     <select className="form-select" value={riForm.posljedlicaNakon || 0} onChange={e => setRi('posljedlicaNakon', +e.target.value)}>
                                                         <option value={0}>—</option>
-                                                        {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
+                                                        {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {getPLabel(p, lang)}</option>)}
                                                     </select>
                                                 </div>
-                                                <div>
-                                                    <div style={labelSt}>R nakon</div>
-                                                    {riForm.vjerovatnocaNakon> 0 && riForm.posljedlicaNakon> 0 ? (() => {
+                                                 <div>
+                                                    <div style={labelSt}>{tr('R nakon', 'R after', 'R nach', 'T po', 'R nakon', 'R nakon')}</div>
+                                                    {riForm.vjerovatnocaNakon > 0 && riForm.posljedlicaNakon > 0 ? (() => {
                                                         const sc2 = riForm.vjerovatnocaNakon * riForm.posljedlicaNakon;
                                                         const rl2 = riskLevel(sc2);
                                                         return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl2.bg, color: rl2.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl2.color}` }}>{sc2} — {rl2.label}</div>;
@@ -1917,8 +1968,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 </div>
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
-                                                <div><div style={labelSt}>Odgovorna osoba</div><input className="form-input" value={riForm.odgovornaOsoba || ''} onChange={e => setRi('odgovornaOsoba', e.target.value)} /></div>
-                                                <div><div style={labelSt}>Rok provedbe</div><DateInput value={riForm.rokProvedbe || ''} onChange={v => setRi('rokProvedbe', v)} /></div>
+                                                <div><div style={labelSt}>{tr('Odgovorna osoba', 'Responsible person', 'Verantwortliche Person', 'Odgovorna oseba')}</div><input className="form-input" value={riForm.odgovornaOsoba || ''} onChange={e => setRi('odgovornaOsoba', e.target.value)} /></div>
+                                                <div><div style={labelSt}>{tr('Rok provedbe', 'Implementation deadline', 'Umsetzungsfrist', 'Rok izvedbe', 'Rok provedbe', 'Rok sprovođenja')}</div><DateInput value={riForm.rokProvedbe || ''} onChange={v => setRi('rokProvedbe', v)} /></div>
                                             </div>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {t('save')}</button>
@@ -1932,23 +1983,23 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             {showRiForm && !riEditId && riFormContent}
 
                                             {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{t('nemaStavkiKlikniteNaMatricu')}</div>}
-                                            {riSorted.length> 0 && (
+                                            {riSorted.length > 0 && (
                                                 <div className="data-table-wrapper"><table className="data-table"><thead><tr>
                                                     <th style={{ width: 85, paddingLeft: 8 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                            <input type="checkbox" checked={selectedRiIds.size === riSorted.length && riSorted.length> 0} onChange={() => {
+                                                            <input type="checkbox" checked={selectedRiIds.size === riSorted.length && riSorted.length > 0} onChange={() => {
                                                                 if (selectedRiIds.size === riSorted.length) setSelectedRiIds(new Set());
                                                                 else setSelectedRiIds(new Set(riSorted.map(ri => ri.id)));
-                                                            }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 16, height: 16 }} title="Označi sve" />
+                                                            }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 16, height: 16 }} title={tr('Označi sve', 'Select all', 'Alle auswählen', 'Označi vse')} />
                                                         </div>
-                                                    </th><th>Radno mjesto</th><th>Opasnost</th>
-                                                    <th style={{ width: 50, textAlign: 'center' }}>V</th><th style={{ width: 50, textAlign: 'center' }}>P</th>
-                                                    <th style={{ width: 50, textAlign: 'center' }}>R₀</th><th>Prije</th>
-                                                    <th style={{ width: 50, textAlign: 'center' }}>R₁</th><th>Nakon</th><th style={{ width: 40 }}></th>
+                                                    </th><th>{tr('Radno mjesto', 'Workplace', 'Arbeitsplatz', 'Delovno mesto')}</th><th>{tr('Opasnost', 'Hazard', 'Gefahr', 'Nevarnost')}</th>
+                                                    <th style={{ width: 50, textAlign: 'center' }}>{tr('V', 'P', 'W', 'V', 'V')}</th><th style={{ width: 50, textAlign: 'center' }}>{tr('P', 'C', 'A', 'P')}</th>
+                                                    <th style={{ width: 50, textAlign: 'center' }}>R₀</th><th>{tr('Prije', 'Before', 'Vorher', 'Pred', 'Prije', 'Pre')}</th>
+                                                    <th style={{ width: 50, textAlign: 'center' }}>R₁</th><th>{tr('Nakon', 'After', 'Nachher', 'Po', 'Nakon', 'Nakon')}</th><th style={{ width: 40 }}></th>
                                                 </tr></thead>
                                                 {riSorted.map(ri => {
                                                     const rl = riskLevel(ri.rizik || 0);
-                                                    const rlA = ri.rizikNakon> 0 ? riskLevel(ri.rizikNakon) : null;
+                                                    const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
                                                     const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
                                                     const hz = hazards.find(h => h.id === ri.opasnostId);
                                                     const improved = rlA && ri.rizikNakon < ri.rizik;
@@ -1968,7 +2019,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                 <td style={{ fontSize: '0.82rem' }}>
                                                                     {hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}
                                                                     {ri.aiGenerated && !ri.source && <span style={{ marginLeft: 6, fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(102,126,234,0.15)', color: '#667eea', borderRadius: 10, fontWeight: 600 }}>✨ AI</span>}
-                                                                    {ri.source === 'questionnaire' && <span style={{ marginLeft: 6, fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(255,152,0,0.15)', color: '#ff9800', borderRadius: 10, fontWeight: 600 }}>📝 Upitnik AI</span>}
+                                                                    {ri.source === 'questionnaire' && <span style={{ marginLeft: 6, fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(255,152,0,0.15)', color: '#ff9800', borderRadius: 10, fontWeight: 600 }}>{tr('📝 Upitnik AI', '📝 Questionnaire AI', '📝 Fragebogen-KI', '📝 Vprašalnik AI')}</span>}
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}</td>
                                                                 <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.posljedica}</td>
@@ -2002,14 +2053,14 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         {showImportModal && (
                             <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
                                 onClick={(e) => { if (e.target === e.currentTarget) setShowImportModal(false); }}>
-                                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 450, maxWidth: 600, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>📋 Uvezi stavke iz upitnika</div>
+                                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 450, maxWidth: 650, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>{tr('📋 Uvezi stavke iz upitnika', '📋 Import items from questionnaire', '📋 Elemente aus Fragebogen importieren', '📋 Uvozi postavke iz vprašalnika')}</div>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-                                        AI će analizirati odgovore iz upitnika i automatski kreirati stavke procjene rizika sa V×P ocjenama i predloženim mjerama.
+                                        {tr('AI će analizirati odgovore iz upitnika i automatski kreirati stavke procjene rizika sa V×P ocjenama i predloženim mjerama.', 'AI will analyze questionnaire responses and automatically create risk assessment items with P×C scores and proposed measures.', 'Die KI analysiert die Antworten aus dem Fragebogen und erstellt automatisch Risikobewertungselemente mit W×A-Ergebnissen und vorgeschlagenen Maßnahmen.', 'AI bo analizirala odgovore iz vprašalnika in samodejno ustvarila postavke ocene tveganja z ocenami V×P in predlaganimi ukrepi.', 'AI će analizirati odgovore iz upitnika i automatski kreirati stavke procjene rizika sa V×P ocjenama i predloženim mjerama.', 'AI će analizirati odgovore iz upitnika i automatski kreirati stavke procene rizika sa V×P ocenama i predloženim merama.')}
                                     </div>
                                     {questionnaires.length === 0 ? (
                                         <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>
-                                            Nema upitnika označenih za procjenu rizika. Kreirajte upitnik u modulu Upitnici i označite &quot;Dodaje se u procjenu rizika&quot;.
+                                            {tr('Nema upitnika označenih za procjenu rizika. Kreirajte upitnik u modulu Upitnici i označite "Dodaje se u procjenu rizika".', 'No questionnaires marked for risk assessment. Create a questionnaire in the Questionnaires module and mark "Added to risk assessment".', 'Keine Fragebögen für die Risikobeurteilung markiert. Erstellen Sie einen Fragebogen im Modul Fragebögen und markieren Sie „Zur Risikobeurteilung hinzugefügt“.', 'Noben vprašalnik ni označen za oceno tveganja. Ustvarite vprašalnik v modulu Vprašalniki in označite "Doda se v oceno tveganja".', 'Nema upitnika označenih za procjenu rizika. Kreirajte upitnik u modulu Upitnici i označite "Dodaje se u procjenu rizika".', 'Nema upitnika označenih za procenu rizika. Kreirajte upitnik u modulu Upitnici i označite "Dodaje se u procenu rizika".')}
                                         </div>
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -2027,9 +2078,9 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 return (
                                                     <div key={q.id} style={{ padding: 14, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--bg-input)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <div>
-                                                            <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{q.naziv || 'Bez naziva'}</div>
+                                                            <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{q.naziv || tr('Bez naziva', 'Untitled', 'Ohne Titel', 'Brez naslova')}</div>
                                                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                                                {wp ? `🏢 ${wp.naziv}` : ''} • {qCount} pitanja • {rCount} odgovora
+                                                                {wp ? `🏢 ${wp.naziv}` : ''} • {qCount} {tr('pitanja', 'questions', 'Fragen', 'vprašanj')} • {rCount} {tr('odgovora', 'responses', 'Antworten', 'odgovorov')}
                                                                 {q.aiGenerated && <span style={{ color: '#667eea', marginLeft: 6 }}>🤖 AI</span>}
                                                                 {sist && <span style={{ color: '#11998e', marginLeft: 6 }}>📑 Sistematizacija</span>}
                                                             </div>
@@ -2039,7 +2090,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                             onClick={() => handleImportFromQuestionnaire(q)} 
                                                             disabled={importLoadingId !== null || importedIds.has(q.id)}
                                                             style={{ minWidth: 90 }}>
-                                                            {importLoadingId === q.id ? '⏳ Uvozim...' : importedIds.has(q.id) ? '✔ Uvezeno' : '↓ Uvezi'}
+                                                            {importLoadingId === q.id ? tr('⏳ Uvozim...', '⏳ Importing...', '⏳ Importieren...', '⏳ Uvažam...') : importedIds.has(q.id) ? tr('✔ Uvezeno', '✔ Imported', '✔ Importiert', '✔ Uvoženo') : tr('↓ Uvezi', '↓ Import', '↓ Importieren', '↓ Uvozi')}
                                                         </button>
                                                     </div>
                                                 );
@@ -2056,19 +2107,19 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
                                 onClick={(e) => { if (e.target === e.currentTarget) setShowBulkModal(false); }}>
                                 <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 500, maxWidth: 650, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>⚠️ Dodaj opasnosti iz kataloga</div>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>{tr('⚠️ Dodaj opasnosti iz kataloga', '⚠️ Add hazards from catalog', '⚠️ Gefahren aus Katalog hinzufügen', '⚠️ Dodaj nevarnosti iz kataloga')}</div>
                                     <div style={{ marginBottom: 14 }}>
-                                        <div style={{ ...labelSt, marginBottom: 6 }}>RADNO MJESTO</div>
+                                        <div style={{ ...labelSt, marginBottom: 6 }}>{tr('RADNO MJESTO', 'WORKPLACE', 'ARBEITSPLATZ', 'DELOVNO MESTO')}</div>
                                         <select className="form-select" value={bulkWpId} onChange={e => setBulkWpId(e.target.value)}>
-                                            <option value="">— Odaberi radno mjesto —</option>
+                                            <option value="">{tr('— Odaberi radno mjesto —', '— Select workplace —', '— Arbeitsplatz auswählen —', '— Izberi delovno mesto —', '— Odaberi radno mjesto —', '— Odaberi radno mjesto —')}</option>
                                             {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
                                         </select>
                                     </div>
                                     <div style={{ marginBottom: 14 }}>
-                                        <div style={{ ...labelSt, marginBottom: 6 }}>OPASNOSTI ({bulkSelected.length} odabrano)</div>
+                                        <div style={{ ...labelSt, marginBottom: 6 }}>{tr('OPASNOSTI', 'HAZARDS', 'GEFAHREN', 'NEVARNOSTI')} ({bulkSelected.length} {tr('odabrano', 'selected', 'ausgewählt', 'izbrano')})</div>
                                         <div style={{ maxHeight: 300, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
                                             {hazards.length === 0 ? (
-                                                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 16 }}>Nema opasnosti u katalogu. Kreirajte ih na stranici "Opasnosti".</div>
+                                                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 16 }}>{tr('Nema opasnosti u katalogu. Kreirajte ih na stranici "Opasnosti".', 'No hazards in catalog. Create them on the "Hazards" page.', 'Keine Gefahren im Katalog. Erstellen Sie diese auf der Seite „Gefahren“.', 'V katalogu ni nevarnosti. Ustvarite jih na strani "Nevarnosti".')}</div>
                                             ) : hazards.map(h => {
                                                 const checked = bulkSelected.includes(h.id);
                                                 return (
@@ -2080,13 +2131,29 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             })}
                                         </div>
                                         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                                            <button className="btn btn-ghost btn-sm" onClick={() => setBulkSelected(hazards.map(h => h.id))}>Odaberi sve</button>
-                                            <button className="btn btn-ghost btn-sm" onClick={() => setBulkSelected([])}>Poništi</button>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setBulkSelected(hazards.map(h => h.id))}>{tr('Odaberi sve', 'Select all', 'Alle auswählen', 'Označi vse')}</button>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setBulkSelected([])}>{tr('Poništi', 'Cancel', 'Abbrechen', 'Prekliči')}</button>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         <button className="btn btn-primary" onClick={handleBulkAdd} disabled={!bulkWpId || bulkSelected.length === 0}>
-                                            ✔ Dodaj {bulkSelected.length} stavk{bulkSelected.length === 1 ? 'u' : bulkSelected.length < 5 ? 'e' : 'i'}
+                                            {(() => {
+                                                const count = bulkSelected.length;
+                                                if (lang === 'en') return `✔ Add ${count} ${count === 1 ? 'item' : 'items'}`;
+                                                if (lang === 'de') return `✔ ${count} ${count === 1 ? 'Element' : 'Elemente'} hinzufügen`;
+                                                if (lang === 'sl') {
+                                                    let suffix = 'postavk';
+                                                    if (count === 1) suffix = 'postavko';
+                                                    else if (count === 2) suffix = 'postavki';
+                                                    else if (count === 3 || count === 4) suffix = 'postavke';
+                                                    return `✔ Dodaj ${count} ${suffix}`;
+                                                }
+                                                // bs, hr, sr
+                                                let suffix = 'stavki';
+                                                if (count === 1) suffix = 'stavku';
+                                                else if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) suffix = 'stavke';
+                                                return `✔ Dodaj ${count} ${suffix}`;
+                                            })()}
                                         </button>
                                         <button className="btn btn-ghost" onClick={() => setShowBulkModal(false)}>{t('zatvori')}</button>
                                     </div>
@@ -2105,7 +2172,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     };
                     const MjeraCell = ({ ri, field, label, type = 'textarea', display }) => (
                         <div
-                            title={`Klikni za uređivanje: ${label}`}
+                            title={tr('Klikni za uređivanje: ', 'Click to edit: ', 'Klicken Sie zum Bearbeiten: ', 'Kliknite za urejanje: ', 'Klikni za uređivanje: ', 'Klikni za uređivanje: ') + label}
                             onClick={() => setMjeraEdit({ riId: ri.id, field, label, value: ri[field] || '', type })}
                             style={{
                                 ...editCellStyle,
@@ -2117,7 +2184,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 ri[field]
                                     ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{ri[field]}</span>
                                     : <span style={{ color: field === 'predlozeneMjere' ? 'rgba(244,67,54,0.7)' : 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.78rem' }}>
-                                        {field === 'predlozeneMjere' ? '⚠ Nije definirano' : '—'}
+                                        {field === 'predlozeneMjere' ? tr('⚠ Nije definisano', '⚠ Not defined', '⚠ Nicht definiert', '⚠ Ni določeno', '⚠ Nije definirano', '⚠ Nije definisano') : '—'}
                                       </span>
                             )}
                             <span className="mjera-cell-edit-hint" style={{ position: 'absolute', top: -4, right: -4, fontSize: '0.7rem', opacity: 0, background: 'var(--bg-card)', border: '1px solid var(--primary)', padding: '2px 4px', borderRadius: 6, boxShadow: '0 2px 6px rgba(0,0,0,0.15)', transition: 'all 0.15s', pointerEvents: 'none', zIndex: 10 }}>✏️</span>
@@ -2129,7 +2196,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <datalist id="workers-list">
                                 {workers.map(w => <option key={w.id} value={`${w.ime} ${w.prezime}`} />)}
                             </datalist>
-
+ 
                             {/* ── Edit Modal ── */}
                             {mjeraEdit && (() => {
                                 const ri = riskItems.find(r => r.id === mjeraEdit.riId);
@@ -2159,7 +2226,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     style={{ width: '100%', marginBottom: 20 }}
                                                     value={mjeraEdit.value}
                                                     onChange={e => setMjeraEdit(prev => ({ ...prev, value: e.target.value }))}>
-                                                    <option value="">— Odaberi radno mjesto —</option>
+                                                    <option value="">{tr('— Odaberi radno mjesto —', '— Select workplace —', '— Arbeitsplatz auswählen —', '— Izberi delovno mesto —', '— Odaberi radno mjesto —', '— Odaberi radno mjesto —')}</option>
                                                     {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
                                                 </select>
                                             ) : (
@@ -2170,7 +2237,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     style={{ width: '100%', marginBottom: 20, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
                                                     value={mjeraEdit.value}
                                                     onChange={e => setMjeraEdit(prev => ({ ...prev, value: e.target.value }))}
-                                                    placeholder={`Unesite ${mjeraEdit.label.toLowerCase()}...`}
+                                                    placeholder={tr('Unesite ', 'Enter ', 'Geben Sie ', 'Vnesite ', 'Unesite ', 'Unesite ') + mjeraEdit.label.toLowerCase() + '...'}
                                                 />
                                             )}
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -2185,10 +2252,10 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     </div>
                                 );
                             })()}
-
+ 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
-                                {highRisk.length> 0 && (
+                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>{tr('MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)', 'MEASURES FOR RISK REDUCTION (Items with R ≥ 6)', 'MASSNAHMEN ZUR RISIKOMINDERUNG (Elemente mit R ≥ 6)', 'UKREPI ZA ZMANJŠANJE TVEGANJA (Postavke z R ≥ 6)', 'MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)', 'MERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)')}</div>
+                                {highRisk.length > 0 && (
                                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('dodijeliSvima')}</div>
                                         <div style={{ display: 'flex', gap: 4 }}>
@@ -2202,7 +2269,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             <button className="btn btn-outline btn-sm" onClick={() => {
                                                 const val = document.getElementById('bulkOdgovornaOsoba').value;
                                                 if (val) {
-                                                    setRiskItems(prev => prev.map(ri => ri.rizik>= 6 ? { ...ri, odgovornaOsoba: val } : ri));
+                                                    setRiskItems(prev => prev.map(ri => ri.rizik >= 6 ? { ...ri, odgovornaOsoba: val } : ri));
                                                     markDirty();
                                                     document.getElementById('bulkOdgovornaOsoba').value = '';
                                                 }
@@ -2218,16 +2285,16 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
                                     <th style={{ width: 48 }}>R₀</th>
                                     <th style={{ width: 48 }}>R₁</th>
-                                    <th>Opasnost</th>
-                                    <th>Radno mjesto</th>
-                                    <th>Postojeće mjere</th>
-                                    <th>Predložene mjere</th>
-                                    <th>Odgovorna osoba</th>
-                                    <th>Rok</th>
+                                    <th>{tr('Opasnost', 'Hazard', 'Gefahr', 'Nevarnost')}</th>
+                                    <th>{tr('Radno mjesto', 'Workplace', 'Arbeitsplatz', 'Delovno mesto', 'Radno mjesto', 'Radno mjesto')}</th>
+                                    <th>{tr('Postojeće mjere', 'Existing measures', 'Bestehende Maßnahmen', 'Obstoječi ukrepi', 'Postojeće mjere', 'Postojeće mere')}</th>
+                                    <th>{tr('Predložene mjere', 'Proposed measures', 'Vorgeschlagene Maßnahmen', 'Predlagani ukrepi', 'Predložene mjere', 'Predložene mere')}</th>
+                                    <th>{tr('Odgovorna osoba', 'Responsible person', 'Verantwortliche Person', 'Odgovorna oseba')}</th>
+                                    <th>{tr('Rok', 'Deadline', 'Frist', 'Rok')}</th>
                                 </tr></thead><tbody>
                                     {highRisk.sort((a, b) => b.rizik - a.rizik).map(ri => {
                                         const rl = riskLevel(ri.rizik);
-                                        const rlA = ri.rizikNakon> 0 ? riskLevel(ri.rizikNakon) : null;
+                                        const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
                                         const hp = hazards.find(h => h.id === ri.opasnostId);
                                         const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
                                         return <tr key={ri.id}>
@@ -2237,7 +2304,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             <td>{rlA ? <span style={{ padding: '3px 10px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizikNakon}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                                             {/* OPASNOST — click to edit */}
                                             <td style={{ fontSize: '0.82rem', maxWidth: 220 }}>
-                                                <MjeraCell ri={ri} field="opisOpasnosti" label="Opasnost" type="textarea"
+                                                <MjeraCell ri={ri} field="opisOpasnosti" label={tr('Opasnost', 'Hazard', 'Gefahr', 'Nevarnost')} type="textarea"
                                                     display={<>
                                                         {hp && <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 2 }}>📋 {hp.oznaka ? `${hp.oznaka} ` : ''}{hp.naziv}</div>}
                                                         {ri.opisOpasnosti
@@ -2249,7 +2316,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </td>
                                             {/* RADNO MJESTO — click to edit */}
                                             <td style={{ fontSize: '0.82rem', maxWidth: 160 }}>
-                                                <MjeraCell ri={ri} field="radnoMjestoId" label="Radno mjesto" type="select"
+                                                <MjeraCell ri={ri} field="radnoMjestoId" label={tr('Radno mjesto', 'Workplace', 'Arbeitsplatz', 'Delovno mesto', 'Radno mjesto', 'Radno mjesto')} type="select"
                                                     display={wp
                                                         ? <span>{wp.naziv}</span>
                                                         : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.78rem' }}>—</span>
@@ -2258,11 +2325,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </td>
                                             {/* POSTOJEĆE MJERE — click to edit */}
                                             <td style={{ fontSize: '0.82rem', maxWidth: 200 }}>
-                                                <MjeraCell ri={ri} field="postojeceMjere" label="Postojeće mjere" type="long" />
+                                                <MjeraCell ri={ri} field="postojeceMjere" label={tr('Postojeće mjere', 'Existing measures', 'Bestehende Maßnahmen', 'Obstoječi ukrepi', 'Postojeće mjere', 'Postojeće mere')} type="long" />
                                             </td>
                                             {/* PREDLOŽENE MJERE — click to edit */}
                                             <td style={{ fontSize: '0.82rem', maxWidth: 200 }}>
-                                                <MjeraCell ri={ri} field="predlozeneMjere" label="Predložene mjere" type="long" />
+                                                <MjeraCell ri={ri} field="predlozeneMjere" label={tr('Predložene mjere', 'Proposed measures', 'Vorgeschlagene Maßnahmen', 'Predlagani ukrepi', 'Predložene mjere', 'Predložene mere')} type="long" />
                                             </td>
                                             {/* ODGOVORNA OSOBA — stays inline */}
                                             <td style={{ fontSize: '0.82rem' }}>
@@ -2272,7 +2339,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     list="workers-list"
                                                     value={ri.odgovornaOsoba || ''}
                                                     onChange={(e) => handleInlineRiUpdate(ri.id, 'odgovornaOsoba', e.target.value)}
-                                                    placeholder="Odaberi ili upiši..."
+                                                    placeholder={tr('Odaberi ili upiši...', 'Select or type...', 'Auswählen oder eingeben...', 'Izberi ali vpiši...', 'Odaberi ili upiši...', 'Odaberi ili upiši...')}
                                                 />
                                             </td>
                                             {/* ROK — stays inline */}
@@ -2292,12 +2359,12 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
                 {/* ── TAB: Zaključak ── */}
                 {activeTab === 'zakljucak' && (() => {
-                    const itemsWithScores = riskItems.filter(ri => ri.rizik> 0);
-                    const avgBefore = itemsWithScores.length> 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
-                    const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon> 0);
-                    const avgAfter = itemsWithAfter.length> 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
-                    const gradeBefore = avgBefore> 0 ? riskLevel(Math.round(avgBefore)) : null;
-                    const gradeAfter = avgAfter> 0 ? riskLevel(Math.round(avgAfter)) : null;
+                    const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+                    const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+                    const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+                    const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+                    const gradeBefore = avgBefore > 0 ? riskLevel(Math.round(avgBefore)) : null;
+                    const gradeAfter = avgAfter > 0 ? riskLevel(Math.round(avgAfter)) : null;
                     const bandsAfter = { neznatan: 0, dopustiv: 0, umjeren: 0, znatan: 0, nedopustiv: 0 };
                     itemsWithAfter.forEach(ri => {
                         const s = ri.rizikNakon || 0;
@@ -2307,59 +2374,64 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     return (
                     <div className="card"><div className="card-body">
                         {/* ── Overall Grade ── */}
-                        {riskItems.length> 0 && (
+                        {riskItems.length > 0 && (
                             <div style={{ marginBottom: 24 }}>
-                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>UKUPNA OCJENA RIZIKA</div>
+                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>{tr('UKUPNA OCJENA RIZIKA', 'OVERALL RISK ASSESSMENT', 'GESAMTRISIKOBEWERTUNG', 'SKUPNA OCENA TVEGANJA')}</div>
                                 <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
                                     <div style={{ textAlign: 'center', padding: '16px 24px', borderRadius: 'var(--radius-lg)', background: gradeBefore ? gradeBefore.bg : 'var(--bg-input)', border: gradeBefore ? `3px solid ${gradeBefore.color}` : '2px solid var(--border-light)', minWidth: 140 }}>
-                                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Prije mjera (Početni rizik)</div>
-                                        <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeBefore?.color || 'var(--text-muted)' }}>{avgBefore> 0 ? avgBefore.toFixed(1) : '—'}</div>
-                                        {gradeBefore && <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeBefore.color, marginTop: 4 }}>{gradeBefore.label}</div>}
+                                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>{tr('Prije mjera (Početni rizik)', 'Before measures (Initial risk)', 'Vor Maßnahmen (Anfangsrisiko)', 'Pred ukrepi (Začetno tveganje)', 'Prije mjera (Početni rizik)', 'Pre mera (Početni rizik)')}</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeBefore?.color || 'var(--text-muted)' }}>{avgBefore > 0 ? avgBefore.toFixed(1) : '—'}</div>
+                                        {gradeBefore && <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeBefore.color, marginTop: 4 }}>{t(gradeBefore.label.toLowerCase())}</div>}
                                     </div>
                                     {gradeAfter && <div style={{ fontSize: '2rem', fontWeight: 900, color: avgAfter < avgBefore ? '#4caf50' : '#f44336' }}>→</div>}
                                     {gradeAfter && (
                                         <div style={{ textAlign: 'center', padding: '16px 24px', borderRadius: 'var(--radius-lg)', background: gradeAfter.bg, border: `3px solid ${gradeAfter.color}`, minWidth: 140 }}>
-                                            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Nakon mjera (Preostali rizik)</div>
+                                            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>{tr('Nakon mjera (Preostali rizik)', 'After measures (Residual risk)', 'Nach Maßnahmen (Restrisiko)', 'Po ukrepih (Preostalo tveganje)', 'Nakon mjera (Preostali rizik)', 'Nakon mera (Preostali rizik)')}</div>
                                             <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeAfter.color }}>{avgAfter.toFixed(1)}</div>
-                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeAfter.color, marginTop: 4 }}>{gradeAfter.label}</div>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeAfter.color, marginTop: 4 }}>{t(gradeAfter.label.toLowerCase())}</div>
                                         </div>
                                     )}
                                     {gradeAfter && avgAfter < avgBefore && (
                                         <div style={{ padding: '12px 20px', borderRadius: 'var(--radius-md)', background: 'rgba(76,175,80,0.1)', border: '2px solid #4caf50', textAlign: 'center' }}>
                                             <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#4caf50' }}>↓ {((1 - avgAfter / avgBefore) * 100).toFixed(0)}%</div>
-                                            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#4caf50' }}>SMANJENJE RIZIKA</div>
+                                            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#4caf50' }}>{tr('SMANJENJE RIZIKA', 'RISK REDUCTION', 'RISIKOMINDERUNG', 'ZMANJŠANJE TVEGANJA')}</div>
                                         </div>
                                     )}
                                 </div>
-                                {!gradeAfter && itemsWithScores.length> 0 && (
+                                {!gradeAfter && itemsWithScores.length > 0 && (
                                     <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(255,193,7,0.1)', border: '1px solid #ffc107', fontSize: '0.82rem', color: '#ffc107' }}>
-                                        ⚠ Koristite tab "Procjena rizika" i dugme "🤖 AI Predloži mjere" da dobijete ocjenu nakon mjera.
+                                        {tr('⚠ Koristite tab "Procjena rizika" i dugme "🤖 AI Predloži mjere" da dobijete ocjenu nakon mjera.',
+                                            '⚠ Use the "Risk Assessment" tab and the "🤖 AI Suggest Measures" button to get the score after measures.',
+                                            '⚠ Verwenden Sie die Registerkarte „Risikobewertung“ und die Schaltfläche „🤖 AI Maßnahmen vorschlagen“, um die Bewertung nach den Maßnahmen zu erhalten.',
+                                            '⚠ Uporabite zavihek "Ocena tveganja" in gumb "🤖 AI Predlagaj ukrepe", da dobite oceno po ukrepih.',
+                                            '⚠ Koristite tab "Procjena rizika" i gumb "🤖 AI Predloži mjere" da dobijete ocjenu nakon mjera.',
+                                            '⚠ Koristite tab "Procena rizika" i dugme "🤖 AI Predloži mere" da dobijete ocenu nakon mera.')}
                                     </div>
                                 )}
                             </div>
                         )}
                         {/* ── Distribution cards ── */}
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>DISTRIBUCIJA PO NIVOU RIZIKA</div>
-                        {riskItems.length> 0 && (
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>{tr('DISTRIBUCIJA PO NIVOU RIZIKA', 'DISTRIBUTION BY RISK LEVEL', 'VERTEILUNG NACH RISIKOSTUFE', 'PORAZDELITEV PO STOPNJI TVEGANJA')}</div>
+                        {riskItems.length > 0 && (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10, marginBottom: 20 }}>
                                 {[
-                                    { k: 'neznatan', l: 'Neznatan', c: '#4caf50' }, { k: 'dopustiv', l: 'Dopustiv', c: '#ffc107' },
-                                    { k: 'umjeren', l: 'Umjeren', c: '#ff9800' }, { k: 'znatan', l: 'Znatan', c: '#f44336' },
-                                    { k: 'nedopustiv', l: 'Nedopustiv', c: '#b71c1c' },
+                                    { k: 'neznatan', c: '#4caf50' }, { k: 'dopustiv', c: '#ffc107' },
+                                    { k: 'umjeren', c: '#ff9800' }, { k: 'znatan', c: '#f44336' },
+                                    { k: 'nedopustiv', c: '#b71c1c' },
                                 ].map(b => (
                                     <div key={b.k} style={{ padding: '10px', borderRadius: 'var(--radius-md)', background: `${b.c}15`, border: `2px solid ${b.c}`, textAlign: 'center' }}>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'baseline' }}>
                                             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: b.c }}>{bands[b.k]}</div>
-                                            {itemsWithAfter.length> 0 && bandsAfter[b.k] !== bands[b.k] && (
+                                            {itemsWithAfter.length > 0 && bandsAfter[b.k] !== bands[b.k] && (
                                                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: bandsAfter[b.k] < bands[b.k] ? '#4caf50' : '#f44336' }}>→ {bandsAfter[b.k]}</div>
                                             )}
                                         </div>
-                                        <div style={{ fontSize: '0.65rem', fontWeight: 600, color: b.c }}>{b.l}</div>
+                                        <div style={{ fontSize: '0.65rem', fontWeight: 600, color: b.c }}>{t(b.k)}</div>
                                     </div>
                                 ))}
                             </div>
                         )}
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>ZAKLJUČAK</div>
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>{tr('ZAKLJUČAK', 'CONCLUSION', 'FAZIT', 'ZAKLJUČEK')}</div>
                         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                             <button className="btn btn-outline btn-sm" onClick={handleAutoConclusion} disabled={conclusionLoading || riskItems.length === 0}
                                 style={{ background: conclusionLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
@@ -2393,8 +2465,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             </button>
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={handleBack}>↩ {t('cancel')}</button>
-                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave} style={{ minWidth: 120 }}>💾 {t('save')}</button>
+                            <button className="btn btn-ghost" title={tr('Zatvorite formu i vratite se na početnu listu', 'Close the form and return to the main list', 'Schließen Sie das Formular und kehren Sie zur Hauptliste zurück', 'Zaprite obrazec in se vrnite na glavni seznam', 'Zatvorite formu i vratite se na početnu listu', 'Zatvorite formu i vratite se na početnu listu')} onClick={handleBack}>↩ {t('cancel')}</button>
+                            <button className="btn btn-primary" title={tr('Spasite sve dosadašnje promjene', 'Save all changes made so far', 'Speichern Sie alle bisher vorgenommenen Änderungen', 'Shranite vse dosedanje spremembe', 'Spasite sve dosadašnje promjene', 'Spasite sve dosadašnje promjene')} onClick={handleSave} style={{ minWidth: 120 }}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
                     </div>
