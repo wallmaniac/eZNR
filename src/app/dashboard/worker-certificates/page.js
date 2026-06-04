@@ -11,6 +11,7 @@ import PDFExportButton from '@/components/PDFExportButton';
 import PageHeader from '@/components/PageHeader';
 import { useDialog } from '@/hooks/useDialog';
 import { useCountry } from '@/contexts/CountryContext';
+import * as XLSX from 'xlsx';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
 function buildBulkPrintHtml(selectedRows, workers, lang, t) {
@@ -217,6 +218,42 @@ function WorkerCertificatesInner() {
     win.document.close();
   }, [rows, selectedIds, workers, lang]);
 
+  // ── Bulk delete ───────────────────────────────────────────────────────────
+  const handleBulkDelete = useCallback(async () => {
+    const ok = await confirm(t('deleteSelectedItems').replace('{0}', selectedIds.size));
+    if (ok) {
+      selectedIds.forEach(id => {
+        remove(COLLECTIONS.CERTIFICATES, id);
+      });
+      setCerts(getAll(COLLECTIONS.CERTIFICATES));
+      setSelectedIds(new Set());
+      if (typeof window !== 'undefined' && window.eznrToast) {
+        window.eznrToast(t('success'), 'info');
+      }
+    }
+  }, [selectedIds, confirm, t]);
+
+  // ── Excel export ──────────────────────────────────────────────────────────
+  const handleExcelExport = useCallback(() => {
+    const targetRows = selectedIds.size > 0 
+      ? rows.filter(r => selectedIds.has(r.id)) 
+      : rows;
+      
+    const dataRows = targetRows.map(r => ({
+      [t('worker')]: r.workerName,
+      [t('name')]: t(r.naziv?.trim()) || t(r.ime?.trim()) || r.naziv || r.ime || '—',
+      [t('certCode')]: r.oznaka || '—',
+      [t('certDate')]: r.datum ? r.datum.split('T')[0].split('-').reverse().join('.') : '—',
+      [t('certValidUntil')]: r.vrijediDo ? r.vrijediDo.split('T')[0].split('-').reverse().join('.') : t('permanent'),
+      [t('status')]: r.isExpired ? t('istekla') : t('vazeca')
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Uvjerenja');
+    XLSX.writeFile(wb, `Uvjerenja_izvoz_${new Date().toISOString().split('T')[0]}.xlsx`);
+  }, [selectedIds, rows, t]);
+
   // ── Scroll to highlight ───────────────────────────────────────────────────
   useEffect(() => {
     if (highlightId && highlightRef.current) {
@@ -299,6 +336,14 @@ function WorkerCertificatesInner() {
                 ...(selectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
+              <button 
+                className="btn btn-secondary btn-sm" 
+                style={{ height: 38, background: '#107c41', color: 'white', borderColor: '#107c41', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }} 
+                onClick={handleExcelExport}
+                title={selectedIds.size > 0 ? t('exportSelected') : t('export')}>
+                📥 {selectedIds.size > 0 ? `${t('export')} (${selectedIds.size})` : t('export')}
+              </button>
+
               <div style={{ position: 'relative' }}>
                  <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={(e) => {
                      const rect = e.currentTarget.getBoundingClientRect();
@@ -334,6 +379,19 @@ function WorkerCertificatesInner() {
                   onClick={handleBulkPrint}
                   title={t('generateAndPrintAllSelected')}>
                   🖨️ {t('generatePdfCerts').replace('{0}', selectedIds.size)}
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }}
+                  onClick={handleExcelExport}
+                  title={t('exportSelected')}>
+                  📥 {t('export')} ({selectedIds.size})
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={handleBulkDelete}
+                  title={t('deleteSelected1')}>
+                  🗑️ {t('deleteSelected1')} ({selectedIds.size})
                 </button>
                 <button
                   className="btn btn-ghost btn-sm"
