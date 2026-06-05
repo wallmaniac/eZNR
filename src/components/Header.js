@@ -14,7 +14,7 @@ import { matchesSearch } from '@/lib/dateUtils';
 
 export default function Header({ sidebarCollapsed, isMobile = false, onMobileMenuToggle }) {
     const { t, lang, setLang } = useLanguage();
-    const { user, logout, isAdmin, isSuperAdmin, activeCompanyId, userCompanies, switchCompany } = useAuth();
+    const { user, logout, isAdmin, isSuperAdmin, activeCompanyId, userCompanies, switchCompany, updateUserContext } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const router = useRouter();
     const [searchFocused, setSearchFocused] = useState(false);
@@ -203,6 +203,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                 // Keep local storage session cache in sync purely for legacy reasons
                 try { const p = JSON.parse(localStorage.getItem('eznr_user')); p.companyIds = updatedIds; localStorage.setItem('eznr_user', JSON.stringify(p)); } catch (e) { }
+                updateUserContext({ companyIds: updatedIds });
             }
 
             // Assign to officer if selected

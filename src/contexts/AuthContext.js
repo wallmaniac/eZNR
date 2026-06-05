@@ -202,6 +202,17 @@ export function AuthProvider({ children }) {
             } else {
                 const comp = await getCompany(companyId);
                 setActiveCompany(comp);
+                if (comp) {
+                    setUserCompanies(prev => {
+                        if (prev.some(c => c.id === comp.id)) return prev;
+                        return [...prev, comp];
+                    });
+                    setUser(prev => {
+                        if (!prev) return null;
+                        const updatedIds = [...new Set([...(prev.companyIds || []), comp.id])];
+                        return { ...prev, companyIds: updatedIds };
+                    });
+                }
             }
         } else {
             setActiveCompany(null);

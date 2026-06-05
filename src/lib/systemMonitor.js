@@ -362,7 +362,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (expired > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_cert_expired',
+                id: 'user_cert_expired_' + companyId,
                 severity: 'urgent',
                 category: 'certificates',
                 icon: '🚨',
@@ -379,7 +379,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (urgentCount > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_cert_urgent',
+                id: 'user_cert_urgent_' + companyId,
                 severity: 'urgent',
                 category: 'certificates',
                 icon: '⏰',
@@ -396,7 +396,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (warningCount > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_cert_warning',
+                id: 'user_cert_warning_' + companyId,
                 severity: 'warning',
                 category: 'certificates',
                 icon: '📋',
@@ -428,7 +428,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (expired > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_equip_expired',
+                id: 'user_equip_expired_' + companyId,
                 severity: 'urgent',
                 category: 'equipment',
                 icon: '🔧',
@@ -445,7 +445,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (urgentCount + warningCount > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_equip_warning',
+                id: 'user_equip_warning_' + companyId,
                 severity: 'warning',
                 category: 'equipment',
                 icon: '⚙️',
@@ -476,7 +476,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (expired > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_docs_expired',
+                id: 'user_docs_expired_' + companyId,
                 severity: 'urgent',
                 category: 'documents',
                 icon: '📄',
@@ -493,7 +493,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (warningCount > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_docs_warning',
+                id: 'user_docs_warning_' + companyId,
                 severity: 'warning',
                 category: 'documents',
                 icon: '📑',
@@ -524,7 +524,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (medExpired > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_med_expired', severity: 'urgent', category: 'medical', icon: '🩺',
+                id: 'user_med_expired_' + companyId, severity: 'urgent', category: 'medical', icon: '🩺',
                 title: medExpired + ' ljekarskih pregleda isteklo!',
                 message: `Zakonska obaveza poslodavca - zakaz. preglede hitno (${getCitation(country, 'medical')}).`,
                 titleKey: 'notif_med_expired_title',
@@ -536,7 +536,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (medUrgent > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_med_urgent', severity: 'urgent', category: 'medical', icon: '🩺',
+                id: 'user_med_urgent_' + companyId, severity: 'urgent', category: 'medical', icon: '🩺',
                 title: medUrgent + ' ljekarskih pregleda ističe za 7 dana',
                 message: 'Hitno zakazati preglede.',
                 titleKey: 'notif_med_urgent_title',
@@ -547,7 +547,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (medWarn > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_med_warning', severity: 'warning', category: 'medical', icon: '🩺',
+                id: 'user_med_warning_' + companyId, severity: 'warning', category: 'medical', icon: '🩺',
                 title: medWarn + ' ljekarskih pregleda uskoro ističe',
                 message: 'Planirajte preglede za ' + medWarn + ' radnika.',
                 titleKey: 'notif_med_warning_title',
@@ -584,7 +584,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (expired > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_fleet_expired', severity: 'urgent', category: 'fleet', icon: '🚨',
+                id: 'user_fleet_expired_' + companyId, severity: 'urgent', category: 'fleet', icon: '🚨',
                 title: `${expired} vozila zahtijeva hitnu akciju!`,
                 message: `Registracija, tehnički pregled ili osiguranje je isteklo za ${expired} vozila.`,
                 titleKey: 'notif_fleet_expired_title',
@@ -596,7 +596,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (urgentCount > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_fleet_urgent', severity: 'urgent', category: 'fleet', icon: '🚙',
+                id: 'user_fleet_urgent_' + companyId, severity: 'urgent', category: 'fleet', icon: '🚙',
                 title: `${urgentCount} vozila ističe za 7 dana!`,
                 message: `Registracija, pregled ili osiguranje ističe uskoro.`,
                 titleKey: 'notif_fleet_urgent_title',
@@ -607,7 +607,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
         if (warningCount > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_fleet_warning', severity: 'warning', category: 'fleet', icon: '🚗',
+                id: 'user_fleet_warning_' + companyId, severity: 'warning', category: 'fleet', icon: '🚗',
                 title: `${warningCount} vozila ističe u narednih ${settings.fleetExpiryDays} dana`,
                 message: `Planirajte registraciju i tehnički za ${warningCount} vozila.`,
                 titleKey: 'notif_fleet_warning_title',
@@ -629,7 +629,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (missing.length > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_no_certs',
+                id: 'user_no_certs_' + companyId,
                 severity: 'info',
                 category: 'certificates',
                 icon: '📝',
@@ -655,7 +655,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
         if (missing.length > 0) {
             notifications.push(addCompanyBadge({
-                id: 'user_no_ppe',
+                id: 'user_no_ppe_' + companyId,
                 severity: 'info',
                 category: 'ppe',
                 icon: '🦺',
@@ -686,7 +686,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
     if (expiredQ > 0) {
         notifications.push(addCompanyBadge({
-            id: 'user_quest_expired',
+            id: 'user_quest_expired_' + companyId,
             severity: 'urgent',
             category: 'documents',
             icon: '❓',
@@ -703,7 +703,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
     }
     if (urgentQ > 0) {
         notifications.push(addCompanyBadge({
-            id: 'user_quest_urgent',
+            id: 'user_quest_urgent_' + companyId,
             severity: 'urgent',
             category: 'documents',
             icon: '❓',
@@ -720,7 +720,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
     }
     if (warningQ > 0) {
         notifications.push(addCompanyBadge({
-            id: 'user_quest_warning',
+            id: 'user_quest_warning_' + companyId,
             severity: 'warning',
             category: 'documents',
             icon: '❓',
