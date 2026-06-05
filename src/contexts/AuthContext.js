@@ -26,6 +26,7 @@ import {
 } from '@/lib/authService';
 import { loadCompanyData, switchCompanyData, resetDataStore } from '@/lib/dataStore';
 import { logLogin, updatePresence } from '@/lib/activityLog';
+import { applyUIBranding, resetUIBranding } from '@/lib/brandingService';
 
 const AuthContext = createContext({});
 
@@ -272,6 +273,15 @@ export function AuthProvider({ children }) {
             if (presenceInterval.current) clearInterval(presenceInterval.current);
         };
     }, [user?.id, activeCompanyId]);
+
+    // ── Apply UI branding on company switch ─────────────────────────────────────
+    useEffect(() => {
+        if (activeCompanyId && activeCompanyId !== 'all') {
+            applyUIBranding(activeCompanyId);
+        } else {
+            resetUIBranding();
+        }
+    }, [activeCompanyId]);
 
     // ── Computed properties ───────────────────────────────────────────────────
     const isAdmin = user?.role === 'admin' || user?.role === ROLES.SUPER_ADMIN;

@@ -1240,7 +1240,20 @@ export default function SettingsContent() {
                 
                 {/* ── SUPER PREMIUM BRANDING SECTION ── */}
                 <div style={{ marginTop: 40, borderTop: '1px solid rgba(150,150,150,0.1)', paddingTop: 36 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 16 }}>
+                  {companyData.parentId ? (
+                    <div style={{ padding: 32, borderRadius: 20, background: 'rgba(0,191,166,0.05)', border: '1px solid var(--primary)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, margin: '24px 0' }}>
+                      <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 12px rgba(0,191,166,0.25))' }}>🔗</span>
+                      <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text)' }}>Naslijeđeni dizajn i brendiranje</div>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', margin: 0, maxWidth: 540, lineHeight: '1.6' }}>
+                        Ova firma je podružnica (sub-kompanija) matične firme <strong style={{ color: 'var(--text)' }}>{getById(COLLECTIONS.COMPANIES, companyData.parentId)?.naziv || 'matične kompanije'}</strong>. Postavke izgleda, logotipa, boja i PDF brendiranja se automatski nasljeđuju od nje.
+                      </p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, fontStyle: 'italic' }}>
+                        Da biste promijenili dizajn ili brendiranje, prebacite se na matičnu firmu kroz birač firmi u zaglavlju aplikacije i uredite njene postavke.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                       <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg, var(--primary), var(--primary-dark, #059669))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.1-.7-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/></svg>
@@ -1537,6 +1550,8 @@ export default function SettingsContent() {
                     </div>
 
                   </div>
+                  </>
+                  )}
                 </div>{/* end super premium wrapper */}
 
 

@@ -13,11 +13,24 @@ service cloud.firestore {
     }
 
     function belongsToCompany(companyId) {
-      return isSignedIn() && (
-        isAdmin() || 
-        companyId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyIds
-      );
+      if (!isSignedIn()) {
+        return false;
+      }
+      if (isAdmin()) {
+        return true;
+      }
+      let userCompanyIds = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyIds;
+      if (companyId in userCompanyIds) {
+        return true;
+      }
+      let companyPath = /databases/$(database)/documents/companies/$(companyId);
+      if (exists(companyPath)) {
+        let parentId = get(companyPath).data.parentId;
+        return parentId != null && parentId != "" && parentId in userCompanyIds;
+      }
+      return false;
     }
+
 
     // 1) Users Collection
     match /users/{userId} {

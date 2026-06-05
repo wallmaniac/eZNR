@@ -174,12 +174,20 @@ export function getPdfBranding(companyId) {
   const company = getById(COLLECTIONS.COMPANIES, cId);
   if (!company) return { ...PDF_DEFAULTS, logo: '', companyName: '' };
 
-  const branding = company.branding || {};
+  let brandingSource = company;
+  if (company.parentId) {
+    const parentCompany = getById(COLLECTIONS.COMPANIES, company.parentId);
+    if (parentCompany) {
+      brandingSource = parentCompany;
+    }
+  }
+
+  const branding = brandingSource.branding || {};
 
   return {
     ...PDF_DEFAULTS,
     ...branding,
-    logo: company.logo || branding.logo || '',
+    logo: brandingSource.logo || branding.logo || '',
     companyName: company.naziv || company.name || '',
     address: company.adresa || company.address || '',
     jib: company.oib || company.jib || '',
@@ -218,13 +226,21 @@ export function getUIBranding(companyId) {
   const company = getById(COLLECTIONS.COMPANIES, cId);
   if (!company) return { ...UI_DEFAULTS, enabled: false };
 
-  const branding = company.branding || {};
+  let brandingSource = company;
+  if (company.parentId) {
+    const parentCompany = getById(COLLECTIONS.COMPANIES, company.parentId);
+    if (parentCompany) {
+      brandingSource = parentCompany;
+    }
+  }
+
+  const branding = brandingSource.branding || {};
   return {
     primaryColor: branding.primaryColor || '',
     sidebarColor: branding.sidebarColor || '',
     sidebarLogoEnabled: branding.sidebarLogoEnabled ?? false,
     sidebarText: branding.sidebarText ?? UI_DEFAULTS.sidebarText,
-    logo: company.logo || '',
+    logo: brandingSource.logo || '',
     enabled: !!branding.primaryColor || !!branding.sidebarColor,
   };
 }
