@@ -102,12 +102,7 @@ const menuItems = [
     },
 
     // ── 🧯 ZAŠTITA OD POŽARA — fire protection ──────────────────────────────
-    {
-        key: 'grpFireProtection', icon: '🧯',
-        children: [
-            { key: 'fireExtinguishers', icon: '🧯', path: '/dashboard/fire-protection', label_bs: 'Protupožarna oprema', label_en: 'Fire Equipment' },
-        ],
-    },
+    { key: 'grpFireProtection', icon: '🧯', path: '/dashboard/fire-protection' },
 
     // ── 🚨 EVAKUACIJA — evacuation planning ─────────────────────────────────
     {
