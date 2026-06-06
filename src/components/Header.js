@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getRawAll, seedCompanyData } from '@/lib/dataStore';
+import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getRawAll, seedCompanyData, getSyncStatus } from '@/lib/dataStore';
 import { updateUserProfile } from '@/lib/authService';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -33,6 +33,111 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const searchRef = useRef(null);
     const companyRef = useRef(null);
     const langRef = useRef(null);
+
+    const [syncStatus, setSyncStatus] = useState({ activeWrites: 0, offlineQueue: 0, isOnline: true });
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        setSyncStatus(getSyncStatus());
+
+        const handleSyncChange = (e) => {
+            if (e && e.detail) {
+                setSyncStatus(e.detail);
+            } else {
+                setSyncStatus(getSyncStatus());
+            }
+        };
+
+        const handleQueueChange = () => {
+            setSyncStatus(getSyncStatus());
+        };
+
+        window.addEventListener('eznr:sync-status-changed', handleSyncChange);
+        window.addEventListener('eznr:offline-queue-changed', handleQueueChange);
+
+        return () => {
+            window.removeEventListener('eznr:sync-status-changed', handleSyncChange);
+            window.removeEventListener('eznr:offline-queue-changed', handleQueueChange);
+        };
+    }, []);
+
+    const getSyncStatusText = () => {
+        const l = lang || 'bs';
+        if (!syncStatus.isOnline) {
+            const pendingCount = syncStatus.offlineQueue;
+            if (l === 'en') return `Offline (${pendingCount})`;
+            if (l === 'de') return `Offline (${pendingCount})`;
+            if (l === 'sl') return `Brez povezave (${pendingCount})`;
+            if (l === 'sr') return `Ван мреже (${pendingCount})`;
+            if (l === 'hr') return `Izvan mreže (${pendingCount})`;
+            return `Izvan mreže (${pendingCount})`;
+        }
+        if (syncStatus.activeWrites > 0 || syncStatus.offlineQueue > 0) {
+            if (l === 'en') return 'Saving...';
+            if (l === 'de') return 'Speichern...';
+            if (l === 'sl') return 'Shranjevanje...';
+            if (l === 'sr') return 'Чување...';
+            if (l === 'hr') return 'Spremanje...';
+            return 'Spremanje...';
+        }
+        if (l === 'en') return 'Synced';
+        if (l === 'de') return 'Synchronisiert';
+        if (l === 'sl') return 'Sinhronizirano';
+        if (l === 'sr') return 'Синхронизовано';
+        if (l === 'hr') return 'Sinkronizirano';
+        return 'Sinkronizirano';
+    };
+
+    const getSyncTooltip = () => {
+        const l = lang || 'bs';
+        if (!syncStatus.isOnline) {
+            if (l === 'en') return 'You are offline. Changes are saved locally and will auto-sync when online. Click to force flush.';
+            return 'Nalazite se izvan mreže. Promjene se spremaju lokalno i sinkronizirat će se automatski kada se povežete. Kliknite za pokušaj slanja.';
+        }
+        if (syncStatus.activeWrites > 0 || syncStatus.offlineQueue > 0) {
+            if (l === 'en') return 'Saving changes to the cloud...';
+            return 'U toku je spremanje promjena u oblak...';
+        }
+        if (l === 'en') return 'All changes are successfully saved to Firebase Firestore.';
+        return 'Sve promjene su uspješno spremljene na Firebase Firestore server.';
+    };
+
+    const handleSyncClick = async () => {
+        if (typeof window !== 'undefined' && navigator.onLine && syncStatus.offlineQueue > 0) {
+            try {
+                const { _flushOfflineQueue } = require('@/lib/dataStore');
+                await _flushOfflineQueue();
+            } catch (err) {
+                console.error('[Header] Failed to flush offline queue:', err);
+            }
+        }
+    };
+
+    const getSyncStyles = () => {
+        if (!syncStatus.isOnline) {
+            return {
+                bg: 'rgba(245,158,11,0.08)',
+                border: '1.5px solid rgba(245,158,11,0.3)',
+                color: 'var(--warning)',
+                icon: '⚠️'
+            };
+        }
+        if (syncStatus.activeWrites > 0 || syncStatus.offlineQueue > 0) {
+            return {
+                bg: 'rgba(0,191,166,0.08)',
+                border: '1.5px solid rgba(0,191,166,0.35)',
+                color: 'var(--primary)',
+                icon: <span className="sync-spin" style={{ display: 'inline-block' }}>🔄</span>
+            };
+        }
+        return {
+            bg: 'rgba(34,197,94,0.08)',
+            border: '1.5px solid rgba(34,197,94,0.3)',
+            color: 'var(--success)',
+            icon: '☁️'
+        };
+    };
 
     // Companies list — source of truth depending on role
     // AuthContext safely loads ALL companies for Superadmin and ASSIGNED companies for Officer natively from Firestore.
@@ -268,6 +373,16 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
     return (
         <>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .sync-spin {
+                    animation: spin 1.5s linear infinite;
+                    display: inline-block;
+                }
+            ` }} />
             {/* ══ MOBILE: Compact 48px top bar ══ */}
             {isMobile && (
                 <div style={{
@@ -370,6 +485,51 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             document.body
                         )}
                     </div>
+
+                    {/* Sync Status Pill (Mobile) */}
+                    <button 
+                        onClick={handleSyncClick}
+                        title={getSyncTooltip()}
+                        style={{
+                            width: 34,
+                            height: 32,
+                            borderRadius: 8,
+                            border: getSyncStyles().border,
+                            background: getSyncStyles().bg,
+                            color: getSyncStyles().color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.9rem',
+                            cursor: (syncStatus.isOnline && syncStatus.offlineQueue > 0) ? 'pointer' : 'default',
+                            flexShrink: 0,
+                            padding: 0,
+                            position: 'relative'
+                        }}
+                    >
+                        {getSyncStyles().icon}
+                        {syncStatus.offlineQueue > 0 && (
+                            <span style={{
+                                position: 'absolute',
+                                top: -3,
+                                right: -3,
+                                minWidth: 14,
+                                height: 14,
+                                borderRadius: '50%',
+                                background: '#EF4444',
+                                color: 'white',
+                                fontSize: '0.55rem',
+                                fontWeight: 800,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '0 2px',
+                                border: '1px solid var(--bg-card)'
+                            }}>
+                                {syncStatus.offlineQueue}
+                            </span>
+                        )}
+                    </button>
 
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                         style={{ ...iBtn({ fontSize: '0.95rem', width: 34, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
@@ -568,6 +728,39 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* ══ RIGHT ISLAND: Lang + Theme | Notifs + Profile ══ */}
                     <div style={island}>
+                        {/* Sync Status Pill (Desktop) */}
+                        <div 
+                            title={getSyncTooltip()}
+                            onClick={handleSyncClick}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '4px 10px',
+                                borderRadius: 100,
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                background: getSyncStyles().bg,
+                                border: getSyncStyles().border,
+                                color: getSyncStyles().color,
+                                cursor: (syncStatus.isOnline && syncStatus.offlineQueue > 0) ? 'pointer' : 'default',
+                                transition: 'all 0.2s ease',
+                                userSelect: 'none',
+                                marginRight: 4,
+                            }}
+                            onMouseEnter={e => {
+                                if (syncStatus.offlineQueue > 0 && syncStatus.isOnline) {
+                                    e.currentTarget.style.filter = 'brightness(0.95)';
+                                }
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.filter = 'none';
+                            }}
+                        >
+                            {getSyncStyles().icon}
+                            <span style={{ fontSize: '0.72rem' }}>{getSyncStatusText()}</span>
+                        </div>
+
                         <div ref={langRef} style={{ position: 'relative' }}>
                             <button onClick={() => { setShowLangMenu(v => !v); setShowProfile(false); setShowNotifs(false); setShowCompanyMenu(false); }}
                                 style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60, justifyContent: 'flex-start' })}

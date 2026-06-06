@@ -646,10 +646,13 @@ export async function createMass(collection, dataArray) {
             const docRef = doc(db, path, item.id);
             batch.set(docRef, item);
         });
+        _incrementActiveWrites();
         try {
             await batch.commit();
         } catch (err) {
             console.error('[createMass] Batch commit failed for', collection, err);
+        } finally {
+            _decrementActiveWrites();
         }
     }
 
@@ -1014,6 +1017,37 @@ export function seedFleetData() { }
 
 const _OFFLINE_QUEUE_KEY = 'eznr_offline_queue';
 let _isFlushing = false;
+let _activeWritesCount = 0;
+
+function _incrementActiveWrites() {
+    _activeWritesCount++;
+    _dispatchSyncStatusEvent();
+}
+
+function _decrementActiveWrites() {
+    _activeWritesCount = Math.max(0, _activeWritesCount - 1);
+    _dispatchSyncStatusEvent();
+}
+
+function _dispatchSyncStatusEvent() {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('eznr:sync-status-changed', {
+            detail: {
+                activeWrites: _activeWritesCount,
+                offlineQueue: getOfflineQueueCount(),
+                isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true
+            }
+        }));
+    }
+}
+
+export function getSyncStatus() {
+    return {
+        activeWrites: _activeWritesCount,
+        offlineQueue: typeof window !== 'undefined' ? getOfflineQueueCount() : 0,
+        isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true
+    };
+}
 
 function _getOfflineQueue() {
     try {
@@ -1033,22 +1067,25 @@ function _enqueueOfflineOp(op) {
     if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('eznr:offline-queue-changed', { detail: { count: queue.length } }));
     }
+    _dispatchSyncStatusEvent();
 }
 
 /**
  * Flush all queued offline operations to Firestore.
  * Called automatically when the browser comes back online.
  */
-async function _flushOfflineQueue() {
+export async function _flushOfflineQueue() {
     if (_isFlushing) return;
     const queue = _getOfflineQueue();
     if (queue.length === 0) return;
 
     _isFlushing = true;
+    _dispatchSyncStatusEvent();
     console.log(`[dataStore] 🔄 Flushing ${queue.length} offline operations...`);
 
     const failed = [];
     for (const op of queue) {
+        _incrementActiveWrites();
         try {
             if (op.type === 'write') {
                 const ref = _getDocRef(op.colName, op.docId);
@@ -1064,6 +1101,8 @@ async function _flushOfflineQueue() {
         } catch (err) {
             console.warn(`[dataStore] ⚠️ Failed to flush ${op.type} ${op.colName}/${op.docId}:`, err.message);
             failed.push(op);
+        } finally {
+            _decrementActiveWrites();
         }
     }
 
@@ -1078,6 +1117,7 @@ async function _flushOfflineQueue() {
     if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('eznr:offline-queue-changed', { detail: { count: failed.length } }));
     }
+    _dispatchSyncStatusEvent();
 }
 
 /**
@@ -1091,7 +1131,12 @@ export function getOfflineQueueCount() {
 if (typeof window !== 'undefined') {
     window.addEventListener('online', () => {
         console.log('[dataStore] 🌐 Back online — flushing offline queue...');
+        _dispatchSyncStatusEvent();
         setTimeout(_flushOfflineQueue, 1000); // small delay to let connection stabilize
+    });
+    window.addEventListener('offline', () => {
+        console.log('[dataStore] 📴 Offline mode activated');
+        _dispatchSyncStatusEvent();
     });
 
     // Try flushing on page load if we have queued items
@@ -1117,6 +1162,7 @@ async function _firestoreWrite(colName, item) {
         return;
     }
 
+    _incrementActiveWrites();
     try {
         await setDoc(ref, clean, { merge: true });
     } catch (err) {
@@ -1129,6 +1175,8 @@ async function _firestoreWrite(colName, item) {
                 alert(`Sistemska greška: Promjene nisu spremljene na server! (${err.message})`);
             }
         }
+    } finally {
+        _decrementActiveWrites();
     }
 }
 
@@ -1142,6 +1190,7 @@ async function _firestoreDelete(colName, docId) {
         return;
     }
 
+    _incrementActiveWrites();
     try {
         await deleteDoc(ref);
     } catch (err) {
@@ -1150,6 +1199,8 @@ async function _firestoreDelete(colName, docId) {
         } else {
             console.error(`[dataStore] ❌ Delete failed ${colName}/${docId}:`, err.message);
         }
+    } finally {
+        _decrementActiveWrites();
     }
 }
 
