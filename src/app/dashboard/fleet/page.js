@@ -12,6 +12,7 @@ import Pagination from '@/components/Pagination';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
+import { QRCodeSVG } from 'qrcode.react';
 import PrintPortal from '@/components/PrintPortal';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import PDFExportButton from '@/components/PDFExportButton';
@@ -320,10 +321,47 @@ function FleetInner() {
                 {showForm && (
                     <div className="modal-overlay" onClick={closeForm}>
                         <div className="modal" style={{ width: '100%', maxWidth: 850, minHeight: 650, padding: 0, display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-                            <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px' }}>
-                                <h2>{editingId ? '✏️' : '+'} {t('vehicle')} {formData.registracija || ''}</h2>
-                                <button className="btn btn-ghost btn-icon" onClick={closeForm}>✕</button>
-                            </div>
+                             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px', display: 'flex', alignItems: 'center' }}>
+                                 <h2>{editingId ? '✏️' : '+'} {t('vehicle')} {formData.registracija || ''}</h2>
+                                 {editingId && (
+                                     <div 
+                                         onClick={() => {
+                                             setPrintSelection([formData]);
+                                             setShowPrintModal(true);
+                                         }}
+                                         title="Kliknite za ispis QR koda"
+                                         style={{
+                                             display: 'flex',
+                                             alignItems: 'center',
+                                             gap: 8,
+                                             padding: '5px 10px',
+                                             borderRadius: 8,
+                                             border: '1.5px solid var(--border)',
+                                             background: 'var(--bg-input)',
+                                             cursor: 'pointer',
+                                             marginLeft: 'auto',
+                                             marginRight: 10,
+                                             transition: 'all 0.15s ease',
+                                             userSelect: 'none'
+                                         }}
+                                         onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                         onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                     >
+                                         <div style={{ padding: 2, background: 'white', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
+                                             <QRCodeSVG 
+                                                 value={activeCompanyId ? `${window.location.origin}/q/fleet/${editingId}?c=${activeCompanyId}` : `${window.location.origin}/q/fleet/${editingId}`} 
+                                                 size={26} 
+                                                 level="M" 
+                                             />
+                                         </div>
+                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+                                             <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>QR KOD</span>
+                                             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4 }}>🖨️ {t('isprintajQr') || 'Print'}</span>
+                                         </div>
+                                     </div>
+                                 )}
+                                 <button className="btn btn-ghost btn-icon" onClick={closeForm}>✕</button>
+                             </div>
 
                             {/* Tab bar */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>

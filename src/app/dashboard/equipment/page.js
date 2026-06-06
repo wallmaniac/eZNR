@@ -9,6 +9,7 @@ import {
 } from '@/lib/dataStore';
 import { uploadDocument } from '@/lib/storageService';
 import QRCodeLabel from '@/components/QRCodeLabel';
+import { QRCodeSVG } from 'qrcode.react';
 import PrintPortal from '@/components/PrintPortal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
@@ -404,6 +405,43 @@ function EquipmentPageInner() {
                                     <Icon3D name="Oprema.png" size={48} />
                                     <h2 style={{ margin: 0 }}>{t('radnaOpremaObjekt')} {formData.naziv && `— ${formData.naziv}`}</h2>
                                 </div>
+                                {editingId && (
+                                    <div 
+                                        onClick={() => {
+                                            setPrintSelection([formData]);
+                                            setShowPrintModal(true);
+                                        }}
+                                        title="Kliknite za ispis QR koda"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 8,
+                                            padding: '5px 10px',
+                                            borderRadius: 8,
+                                            border: '1.5px solid var(--border)',
+                                            background: 'var(--bg-input)',
+                                            cursor: 'pointer',
+                                            marginLeft: 'auto',
+                                            marginRight: 10,
+                                            transition: 'all 0.15s ease',
+                                            userSelect: 'none'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                    >
+                                        <div style={{ padding: 2, background: 'white', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
+                                            <QRCodeSVG 
+                                                value={activeCompanyId ? `${window.location.origin}/q/eq/${editingId}?c=${activeCompanyId}` : `${window.location.origin}/q/eq/${editingId}`} 
+                                                size={26} 
+                                                level="M" 
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+                                            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>QR KOD</span>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4 }}>🖨️ {t('isprintajQr') || 'Print'}</span>
+                                        </div>
+                                    </div>
+                                )}
                             <button className="btn btn-ghost btn-icon" onClick={handleCancel}>✕</button>
                         </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
+import { QRCodeSVG } from 'qrcode.react';
 import PrintPortal from '@/components/PrintPortal';
 import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -341,8 +342,45 @@ export default function FireProtectionPage() {
                     {showExtForm && (
                         <div className="modal-overlay" onClick={() => setShowExtForm(false)}>
                             <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
-                                <div className="modal-header">
+                                <div className="modal-header" style={{ display: 'flex', alignItems: 'center' }}>
                                     <h2>{editingExtId ? '✏️' : '+'} {t('fireExtinguisher')}</h2>
+                                    {editingExtId && (
+                                        <div 
+                                            onClick={() => {
+                                                setPrintSelection([{ id: editingExtId, title: `APARAT ${extForm.serijskiBroj}`, sub: t('extType_' + extForm.tip) || extForm.tip }]);
+                                                setShowPrintModal(true);
+                                            }}
+                                            title="Kliknite za ispis QR koda"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                                padding: '5px 10px',
+                                                borderRadius: 8,
+                                                border: '1.5px solid var(--border)',
+                                                background: 'var(--bg-input)',
+                                                cursor: 'pointer',
+                                                marginLeft: 'auto',
+                                                marginRight: 10,
+                                                transition: 'all 0.15s ease',
+                                                userSelect: 'none'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                        >
+                                            <div style={{ padding: 2, background: 'white', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
+                                                <QRCodeSVG 
+                                                    value={activeCompanyId ? `${window.location.origin}/q/fp/${editingExtId}?c=${activeCompanyId}` : `${window.location.origin}/q/fp/${editingExtId}`} 
+                                                    size={26} 
+                                                    level="M" 
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+                                                <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>QR KOD</span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4 }}>🖨️ {t('isprintajQr') || 'Print'}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <button className="btn btn-ghost btn-icon" onClick={() => setShowExtForm(false)}>✕</button>
                                 </div>
                                 <div className="modal-body">
@@ -565,8 +603,45 @@ export default function FireProtectionPage() {
                     {showHydForm && (
                         <div className="modal-overlay" onClick={() => setShowHydForm(false)}>
                             <div className="modal" style={{ maxWidth: 550 }} onClick={e => e.stopPropagation()}>
-                                <div className="modal-header">
+                                <div className="modal-header" style={{ display: 'flex', alignItems: 'center' }}>
                                     <h2>{editingHydId ? '✏️' : '+'} {t('hidrant')}</h2>
+                                    {editingHydId && (
+                                        <div 
+                                            onClick={() => {
+                                                setPrintSelection([{ id: editingHydId, title: `HIDRANT ${hydForm.oznaka}`, sub: hydForm.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }]);
+                                                setShowPrintModal(true);
+                                            }}
+                                            title="Kliknite za ispis QR koda"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                                padding: '5px 10px',
+                                                borderRadius: 8,
+                                                border: '1.5px solid var(--border)',
+                                                background: 'var(--bg-input)',
+                                                cursor: 'pointer',
+                                                marginLeft: 'auto',
+                                                marginRight: 10,
+                                                transition: 'all 0.15s ease',
+                                                userSelect: 'none'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                        >
+                                            <div style={{ padding: 2, background: 'white', borderRadius: 4, display: 'flex', alignItems: 'center' }}>
+                                                <QRCodeSVG 
+                                                    value={activeCompanyId ? `${window.location.origin}/q/fp/${editingHydId}?c=${activeCompanyId}` : `${window.location.origin}/q/fp/${editingHydId}`} 
+                                                    size={26} 
+                                                    level="M" 
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+                                                <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>QR KOD</span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4 }}>🖨️ {t('isprintajQr') || 'Print'}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <button className="btn btn-ghost btn-icon" onClick={() => setShowHydForm(false)}>✕</button>
                                 </div>
                                 <div className="modal-body">
