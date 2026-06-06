@@ -42,6 +42,19 @@ const STATUS_MAP = {
     povucen: { bs: 'Povučen', en: 'Retired', color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' },
 };
 
+const EXT_STATUS_CYCLE = {
+    ispravan: 'neispravan',
+    neispravan: 'servis',
+    servis: 'povucen',
+    povucen: 'ispravan',
+};
+
+const HYD_STATUS_CYCLE = {
+    ispravan: 'neispravan',
+    neispravan: 'servis',
+    servis: 'ispravan',
+};
+
 export default function FireProtectionPage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -438,7 +451,7 @@ export default function FireProtectionPage() {
                                                                     <button onClick={() => { setActionMenuId(null); setPrintSelection([{ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {t('printajQrKod')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...e }; delete copy.id; copy.serijskiBroj = copy.serijskiBroj + '-COPY'; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (t('copy2')); create(COLLECTIONS.FIRE_EXTINGUISHERS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {t('kopiraj')}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { ispravan: 'neispravan', neispravan: 'servis', servis: 'povucen', povucen: 'ispravan' }; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { status: cycle[e.status] || 'ispravan' }); loadData(); }} className="dropdown-item">🔄 {t('status')} → {t('status_' + (cycle[e.status] || 'ispravan'))}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { status: EXT_STATUS_CYCLE[e.status] || 'ispravan' }); loadData(); }} className="dropdown-item">🔄 {t('status')} → {t('status_' + (EXT_STATUS_CYCLE[e.status] || 'ispravan'))}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const nextYear = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0]; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { sljedeciServis: nextYear, zadnjiServis: today }); loadData(); showFlash(); }} className="dropdown-item">📅 {t('scheduleService1yr')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDeleteExt(e.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
@@ -572,7 +585,7 @@ export default function FireProtectionPage() {
                                                                     <button onClick={() => { setActionMenuId(null); setPrintSelection([{ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {t('printajQrKod')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...h }; delete copy.id; copy.oznaka = copy.oznaka + '-COPY'; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (t('copy3')); create(COLLECTIONS.HYDRANTS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {t('kopiraj')}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { ispravan: 'neispravan', neispravan: 'servis', servis: 'ispravan' }; update(COLLECTIONS.HYDRANTS, h.id, { status: cycle[h.status] || 'ispravan' }); loadData(); }} className="dropdown-item">🔄 {t('status')} → {STATUS_MAP[cycle[h.status]]?.[lang] || STATUS_MAP[cycle[h.status]]?.bs || 'Ispravan'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.HYDRANTS, h.id, { status: HYD_STATUS_CYCLE[h.status] || 'ispravan' }); loadData(); }} className="dropdown-item">🔄 {t('status')} → {STATUS_MAP[HYD_STATUS_CYCLE[h.status]]?.[lang] || STATUS_MAP[HYD_STATUS_CYCLE[h.status]]?.bs || 'Ispravan'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const in6m = new Date(Date.now() + 182 * 86400000).toISOString().split('T')[0]; update(COLLECTIONS.HYDRANTS, h.id, { sljedeciPregled: in6m, datumZadnjegPregleda: today }); loadData(); showFlash(); }} className="dropdown-item">📅 {t('scheduleInspection6mo')}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDeleteHyd(h.id); }} className="dropdown-item text-danger">🗑️ {t('izbrisi')}</button>
