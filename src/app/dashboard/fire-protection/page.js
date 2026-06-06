@@ -269,7 +269,7 @@ export default function FireProtectionPage() {
             </PrintPortal>
 
             {showPrintModal && (
-                <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
+                <div className="modal-overlay no-print" style={{ zIndex: 11000 }} onClick={() => setShowPrintModal(false)}>
                     <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>🖨️ Isprintaj QR kodove</h2>
