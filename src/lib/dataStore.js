@@ -15,7 +15,7 @@
 import { db } from './firebase';
 import { logUserAction } from './activityLog';
 import {
-    collection as fsCollection, doc, getDocs, setDoc, updateDoc,
+    collection as fsCollection, doc, getDoc, getDocs, setDoc, updateDoc,
     deleteDoc, writeBatch, onSnapshot, query, orderBy,
 } from 'firebase/firestore';
 
@@ -224,29 +224,75 @@ function _attachCollectionListener(colName, companyId) {
             if (!_cache[colName]) _cache[colName] = [];
 
             targets.forEach(targetId => {
-                const colRef = fsCollection(db, `companies/${targetId}/${colName}`);
-                const unsub = onSnapshot(colRef, (snap) => {
-                    const newDocs = snap.docs.map(d => ({ id: d.id, companyId: targetId, ...d.data() }));
+                let retryCount = 0;
+                const maxRetries = 5;
+                const baseDelay = 1000;
+                let initialDocReceived = false;
 
-                    // Merge data: remove old entries for THIS target company, then add new
-                    _cache[colName] = [
-                        ...(_cache[colName] || []).filter(item => item.companyId !== targetId),
-                        ...newDocs
-                    ];
-
-                    _notifyListeners();
-                    if (typeof window !== 'undefined') {
-                        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                function startListener() {
+                    // Abort if active company switched during retry delay
+                    if (_activeCompanyId !== companyId) {
+                        console.log(`[dataStore] 🚫 Aborting retry for ${colName} [${targetId}] because active company changed.`);
+                        return;
                     }
 
-                    completed++;
-                    if (completed === targets.length) resolve();
-                }, (err) => {
-                    console.warn(`[dataStore] ⚠️ Snapshot error ${colName} [${targetId}]:`, err.message);
-                    completed++;
-                    if (completed === targets.length) resolve();
-                });
-                _snapshotUnsubs.push(unsub);
+                    let currentUnsub = null;
+                    const colRef = fsCollection(db, `companies/${targetId}/${colName}`);
+                    
+                    currentUnsub = onSnapshot(colRef, (snap) => {
+                        const newDocs = snap.docs.map(d => ({ id: d.id, companyId: targetId, ...d.data() }));
+
+                        // Merge data: remove old entries for THIS target company, then add new
+                        _cache[colName] = [
+                            ...(_cache[colName] || []).filter(item => item.companyId !== targetId),
+                            ...newDocs
+                        ];
+
+                        _notifyListeners();
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                        }
+
+                        retryCount = 0;
+                        if (!initialDocReceived) {
+                            initialDocReceived = true;
+                            completed++;
+                            if (completed >= targets.length) resolve();
+                        }
+                    }, (err) => {
+                        console.warn(`[dataStore] ⚠️ Snapshot error ${colName} [${targetId}]:`, err.message);
+
+                        const isPermissionError = err.code === 'permission-denied' || 
+                                                  err.message?.toLowerCase().includes('permission') || 
+                                                  err.message?.toLowerCase().includes('missing');
+
+                        if (isPermissionError && retryCount < maxRetries) {
+                            retryCount++;
+                            const delay = baseDelay * Math.pow(2, retryCount - 1);
+                            console.log(`[dataStore] 🔄 Retrying ${colName} [${targetId}] in ${delay}ms (attempt ${retryCount}/${maxRetries})...`);
+
+                            if (currentUnsub) {
+                                const idx = _snapshotUnsubs.indexOf(currentUnsub);
+                                if (idx !== -1) _snapshotUnsubs.splice(idx, 1);
+                                try { currentUnsub(); } catch {}
+                            }
+
+                            setTimeout(startListener, delay);
+                        } else {
+                            if (!initialDocReceived) {
+                                initialDocReceived = true;
+                                completed++;
+                                if (completed >= targets.length) resolve();
+                            }
+                        }
+                    });
+
+                    if (currentUnsub) {
+                        _snapshotUnsubs.push(currentUnsub);
+                    }
+                }
+
+                startListener();
             });
         } catch (err) {
             console.warn(`[dataStore] ⚠️ Failed sync setup for ${colName}:`, err.message);
@@ -281,6 +327,37 @@ export async function loadCompanyData(companyId) {
             // Initialize empty caches for ALL company-scoped collections
             COMPANY_SCOPED.forEach(col => { _cache[col] = []; });
 
+            // ── Phase 0: Eagerly load metadata for the active company & parent ──
+            if (!_cache['companies']) _cache['companies'] = [];
+            if (companyId !== 'all') {
+                try {
+                    const compDocRef = doc(db, 'companies', companyId);
+                    const compSnap = await getDoc(compDocRef);
+                    if (compSnap.exists()) {
+                        const companyObj = { id: compSnap.id, ...compSnap.data() };
+                        _cache['companies'] = [
+                            ..._cache['companies'].filter(c => c.id !== companyId),
+                            companyObj
+                        ];
+
+                        // Eagerly load parent company if present for branding inheritance
+                        if (companyObj.parentId) {
+                            const parentDocRef = doc(db, 'companies', companyObj.parentId);
+                            const parentSnap = await getDoc(parentDocRef);
+                            if (parentSnap.exists()) {
+                                const parentObj = { id: parentSnap.id, ...parentSnap.data() };
+                                _cache['companies'] = [
+                                    ..._cache['companies'].filter(c => c.id !== companyObj.parentId),
+                                    parentObj
+                                ];
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[dataStore] Failed to eagerly load company metadata:', err);
+                }
+            }
+
             // ── Phase 1: CRITICAL collections (awaited — blocks UI spinner) ──
             const criticalLoads = CRITICAL_COLLECTIONS.map(colName =>
                 _attachCollectionListener(colName, companyId)
@@ -306,10 +383,14 @@ export async function loadCompanyData(companyId) {
             const metaLoads = ['companies', 'users'].map(async (colName) => {
                 try {
                     const snap = await getDocs(fsCollection(db, colName));
-                    _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    const newDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    // Merge with the eagerly fetched documents so they aren't lost
+                    _cache[colName] = [
+                        ...(_cache[colName] || []).filter(existing => !newDocs.some(n => n.id === existing.id)),
+                        ...newDocs
+                    ];
                 } catch (err) {
                     console.debug(`[dataStore] ${colName} load skipped (insufficient permissions).`);
-                    _cache[colName] = [];
                 }
             });
 

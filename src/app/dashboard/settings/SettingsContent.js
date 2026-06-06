@@ -30,7 +30,7 @@ import {
   ACCENT_PRESETS, SIDEBAR_PRESETS, EZNR_DEFAULTS,
   PDF_DEFAULTS, UI_DEFAULTS, WATERMARK_POSITIONS, LOGO_POSITIONS,
   getCompanyBranding, savePdfBranding,
-  getUIBranding, saveUIBranding, applyUIBranding, resetUIBranding,
+  getUIBranding, saveUIBranding, applyUIBranding, resetUIBranding, applyPreviewUIBranding,
 } from '@/lib/brandingService';
 
 // Render-time translation helpers for activity log
@@ -462,54 +462,73 @@ export default function SettingsContent() {
 
   // Load company data
   useEffect(() => {
-    if (activeCompanyId) {
-      const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
-      if (company) {
-        setCompanyData({
-          naziv: company.naziv || '', skraceniNaziv: company.skraceniNaziv || '',
-          oib: company.oib || '', adresa: company.adresa || '',
-          mjesto: company.mjesto || '', postanskiBroj: company.postanskiBroj || '',
-          telefon: company.telefon || '', email: company.email || '',
-          direktor: company.direktor || '', strucnoLice: company.strucnoLice || '',
-          logo: company.logo || '', parentId: company.parentId || '',
-          country: company.country || 'BA',
-        });
-        originalCountryRef.current = company.country || 'BA';
-      }
-      if (isAdmin) {
-        const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => 
-          (u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin') && 
-          (u.companyIds || []).includes(activeCompanyId)
-        );
-        setAssignedOfficers(hasAccess.map(o => o.id));
-      }
-      // Load branding
-      const pdfBrand = getCompanyBranding(activeCompanyId);
-      setPdfAccentColor(pdfBrand.accentColor);
-      setWmEnabled(pdfBrand.watermarkEnabled);
-      setWmPosition(pdfBrand.watermarkPosition);
-      setWmOpacity(pdfBrand.watermarkOpacity);
-      setWmSize(pdfBrand.watermarkSize);
-      setWmContent(pdfBrand.watermarkContent);
-      setLogoPosition(pdfBrand.logoPosition);
-      setLogoSize(pdfBrand.logoSize);
-      setHeaderEnabled(pdfBrand.headerEnabled ?? true);
-      setShowCompanyInfo(pdfBrand.showCompanyInfo ?? true);
-      setShowCompanyName(pdfBrand.showCompanyName ?? true);
-      setHeaderText(pdfBrand.headerText);
-      setHeaderFontSize(pdfBrand.headerFontSize);
-      setHeaderBold(pdfBrand.headerBold);
-      setHeaderItalic(pdfBrand.headerItalic);
-      setHeaderUnderline(pdfBrand.headerUnderline);
-      setHeaderColor(pdfBrand.headerColor);
+    const loadData = () => {
+      if (dirtyTab === 'company') return; // Do not overwrite user edits in progress
+      if (activeCompanyId) {
+        const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
+        if (company) {
+          setCompanyData({
+            naziv: company.naziv || '', skraceniNaziv: company.skraceniNaziv || '',
+            oib: company.oib || '', adresa: company.adresa || '',
+            mjesto: company.mjesto || '', postanskiBroj: company.postanskiBroj || '',
+            telefon: company.telefon || '', email: company.email || '',
+            direktor: company.direktor || '', strucnoLice: company.strucnoLice || '',
+            logo: company.logo || '', parentId: company.parentId || '',
+            country: company.country || 'BA',
+          });
+          originalCountryRef.current = company.country || 'BA';
+        }
+        if (isAdmin) {
+          const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => 
+            (u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin') && 
+            (u.companyIds || []).includes(activeCompanyId)
+          );
+          setAssignedOfficers(hasAccess.map(o => o.id));
+        }
+        // Load branding
+        const pdfBrand = getCompanyBranding(activeCompanyId);
+        setPdfAccentColor(pdfBrand.accentColor);
+        setWmEnabled(pdfBrand.watermarkEnabled);
+        setWmPosition(pdfBrand.watermarkPosition);
+        setWmOpacity(pdfBrand.watermarkOpacity);
+        setWmSize(pdfBrand.watermarkSize);
+        setWmContent(pdfBrand.watermarkContent);
+        setLogoPosition(pdfBrand.logoPosition);
+        setLogoSize(pdfBrand.logoSize);
+        setHeaderEnabled(pdfBrand.headerEnabled ?? true);
+        setShowCompanyInfo(pdfBrand.showCompanyInfo ?? true);
+        setShowCompanyName(pdfBrand.showCompanyName ?? true);
+        setHeaderText(pdfBrand.headerText);
+        setHeaderFontSize(pdfBrand.headerFontSize);
+        setHeaderBold(pdfBrand.headerBold);
+        setHeaderItalic(pdfBrand.headerItalic);
+        setHeaderUnderline(pdfBrand.headerUnderline);
+        setHeaderColor(pdfBrand.headerColor);
 
-      const uiBrand = getUIBranding(activeCompanyId);
-      setUiPrimaryColor(uiBrand.primaryColor);
-      setUiSidebarColor(uiBrand.sidebarColor);
-      setSidebarLogoEnabled(uiBrand.sidebarLogoEnabled);
-      setSidebarText(uiBrand.sidebarText);
+        const uiBrand = getUIBranding(activeCompanyId);
+        setUiPrimaryColor(uiBrand.primaryColor);
+        setUiSidebarColor(uiBrand.sidebarColor);
+        setSidebarLogoEnabled(uiBrand.sidebarLogoEnabled);
+        setSidebarText(uiBrand.sidebarText);
+      }
+    };
+
+    loadData();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => {
+        window.removeEventListener('eznr:data-synced', loadData);
+      };
     }
-  }, [activeCompanyId, isAdmin]);
+  }, [activeCompanyId, isAdmin, dirtyTab]);
+
+  // Live UI branding preview
+  useEffect(() => {
+    if (activeTab === 'company' && (uiPrimaryColor || uiSidebarColor)) {
+      applyPreviewUIBranding(uiPrimaryColor, uiSidebarColor);
+    }
+  }, [uiPrimaryColor, uiSidebarColor, activeTab]);
 
   const allOfficersList = useMemo(() => {
     if (!isAdmin) return [];

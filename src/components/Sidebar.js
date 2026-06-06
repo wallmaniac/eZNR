@@ -851,8 +851,13 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                 </button>
             </div>
 
-            {/* Menu */}
-            {renderMenu(false)}
+            {/* Scrollable menu area */}
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`
+                    div::-webkit-scrollbar { display: none; }
+                `}</style>
+                {renderMenu(false)}
+            </div>
 
             {/* User area */}
             {!collapsed && (
@@ -888,8 +893,7 @@ const sidebarStyles = {
         flexDirection: 'column',
         transition: 'width var(--transition-normal)',
         zIndex: 100,
-        overflowY: 'auto',
-        overflowX: 'hidden',
+        overflow: 'hidden',
         borderRight: '1px solid rgba(255,255,255,0.05)',
     },
     logoArea: {

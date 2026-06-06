@@ -293,6 +293,33 @@ export function applyUIBranding(companyId) {
 }
 
 /**
+ * Apply a temporary preview of UI branding (used in Settings page live-preview)
+ */
+export function applyPreviewUIBranding(primaryColor, sidebarColor) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+
+  if (primaryColor) {
+    const colors = deriveColors(primaryColor);
+    root.style.setProperty('--primary', colors.primary);
+    root.style.setProperty('--primary-light', colors.primaryLight);
+    root.style.setProperty('--primary-dark', colors.primaryDark);
+    root.style.setProperty('--primary-glow', colors.primaryGlow);
+    root.style.setProperty('--primary-glow-strong', colors.primaryGlowStrong);
+    root.style.setProperty('--border-focus', colors.borderFocus);
+    root.style.setProperty('--shadow-glow', colors.shadowGlow);
+    root.style.setProperty('--bg-sidebar-active', colors.primaryGlow);
+    root.style.setProperty('--bg-badge', `${colors.primaryGlow}`);
+  }
+
+  if (sidebarColor) {
+    const sidebar = deriveSidebarColors(sidebarColor);
+    root.style.setProperty('--bg-sidebar', sidebar.bgSidebar);
+    root.style.setProperty('--bg-sidebar-hover', sidebar.bgSidebarHover);
+  }
+}
+
+/**
  * Reset all UI branding overrides.
  */
 export function resetUIBranding() {

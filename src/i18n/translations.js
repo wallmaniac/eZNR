@@ -6670,7 +6670,7 @@ export const translations = {
     sveEmailAdreseKopirane: 'Sve adrese e-pošte su kopirane!',
     zapisa: 'zapisa',
     prikaziAkcijeImenika: 'Prikaži akcije imenika',
-    akcije: 'Radnje',
+    akcije: 'Akcije',
     emailSvimRadnicima: 'Email za sve radnike',
     kopirajSveEmailAdrese: 'Kopirajte sve adrese e-pošte',
     izveziUCsv: 'Izvoz u CSV',

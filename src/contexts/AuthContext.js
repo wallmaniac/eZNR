@@ -274,12 +274,23 @@ export function AuthProvider({ children }) {
         };
     }, [user?.id, activeCompanyId]);
 
-    // ── Apply UI branding on company switch ─────────────────────────────────────
+    // ── Apply UI branding on company switch & sync ─────────────────────────────
     useEffect(() => {
-        if (activeCompanyId && activeCompanyId !== 'all') {
-            applyUIBranding(activeCompanyId);
-        } else {
-            resetUIBranding();
+        const applyBranding = () => {
+            if (activeCompanyId && activeCompanyId !== 'all') {
+                applyUIBranding(activeCompanyId);
+            } else {
+                resetUIBranding();
+            }
+        };
+
+        applyBranding();
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('eznr:data-synced', applyBranding);
+            return () => {
+                window.removeEventListener('eznr:data-synced', applyBranding);
+            };
         }
     }, [activeCompanyId]);
 
