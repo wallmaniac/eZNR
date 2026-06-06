@@ -559,14 +559,20 @@ function FleetInner() {
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                             </div>
-                            <PDFExportButton title={t('prikaziPdfIzvjestaje')} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
-                                { label: t('allVehicles'), icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
-                                ...(selectedIds.size> 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
-                            ]} />
-                            <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38, flexShrink: 0 }} options={[
-                                { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
-                                ...(selectedIds.size> 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
-                            ]} />
+                            <PDFExportButton
+                                label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
+                                title={t('prikaziPdfIzvjestaje')}
+                                buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }}
+                                options={[
+                                    { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                                    { label: t('allVehicles'), icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
+                                    ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
+                                    { divider: true },
+                                    { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
+                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
+                                    ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
+                                ]}
+                            />
                             <SavedFlash />
                             {selectedIds.size> 0 && (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>

@@ -159,10 +159,16 @@ function WorkerPPEInner() {
               />
               {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
             </div>
-            <PDFExportButton title={t('prikaziPdfIzvjestaje')} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-              { label: t('svaOzoZaduzenja'), icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
-              ...(selectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
-            ]} />
+            <PDFExportButton
+              label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
+              title={t('prikaziPdfIzvjestaje')}
+              buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
+              options={[
+                { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                { label: t('svaOzoZaduzenja'), icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
+                ...(selectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
+              ]}
+            />
             <SavedFlash />
             {selectedIds.size> 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>

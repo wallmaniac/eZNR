@@ -518,19 +518,27 @@ export default function FireProtectionPage() {
                     )}
                     <div className="card">
                         <div className="card-body" style={{ padding: 0 }}><div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                                <button className="btn btn-primary btn-sm" onClick={openNewExt}>+ {t('newExtinguisher')}</button>
-                                <div className="search-bar" style={{ flex: 1 }}>
-                                    <input placeholder={t('pretrazi')} value={extSearch} onChange={e => setExtSearch(e.target.value)}
+                                <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNewExt}>+ {t('newExtinguisher')}</button>
+                                <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                                    <input placeholder={t('pretrazi') + '...'} value={extSearch} onChange={e => setExtSearch(e.target.value)}
                                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
+                                    {extSearch && <button onClick={() => setExtSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                                 </div>
-                                <PDFExportButton title={t('prikaziPdfIzvjestaje')} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                                    { label: t('allExtinguishers'), icon: '🧯', onClick: () => generateFireProtectionReport(sortedExt.map(e => e.id), lang) },
-                                    ...(extSelectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
-                                ]} />
-                                <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } },
-                                    ...(extSelectedIds.size> 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } }] : []),
-                                ]} />
+                                <PDFExportButton
+                                    label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
+                                    title={t('prikaziPdfIzvjestaje')}
+                                    buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
+                                    options={[
+                                        { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                                        { label: t('allExtinguishers'), icon: '🧯', onClick: () => generateFireProtectionReport(sortedExt.map(e => e.id), lang) },
+                                        ...(extSelectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
+                                        { divider: true },
+                                        { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
+                                        { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } },
+                                        ...(extSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } }] : []),
+                                    ]}
+                                />
                                 <SavedFlash />
                                 {extSelectedIds.size> 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
@@ -768,19 +776,27 @@ export default function FireProtectionPage() {
                     )}
                     <div className="card">
                         <div className="card-body" style={{ padding: 0 }}><div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                                <button className="btn btn-primary btn-sm" onClick={openNewHyd}>+ {t('newHydrant')}</button>
-                                <div className="search-bar" style={{ flex: 1 }}>
-                                    <input placeholder={t('pretrazi')} value={hydSearch} onChange={e => setHydSearch(e.target.value)}
+                                <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNewHyd}>+ {t('newHydrant')}</button>
+                                <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                                    <input placeholder={t('pretrazi') + '...'} value={hydSearch} onChange={e => setHydSearch(e.target.value)}
                                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
+                                    {hydSearch && <button onClick={() => setHydSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                                 </div>
-                                <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                                    { label: t('allHydrants'), icon: '🚰', onClick: () => generateFireProtectionReport(sortedHyd.map(h => h.id), lang, 'hydrants') },
-                                    ...(hydSelectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => h.id), lang, 'hydrants') }] : []),
-                                ]} />
-                                <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } },
-                                    ...(hydSelectedIds.size> 0 ? [{ label: `${t('odabrani')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } }] : []),
-                                ]} />
+                                <PDFExportButton
+                                    label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
+                                    title={t('prikaziPdfIzvjestaje')}
+                                    buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
+                                    options={[
+                                        { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                                        { label: t('allHydrants'), icon: '🚰', onClick: () => generateFireProtectionReport(sortedHyd.map(h => h.id), lang, 'hydrants') },
+                                        ...(hydSelectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => h.id), lang, 'hydrants') }] : []),
+                                        { divider: true },
+                                        { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
+                                        { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } },
+                                        ...(hydSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } }] : []),
+                                    ]}
+                                />
                                 <SavedFlash />
                                 {hydSelectedIds.size> 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>

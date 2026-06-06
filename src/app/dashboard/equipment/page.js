@@ -716,21 +716,27 @@ function EquipmentPageInner() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew} title={t('dodajNovuOpremu')}>+ {t('novaOprema')}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={t('dodajNovuOpremu')}>+ {t('novaOprema')}</button>
                         <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                             {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                         </div>
-                        <PDFExportButton title={t('prikaziPdfIzvjestaje')} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                            { label: t('svaOprema'), icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
-                            ...(selectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
-                        ]} />
-                        <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                            { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
-                            ...(selectedIds.size> 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
-                        ]} />
+                        <PDFExportButton
+                            label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
+                            title={t('prikaziPdfIzvjestaje')}
+                            buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
+                            options={[
+                                { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                                { label: t('svaOprema'), icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
+                                ...(selectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
+                                { divider: true },
+                                { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
+                                { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
+                                ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
+                            ]}
+                        />
                         <SavedFlash />
                         <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }}  title={t('filtrirajPoOdjelu')} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
                             <option value="">{t('sviOdjeliSektori')}</option>
