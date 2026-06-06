@@ -584,13 +584,27 @@ export default function FireProtectionPage() {
                                     ...(extSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } }] : []),
                                 ]} />
                                 <SavedFlash />
-                                {extSelectedIds.size> 0 ? (
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{extSelectedIds.size} {t('odabrano1')} &mdash; Grupne akcije:</span>
-                                        <button className="btn btn-danger btn-sm" onClick={handleDeleteSelectedExt}>🗑️ {t('obrisi')}</button>
-                                    </div>
-                                ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedExt.length} {t('extinguishers')}</span>}
+                                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{sortedExt.length} {t('extinguishers')}</span>
                             </div>
+
+                            {/* ── Bulk Action Bar ────────────────────────────────────────── */}
+                            {extSelectedIds.size > 0 && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                                    background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid rgba(0,191,166,0.2)',
+                                    flexWrap: 'wrap',
+                                }}>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                        ✓ {extSelectedIds.size} {t('odabrano1')} — {t('grupneAkcije') || 'Grupne akcije'}:
+                                    </span>
+                                    <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelectedExt} title={t('obrisi')}>
+                                        🗑️ {t('obrisi')}
+                                    </button>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', alignItems: 'center' }} onClick={() => setExtSelectedIds(new Set())} title={t('ponistiOdabir')}>
+                                        ✕
+                                    </button>
+                                </div>
+                            )}
                             <div className="data-table-wrapper">
                                 <table className="data-table">
                                     <thead>
@@ -846,13 +860,27 @@ export default function FireProtectionPage() {
                                     ...(hydSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } }] : []),
                                 ]} />
                                 <SavedFlash />
-                                {hydSelectedIds.size> 0 ? (
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{hydSelectedIds.size} {t('odabrano1')} &mdash; Grupne akcije:</span>
-                                        <button className="btn btn-danger btn-sm" onClick={handleDeleteSelectedHyd}>🗑️ {t('obrisi')}</button>
-                                    </div>
-                                ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedHyd.length} {t('hidranti')}</span>}
+                                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{sortedHyd.length} {t('hidranti')}</span>
                             </div>
+
+                            {/* ── Bulk Action Bar ────────────────────────────────────────── */}
+                            {hydSelectedIds.size > 0 && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                                    background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid rgba(0,191,166,0.2)',
+                                    flexWrap: 'wrap',
+                                }}>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                        ✓ {hydSelectedIds.size} {t('odabrano1')} — {t('grupneAkcije') || 'Grupne akcije'}:
+                                    </span>
+                                    <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelectedHyd} title={t('obrisi')}>
+                                        🗑️ {t('obrisi')}
+                                    </button>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', alignItems: 'center' }} onClick={() => setHydSelectedIds(new Set())} title={t('ponistiOdabir')}>
+                                        ✕
+                                    </button>
+                                </div>
+                            )}
                             <div className="data-table-wrapper">
                                 <table className="data-table">
                                     <thead>

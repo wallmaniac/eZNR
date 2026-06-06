@@ -772,16 +772,29 @@ function EquipmentPageInner() {
                             <input type="checkbox" checked={showOutOfUse} onChange={e => setShowOutOfUse(e.target.checked)} />
                             {t('radnaOpremaIzvanUpotrebe')}
                         </label>
-                        {selectedIds.size> 0 && (
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {selectedIds.size} {t('odabrano')} &mdash; Grupne akcije:
-                                </span>
-                                <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); }} title={t('isprintajQrKodoveZaOdabrano')}>🖨️ {t('isprintajQr')}</button>
-                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={t('obrisiOdabranuOpremu')}>🗑️ {t('obrisi')}</button>
-                            </div>
-                        )}
                     </div>
+
+                    {/* ── Bulk Action Bar ────────────────────────────────────────── */}
+                    {selectedIds.size > 0 && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                            background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid rgba(0,191,166,0.2)',
+                            flexWrap: 'wrap',
+                        }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                ✓ {selectedIds.size} {t('odabrano')} — {t('grupneAkcije') || 'Grupne akcije'}:
+                            </span>
+                            <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); }} title={t('isprintajQrKodoveZaOdabrano')}>
+                                🖨️ {t('isprintajQr')}
+                            </button>
+                            <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelected} title={t('obrisiOdabranuOpremu')}>
+                                🗑️ {t('obrisi')}
+                            </button>
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', alignItems: 'center' }} onClick={() => setSelectedIds(new Set())} title={t('ponistiOdabir')}>
+                                ✕
+                            </button>
+                        </div>
+                    )}
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>

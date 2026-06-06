@@ -398,11 +398,10 @@ function WorkerCertificatesInner() {
                   🗑️ {t('deleteSelected1')} ({selectedIds.size})
                 </button>
                 <button
-                  className="btn btn-ghost btn-sm"
-                  style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', alignItems: 'center' }}
                   onClick={() => setSelectedIds(new Set())}
                   title={t('ponistiOdabir')}>
-                  ✕ {t('ponistiOdabir')}
+                  ✕
                 </button>
               </div>
             )}

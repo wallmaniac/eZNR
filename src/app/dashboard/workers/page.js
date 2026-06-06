@@ -2030,40 +2030,45 @@ function WorkersPageInner() {
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}
                             </label>
-
-                            {selectedIds.size> 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', background: 'rgba(0,191,166,0.06)', borderRadius: 20, border: '1px solid rgba(0,191,166,0.3)', flexShrink: 0 }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>
-                                        {selectedIds.size} {t('odabrano')}
-                                    </span>
-                                    <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={() => {
-                                        const selectedWorkers = selectedIds.size> 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
-                                        const emails = selectedWorkers.map(w => w.email).filter(Boolean);
-                                        if (emails.length === 0) {
-                                            alert(t('odabraniRadniciNemajuEmailAdrese'));
-                                            return;
-                                        }
-                                        const subject = encodeURIComponent(t('obavijest'));
-                                        window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
-                                    }} title={t('posaljiEmail')}>
-                                        ✉️ Email
-                                    </button>
-                                    <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={async () => {
-                                        const ok = await confirm(t('deleteWorkersThisCannotBe').replace('{0}', selectedIds.size));
-                                        if (ok) {
-                                            removeManyWorkersCascade([...selectedIds]);
-                                            setSelectedIds(new Set());
-                                            loadData();
-                                        }
-                                    }} title={t('obrisiOdabraneRadnike')}>
-                                        🗑️ {t('obrisi')}
-                                    </button>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={t('ponistiOdabir')}>
-                                        ✕
-                                    </button>
-                                </div>
-                            )}
                         </div>
+
+                        {/* ── Bulk Action Bar ────────────────────────────────────────── */}
+                        {selectedIds.size > 0 && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                                background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid rgba(0,191,166,0.2)',
+                                flexWrap: 'wrap',
+                            }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                    ✓ {selectedIds.size} {t('odabrano')} — {t('grupneAkcije') || 'Grupne akcije'}:
+                                </span>
+                                <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none', height: 32, padding: '0 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={() => {
+                                    const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
+                                    const emails = selectedWorkers.map(w => w.email).filter(Boolean);
+                                    if (emails.length === 0) {
+                                        alert(t('odabraniRadniciNemajuEmailAdrese'));
+                                        return;
+                                    }
+                                    const subject = encodeURIComponent(t('obavijest'));
+                                    window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
+                                }} title={t('posaljiEmail')}>
+                                    ✉️ Email
+                                </button>
+                                <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 32, padding: '0 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={async () => {
+                                    const ok = await confirm(t('deleteWorkersThisCannotBe').replace('{0}', selectedIds.size));
+                                    if (ok) {
+                                        removeManyWorkersCascade([...selectedIds]);
+                                        setSelectedIds(new Set());
+                                        loadData();
+                                    }
+                                }} title={t('obrisiOdabraneRadnike')}>
+                                    🗑️ {t('obrisi')}
+                                </button>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', alignItems: 'center' }} onClick={() => setSelectedIds(new Set())} title={t('ponistiOdabir')}>
+                                    ✕
+                                </button>
+                            </div>
+                        )}
 
                         {/* Table */}
                         <div className="data-table-wrapper">
