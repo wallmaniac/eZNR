@@ -2008,19 +2008,21 @@ function WorkersPageInner() {
                             </select>
 
                             <PDFExportButton
-                                label={t('pdfIzvjestaj')} title={t('prikaziPdfIzvjestaje')}
+                                label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
+                                title={t('prikaziPdfIzvjestaje')}
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
-                                    { label: t('sviRadnici'), icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
-                                    ...(selectedIds.size> 0 ? [{ label: t('selected').replace('{0}', selectedIds.size), icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
-                                ]}
-                            />
-                            <PDFExportButton
-                                label={t('excel')} title={t('prikaziExcelOpcije')}
-                                buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
-                                options={[
-                                    { label: t('sviRadnici'), icon: '👷', onClick: () => setExcelExportMode('all') },
-                                    ...(selectedIds.size> 0 ? [{ label: t('selected1').replace('{0}', selectedIds.size), icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
+                                    { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                                    { label: lang !== 'en' ? 'Svi radnici' : 'All Workers', icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
+                                    ...(selectedIds.size > 0 ? [
+                                        { label: lang !== 'en' ? `Odabrani radnici (${selectedIds.size})` : `Selected Workers (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }
+                                    ] : []),
+                                    { divider: true },
+                                    { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                                    { label: lang !== 'en' ? 'Svi radnici' : 'All Workers', icon: '📥', onClick: () => setExcelExportMode('all') },
+                                    ...(selectedIds.size > 0 ? [
+                                        { label: lang !== 'en' ? `Odabrani radnici (${selectedIds.size})` : `Selected Workers (${selectedIds.size})`, icon: '📥', onClick: () => setExcelExportMode('selected') }
+                                    ] : [])
                                 ]}
                             />
 

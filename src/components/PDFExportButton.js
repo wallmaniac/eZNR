@@ -88,53 +88,74 @@ export default function PDFExportButton({ options = [], label, single = false, b
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-md)',
         boxShadow: 'var(--shadow-lg)',
-        padding: 4,
+        padding: '6px 4px',
         zIndex: 9999,
         animation: 'fadeIn 0.15s ease-out',
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div style={{
-        padding: '6px 12px',
-        fontSize: '0.7rem',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-        color: 'var(--text-muted)',
-        borderBottom: '1px solid var(--border-light)',
-        marginBottom: 4,
-      }}>
-        {t('generateReport')}
-      </div>
-      {options.map((opt, i) => (
-        <button
-          key={i}
-          className="dropdown-item"
-          onClick={() => { setOpen(false); opt.onClick(); }}
-          style={{
-            width: '100%',
-            textAlign: 'left',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 12px',
-            fontSize: '0.85rem',
-            fontWeight: 500,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            borderRadius: 6,
-            color: 'var(--text)',
-            fontFamily: 'var(--font-body)',
-            transition: 'background 0.1s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'none'}
-        >
-          {opt.icon && <span>{opt.icon}</span>}
-          <span>{opt.label}</span>
-        </button>
-      ))}
+      {!options.some(opt => opt.header) && (
+        <div style={{
+          padding: '6px 12px',
+          fontSize: '0.7rem',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          color: 'var(--text-muted)',
+          borderBottom: '1px solid var(--border-light)',
+          marginBottom: 4,
+        }}>
+          {t('generateReport')}
+        </div>
+      )}
+      {options.map((opt, i) => {
+        if (opt.divider) {
+          return <div key={i} style={{ borderTop: '1px solid var(--border-light)', margin: '6px 0' }} />;
+        }
+        if (opt.header) {
+          return (
+            <div key={i} style={{
+              padding: i === 0 ? '2px 12px 6px 12px' : '10px 12px 6px 12px',
+              fontSize: '0.7rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: 'var(--primary)',
+            }}>
+              {opt.header}
+            </div>
+          );
+        }
+        return (
+          <button
+            key={i}
+            className="dropdown-item"
+            onClick={() => { setOpen(false); opt.onClick(); }}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              borderRadius: 6,
+              color: 'var(--text)',
+              fontFamily: 'var(--font-body)',
+              transition: 'background 0.1s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+          >
+            {opt.icon && <span>{opt.icon}</span>}
+            <span>{opt.label}</span>
+          </button>
+        );
+      })}
     </div>
   ) : null;
 

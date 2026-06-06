@@ -234,8 +234,8 @@ function WorkerCertificatesInner() {
   }, [selectedIds, confirm, t]);
 
   // ── Excel export ──────────────────────────────────────────────────────────
-  const handleExcelExport = useCallback(() => {
-    const targetRows = selectedIds.size > 0 
+  const handleExcelExport = useCallback((forceAll = false) => {
+    const targetRows = (!forceAll && selectedIds.size > 0) 
       ? rows.filter(r => selectedIds.has(r.id)) 
       : rows;
       
@@ -329,20 +329,22 @@ function WorkerCertificatesInner() {
               </div>
 
                 <PDFExportButton 
+                label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
                 title={t('prikaziPdfIzvjestaje')}
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
-                { label: t('svaUvjerenja'), icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
-                ...(selectedIds.size> 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
-              ]} />
-
-              <button 
-                className="btn btn-secondary btn-sm" 
-                style={{ height: 38, background: '#107c41', color: 'white', borderColor: '#107c41', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }} 
-                onClick={handleExcelExport}
-                title={selectedIds.size > 0 ? t('exportSelected') : t('export')}>
-                📥 {selectedIds.size > 0 ? `${t('export')} (${selectedIds.size})` : t('export')}
-              </button>
+                  { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
+                  { label: t('svaUvjerenja'), icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
+                  ...(selectedIds.size > 0 ? [
+                    { label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }
+                  ] : []),
+                  { divider: true },
+                  { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                  { label: lang !== 'en' ? 'Sva uvjerenja' : 'All Certificates', icon: '📥', onClick: () => handleExcelExport(true) },
+                  ...(selectedIds.size > 0 ? [
+                    { label: lang !== 'en' ? `Odabrana uvjerenja (${selectedIds.size})` : `Selected Certificates (${selectedIds.size})`, icon: '📥', onClick: () => handleExcelExport(false) }
+                  ] : []),
+                ]} />
 
               <div style={{ position: 'relative' }}>
                  <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={(e) => {
@@ -376,25 +378,28 @@ function WorkerCertificatesInner() {
                 </span>
                 <button
                   className="btn btn-primary btn-sm"
+                  style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }}
                   onClick={handleBulkPrint}
                   title={t('generateAndPrintAllSelected')}>
                   🖨️ {t('generatePdfCerts').replace('{0}', selectedIds.size)}
                 </button>
                 <button
-                  className="btn btn-secondary btn-sm"
-                  style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }}
-                  onClick={handleExcelExport}
+                  className="btn btn-sm"
+                  style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }}
+                  onClick={() => handleExcelExport(false)}
                   title={t('exportSelected')}>
-                  📥 {t('export')} ({selectedIds.size})
+                  📥 {lang === 'bs' ? 'Izvoz u Excel' : 'Export to Excel'} ({selectedIds.size})
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
+                  style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }}
                   onClick={handleBulkDelete}
                   title={t('deleteSelected1')}>
                   🗑️ {t('deleteSelected1')} ({selectedIds.size})
                 </button>
                 <button
                   className="btn btn-ghost btn-sm"
+                  style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }}
                   onClick={() => setSelectedIds(new Set())}
                   title={t('ponistiOdabir')}>
                   ✕ {t('ponistiOdabir')}
