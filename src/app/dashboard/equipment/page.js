@@ -19,6 +19,7 @@ import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/Pagination';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateEquipmentReport } from '@/lib/pdfReportGenerator';
+import * as XLSX from 'xlsx';
 import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';
 
@@ -134,6 +135,27 @@ function EquipmentPageInner() {
     const enrichedItems = filtered.map(eq => ({ ...eq, orgName: getOrgUnitName(eq.orgJedinicaId) }));
     const { sorted: sortedEquipment, toggleSort, sortIcon, thStyle } = useSortedList(enrichedItems, 'naziv');
     const { page, perPage, setPage, setPerPage, totalPages, pagedData: pagedEquipment, totalItems, nextPage, prevPage } = usePagination(sortedEquipment, 25);
+
+    const handleExcelExport = useCallback((forceAll = false) => {
+        const targetRows = (!forceAll && selectedIds.size > 0)
+            ? sortedEquipment.filter(eq => selectedIds.has(eq.id))
+            : sortedEquipment;
+            
+        const dataRows = targetRows.map(eq => ({
+            [t('vrsta')]: t(eq.vrsta?.trim()) || eq.vrsta || '—',
+            [t('name')]: eq.naziv,
+            [t('tvBroj')]: eq.tvBroj || '—',
+            [t('invBroj')]: eq.invBroj || '—',
+            [t('organizacija')]: eq.orgName || '—',
+            [t('posljednji')]: eq.posljednji ? eq.posljednji.split('T')[0].split('-').reverse().join('.') : '—',
+            [t('iduci')]: eq.iduci ? eq.iduci.split('T')[0].split('-').reverse().join('.') : '—'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Oprema');
+        XLSX.writeFile(wb, `Oprema_izvoz_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }, [selectedIds, sortedEquipment, t]);
 
     const handleNew = () => { setFormData({ ...emptyEQ }); setEditingId(null); setActiveTab('podaci'); setServiceLogs([]); setShowForm(true); };
     const handleEdit = (item, tab = 'podaci') => {
@@ -732,11 +754,15 @@ function EquipmentPageInner() {
                                 { label: t('svaOprema'), icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
                                 { divider: true },
-                                { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
-                                { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
-                                ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
+                                { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                                { label: lang !== 'en' ? 'Sva oprema' : 'All Equipment', icon: '📥', onClick: () => handleExcelExport(true) },
+                                ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrana oprema (${selectedIds.size})` : `Selected Equipment (${selectedIds.size})`, icon: '📥', onClick: () => handleExcelExport(false) }] : []),
                             ]}
                         />
+                        <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
+                            { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
+                            ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
+                        ]} />
                         <SavedFlash />
                         <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }}  title={t('filtrirajPoOdjelu')} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
                             <option value="">{t('sviOdjeliSektori')}</option>

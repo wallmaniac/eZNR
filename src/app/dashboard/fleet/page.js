@@ -17,6 +17,7 @@ import PrintPortal from '@/components/PrintPortal';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateFleetReport } from '@/lib/pdfReportGenerator';
+import * as XLSX from 'xlsx';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
 import VehicleTravelOrdersTab from './VehicleTravelOrdersTab';
@@ -189,6 +190,28 @@ function FleetInner() {
     // Action menu
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+    const handleExcelExport = useCallback((forceAll = false) => {
+        const targetRows = (!forceAll && selectedIds.size > 0)
+            ? sorted.filter(v => selectedIds.has(v.id))
+            : sorted;
+            
+        const dataRows = targetRows.map(v => ({
+            [t('registracija')]: v.registracija || '—',
+            [t('brandmodel')]: `${v.marka || ''} ${v.model || ''}`.trim() || '—',
+            [t('tip')]: t(v.tip) || v.tip || '—',
+            [t('driver1')]: v.vozacIme || '—',
+            [t('regExpires1')]: v.registracijaIstice ? v.registracijaIstice.split('T')[0].split('-').reverse().join('.') : '—',
+            [t('tehnicki')]: v.tehnickiIstice ? v.tehnickiIstice.split('T')[0].split('-').reverse().join('.') : '—',
+            [t('insurance1')]: v.osiguranjeIstice ? v.osiguranjeIstice.split('T')[0].split('-').reverse().join('.') : '—',
+            [t('status')]: t('status_' + v.status) || v.status || '—'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Vozila');
+        XLSX.writeFile(wb, `Vozila_izvoz_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }, [selectedIds, sorted, t]);
 
     const openNew = () => {
         setEditingId(null); setActiveTab('osnovno'); setFormData({ ...EMPTY, dokumenti: [] }); setWorkerSearch(''); setShowForm(true);
@@ -568,11 +591,15 @@ function FleetInner() {
                                     { label: t('allVehicles'), icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
                                     ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
                                     { divider: true },
-                                    { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
-                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
-                                    ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
+                                    { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                                    { label: lang !== 'en' ? 'Sva vozila' : 'All Vehicles', icon: '📥', onClick: () => handleExcelExport(true) },
+                                    ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrana vozila (${selectedIds.size})` : `Selected Vehicles (${selectedIds.size})`, icon: '📥', onClick: () => handleExcelExport(false) }] : []),
                                 ]}
                             />
+                            <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38, flexShrink: 0 }} options={[
+                                { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
+                                ...(selectedIds.size > 0 ? [{ label: `${t('odabrani')} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
+                            ]} />
                             <SavedFlash />
                             {selectedIds.size> 0 && (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>

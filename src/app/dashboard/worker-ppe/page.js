@@ -1,7 +1,7 @@
 'use client';
 import DateInput from '@/components/DateInput';
 import { createPortal } from 'react-dom';
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
@@ -12,6 +12,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generatePPEReport } from '@/lib/pdfReportGenerator';
+import * as XLSX from 'xlsx';
 import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';
 
@@ -135,6 +136,24 @@ function WorkerPPEInner() {
     }
   }, [openId, assignments]);
 
+  const handleExcelExport = useCallback((forceAll = false) => {
+    const targetRows = (!forceAll && selectedIds.size > 0)
+      ? sortedRows.filter(r => selectedIds.has(r.id))
+      : sortedRows;
+
+    const dataRows = targetRows.map(r => ({
+      [t('worker')]: r.workerName,
+      [t('name')]: r.naziv || '—',
+      [t('assignmentDate')]: r.datumZaduzenja ? r.datumZaduzenja.split('T')[0].split('-').reverse().join('.') : '—',
+      [t('kolicina')]: r.kolicina || 1
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'OZO');
+    XLSX.writeFile(wb, `OZO_izvoz_${new Date().toISOString().split('T')[0]}.xlsx`);
+  }, [selectedIds, sortedRows, t]);
+
   const clickableName = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' };
   const clickableNaziv = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 500, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' };
   const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
@@ -167,6 +186,10 @@ function WorkerPPEInner() {
                 { header: lang !== 'en' ? 'PDF Izvještaji' : 'PDF Reports' },
                 { label: t('svaOzoZaduzenja'), icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
                 ...(selectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
+                { divider: true },
+                { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                { label: lang !== 'en' ? 'Sva OZO zaduženja' : 'All PPE Assignments', icon: '📥', onClick: () => handleExcelExport(true) },
+                ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrana zaduženja (${selectedIds.size})` : `Selected Assignments (${selectedIds.size})`, icon: '📥', onClick: () => handleExcelExport(false) }] : []),
               ]}
             />
             <SavedFlash />

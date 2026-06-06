@@ -13,6 +13,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateFireProtectionReport } from '@/lib/pdfReportGenerator';
+import * as XLSX from 'xlsx';
 import PageHeader from '@/components/PageHeader';
 import { uploadDocument } from '@/lib/storageService';
 
@@ -213,6 +214,45 @@ export default function FireProtectionPage() {
             setHydSelectedIds(new Set()); loadData();
         }
     };
+
+    const handleExtExcelExport = useCallback((forceAll = false) => {
+        const targetRows = (!forceAll && extSelectedIds.size > 0)
+            ? sortedExt.filter(e => extSelectedIds.has(e.id))
+            : sortedExt;
+            
+        const dataRows = targetRows.map(e => ({
+            [t('tvBroj')]: e.serijskiBroj,
+            [t('tip')]: t('extType_' + e.tip) || e.tip,
+            [t('weight')]: e.tezina ? `${e.tezina} kg` : '—',
+            [t('lokacija')]: e.lokacija || '—',
+            [t('nextService1')]: e.sljedeciServis ? e.sljedeciServis.split('T')[0].split('-').reverse().join('.') : '—',
+            [t('status')]: t('status_' + e.status) || e.status || '—'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'PP Aparati');
+        XLSX.writeFile(wb, `PPAparati_izvoz_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }, [extSelectedIds, sortedExt, t]);
+
+    const handleHydExcelExport = useCallback((forceAll = false) => {
+        const targetRows = (!forceAll && hydSelectedIds.size > 0)
+            ? sortedHyd.filter(h => hydSelectedIds.has(h.id))
+            : sortedHyd;
+            
+        const dataRows = targetRows.map(h => ({
+            [t('oznaka')]: h.oznaka,
+            [t('tip')]: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski',
+            [t('lokacija')]: h.lokacija || '—',
+            [t('nextExam')]: h.sljedeciPregled ? h.sljedeciPregled.split('T')[0].split('-').reverse().join('.') : '—',
+            [t('status')]: t('status_' + h.status) || h.status || '—'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Hidranti');
+        XLSX.writeFile(wb, `Hidranti_izvoz_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }, [hydSelectedIds, sortedHyd, t]);
 
     // ── Action menus ──
     const [actionMenuId, setActionMenuId] = useState(null);
@@ -534,11 +574,15 @@ export default function FireProtectionPage() {
                                         { label: t('allExtinguishers'), icon: '🧯', onClick: () => generateFireProtectionReport(sortedExt.map(e => e.id), lang) },
                                         ...(extSelectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
                                         { divider: true },
-                                        { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
-                                        { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } },
-                                        ...(extSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } }] : []),
+                                        { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                                        { label: lang !== 'en' ? 'Svi PP aparati' : 'All Extinguishers', icon: '📥', onClick: () => handleExtExcelExport(true) },
+                                        ...(extSelectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrani PP aparati (${extSelectedIds.size})` : `Selected Extinguishers (${extSelectedIds.size})`, icon: '📥', onClick: () => handleExtExcelExport(false) }] : []),
                                     ]}
                                 />
+                                <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
+                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } },
+                                    ...(extSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: t('extType_' + e.tip) || e.tip }))); setShowPrintModal(true); } }] : []),
+                                ]} />
                                 <SavedFlash />
                                 {extSelectedIds.size> 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
@@ -792,11 +836,15 @@ export default function FireProtectionPage() {
                                         { label: t('allHydrants'), icon: '🚰', onClick: () => generateFireProtectionReport(sortedHyd.map(h => h.id), lang, 'hydrants') },
                                         ...(hydSelectedIds.size > 0 ? [{ label: `${t('odabrano1')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => h.id), lang, 'hydrants') }] : []),
                                         { divider: true },
-                                        { header: lang !== 'en' ? 'QR Kod' : 'QR Code' },
-                                        { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } },
-                                        ...(hydSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } }] : []),
+                                        { header: lang !== 'en' ? 'Excel Izvoz' : 'Excel Export' },
+                                        { label: lang !== 'en' ? 'Svi hidranti' : 'All Hydrants', icon: '📥', onClick: () => handleHydExcelExport(true) },
+                                        ...(hydSelectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrani hidranti (${hydSelectedIds.size})` : `Selected Hydrants (${hydSelectedIds.size})`, icon: '📥', onClick: () => handleHydExcelExport(false) }] : []),
                                     ]}
                                 />
+                                <PDFExportButton label={t('qrKod')} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
+                                    { label: t('sviKodovi'), icon: '🖨️', onClick: () => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } },
+                                    ...(hydSelectedIds.size > 0 ? [{ label: `${t('odabrani')} (${hydSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } }] : []),
+                                ]} />
                                 <SavedFlash />
                                 {hydSelectedIds.size> 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
