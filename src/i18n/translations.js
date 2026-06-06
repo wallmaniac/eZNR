@@ -1,5 +1,7 @@
 export const translations = {
   bs: {
+    extPressureHint: 'Preporučeni radni pritisak je 12-15 bar (zelena zona, min. 11 bar).',
+    hydPressureHint: 'Minimalni dopušteni pritisak u mreži je 2.5 bar.',
     pritisak: 'Pritisak (bar)',
     plomba: 'Plomba (ispravna)',
     ucitaniDokumenti: 'Učitani dokumenti (dokaz o pregledu)',
@@ -2977,6 +2979,8 @@ export const translations = {
   },
 
   en: {
+    extPressureHint: 'Recommended operating pressure is 12-15 bar (green zone, min. 11 bar).',
+    hydPressureHint: 'Minimum allowed network pressure is 2.5 bar.',
     pritisak: 'Pressure (bar)',
     plomba: 'Seal (intact)',
     ucitaniDokumenti: 'Uploaded documents (proof of inspection)',
@@ -8917,6 +8921,8 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Zakon o zaštiti od požara',
   },
   de: {
+    extPressureHint: 'Empfohlener Betriebsdruck ist 12-15 bar (grüner Bereich, min. 11 bar).',
+    hydPressureHint: 'Der zulässige Mindestnetzdruck beträgt 2,5 bar.',
     pritisak: 'Druck (bar)',
     plomba: 'Plombe (intakt)',
     ucitaniDokumenti: 'Hochgeladene Dokumente (Prüfnachweis)',
@@ -11845,6 +11851,8 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Brandschutzgesetz',
   },
   sl: {
+    extPressureHint: 'Priporočeni delovni tlak je 12-15 bar (zeleno območje, min. 11 bar).',
+    hydPressureHint: 'Najnižji dovoljeni tlak v omrežju je 2,5 bar.',
     pritisak: 'Tlak (bar)',
     plomba: 'Plomba (nepoškodovana)',
     ucitaniDokumenti: 'Naloženi dokumenti (dokazilo o pregledu)',
@@ -14773,6 +14781,8 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Zakon o varstvu pred požarom',
   },
   sr: {
+    extPressureHint: 'Preporučeni radni pritisak je 12-15 bar (zelena zona, min. 11 bar).',
+    hydPressureHint: 'Minimalni dopušteni pritisak u mreži je 2.5 bar.',
     pritisak: 'Pritisak (bar)',
     plomba: 'Plomba (ispravna)',
     ucitaniDokumenti: 'Učitani dokumenti (dokaz o pregledu)',

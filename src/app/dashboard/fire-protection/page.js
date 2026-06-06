@@ -390,6 +390,9 @@ export default function FireProtectionPage() {
                                         <div className="form-group">
                                             <label className="form-label">{t('pritisak')}</label>
                                             <input className="form-input" value={extForm.pritisak || ''} onChange={e => setExt('pritisak', e.target.value)} placeholder="npr. 15 bar" />
+                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
+                                                💡 {t('extPressureHint')}
+                                            </span>
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{t('plomba')}</label>
@@ -600,6 +603,9 @@ export default function FireProtectionPage() {
                                         <div className="form-group">
                                             <label className="form-label">{t('pritisak')}</label>
                                             <input className="form-input" value={hydForm.pritisak || ''} onChange={e => setHyd('pritisak', e.target.value)} placeholder="npr. 8 bar" />
+                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
+                                                💡 {t('hydPressureHint')}
+                                            </span>
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{t('plomba')}</label>
