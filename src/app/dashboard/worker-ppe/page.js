@@ -206,6 +206,12 @@ function WorkerPPEInner() {
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
                 ✓ {selectedIds.size} {t('odabrano')} — {t('grupneAkcije') || 'Grupne akcije'}:
               </span>
+              <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)} title={lang !== 'en' ? 'Generiši PDF za odabrana zaduženja' : 'Generate PDF for selected assignments'}>
+                🖨️ {lang !== 'en' ? 'Generiši PDF' : 'Generate PDF'} ({selectedIds.size})
+              </button>
+              <button className="btn btn-sm" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }} onClick={() => handleExcelExport(false)} title={lang !== 'en' ? 'Izvezi odabrana zaduženja u Excel' : 'Export selected assignments to Excel'}>
+                📥 {lang !== 'en' ? 'Izvoz u Excel' : 'Export to Excel'} ({selectedIds.size})
+              </button>
               <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelected} title={t('obrisiOdabranuOzo')}>
                 🗑️ {t('obrisi')}
               </button>

@@ -597,6 +597,12 @@ export default function FireProtectionPage() {
                                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
                                         ✓ {extSelectedIds.size} {t('odabrano1')} — {t('grupneAkcije') || 'Grupne akcije'}:
                                     </span>
+                                    <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang)} title={lang !== 'en' ? 'Generiši PDF za odabrane aparate' : 'Generate PDF for selected extinguishers'}>
+                                        🖨️ {lang !== 'en' ? 'Generiši PDF' : 'Generate PDF'} ({extSelectedIds.size})
+                                    </button>
+                                    <button className="btn btn-sm" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }} onClick={() => handleExtExcelExport(false)} title={lang !== 'en' ? 'Izvezi odabrane aparate u Excel' : 'Export selected extinguishers to Excel'}>
+                                        📥 {lang !== 'en' ? 'Izvoz u Excel' : 'Export to Excel'} ({extSelectedIds.size})
+                                    </button>
                                     <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelectedExt} title={t('obrisi')}>
                                         🗑️ {t('obrisi')}
                                     </button>
@@ -873,6 +879,12 @@ export default function FireProtectionPage() {
                                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
                                         ✓ {hydSelectedIds.size} {t('odabrano1')} — {t('grupneAkcije') || 'Grupne akcije'}:
                                     </span>
+                                    <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => generateFireProtectionReport(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => h.id), lang, 'hydrants')} title={lang !== 'en' ? 'Generiši PDF za odabrane hidrante' : 'Generate PDF for selected hydrants'}>
+                                        🖨️ {lang !== 'en' ? 'Generiši PDF' : 'Generate PDF'} ({hydSelectedIds.size})
+                                    </button>
+                                    <button className="btn btn-sm" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }} onClick={() => handleHydExcelExport(false)} title={lang !== 'en' ? 'Izvezi odabrane hidrante u Excel' : 'Export selected hydrants to Excel'}>
+                                        📥 {lang !== 'en' ? 'Izvoz u Excel' : 'Export to Excel'} ({hydSelectedIds.size})
+                                    </button>
                                     <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelectedHyd} title={t('obrisi')}>
                                         🗑️ {t('obrisi')}
                                     </button>

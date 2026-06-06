@@ -2054,6 +2054,12 @@ function WorkersPageInner() {
                                 }} title={t('posaljiEmail')}>
                                     ✉️ Email
                                 </button>
+                                <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang)} title={lang !== 'en' ? 'Generiši PDF za odabrane radnike' : 'Generate PDF for selected workers'}>
+                                    🖨️ {lang !== 'en' ? 'Generiši PDF' : 'Generate PDF'} ({selectedIds.size})
+                                </button>
+                                <button className="btn btn-sm" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }} onClick={() => setExcelExportMode('selected')} title={lang !== 'en' ? 'Izvezi odabrane radnike u Excel' : 'Export selected workers to Excel'}>
+                                    📥 {lang !== 'en' ? 'Izvoz u Excel' : 'Export to Excel'} ({selectedIds.size})
+                                </button>
                                 <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 32, padding: '0 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={async () => {
                                     const ok = await confirm(t('deleteWorkersThisCannotBe').replace('{0}', selectedIds.size));
                                     if (ok) {

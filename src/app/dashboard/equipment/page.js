@@ -787,6 +787,12 @@ function EquipmentPageInner() {
                             <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); }} title={t('isprintajQrKodoveZaOdabrano')}>
                                 🖨️ {t('isprintajQr')}
                             </button>
+                            <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang)} title={lang !== 'en' ? 'Generiši PDF za odabranu opremu' : 'Generate PDF for selected equipment'}>
+                                🖨️ {lang !== 'en' ? 'Generiši PDF' : 'Generate PDF'} ({selectedIds.size})
+                            </button>
+                            <button className="btn btn-sm" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }} onClick={() => handleExcelExport(false)} title={lang !== 'en' ? 'Izvezi odabranu opremu u Excel' : 'Export selected equipment to Excel'}>
+                                📥 {lang !== 'en' ? 'Izvoz u Excel' : 'Export to Excel'} ({selectedIds.size})
+                            </button>
                             <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelected} title={t('obrisiOdabranuOpremu')}>
                                 🗑️ {t('obrisi')}
                             </button>

@@ -49,6 +49,8 @@ const TYPE_MAP = {
     specijalno: { bs: 'Specijalno vozilo', en: 'Special' },
     motocikl: { bs: 'Motocikl', en: 'Motorcycle' },
     prikolica: { bs: 'Prikolica', en: 'Trailer' },
+    kamion: { bs: 'Kamion', en: 'Truck' },
+    kombi: { bs: 'Kombi', en: 'Van' },
 };
 
 function FleetInner() {
@@ -614,6 +616,12 @@ function FleetInner() {
                                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     ✓ {selectedIds.size} {t('odabrano1')} — {t('grupneAkcije') || 'Grupne akcije'}:
                                 </span>
+                                <button className="btn btn-sm btn-primary" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={() => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang)} title={lang !== 'en' ? 'Generiši PDF za odabrana vozila' : 'Generate PDF for selected vehicles'}>
+                                    🖨️ {lang !== 'en' ? 'Generiši PDF' : 'Generate PDF'} ({selectedIds.size})
+                                </button>
+                                <button className="btn btn-sm" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0, background: '#107c41', color: 'white' }} onClick={() => handleExcelExport(false)} title={lang !== 'en' ? 'Izvezi odabrana vozila u Excel' : 'Export selected vehicles to Excel'}>
+                                    📥 {lang !== 'en' ? 'Izvoz u Excel' : 'Export to Excel'} ({selectedIds.size})
+                                </button>
                                 <button className="btn btn-sm btn-danger" style={{ height: 32, display: 'inline-flex', alignItems: 'center', paddingTop: 0, paddingBottom: 0 }} onClick={handleDeleteSelected} title={t('deleteSelectedVehicles')}>
                                     🗑️ {t('obrisi')}
                                 </button>
