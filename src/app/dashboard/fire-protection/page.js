@@ -13,12 +13,14 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateFireProtectionReport } from '@/lib/pdfReportGenerator';
 import PageHeader from '@/components/PageHeader';
+import { uploadDocument } from '@/lib/storageService';
 
 // ── Fire Extinguisher ──
 const EMPTY_EXT = {
     serijskiBroj: '', tip: 'prah', tezina: '', lokacija: '',
     datumNabavke: '', zadnjiServis: '', sljedeciServis: '',
     status: 'ispravan', odgovornaOsoba: '', napomena: '',
+    pritisak: '', plomba: 'da', dokumenti: [],
 };
 
 const EXT_TYPES = {
@@ -33,6 +35,7 @@ const EMPTY_HYD = {
     oznaka: '', lokacija: '', tip: 'unutarnji',
     datumZadnjegPregleda: '', sljedeciPregled: '',
     status: 'ispravan', napomena: '',
+    pritisak: '', plomba: 'da', dokumenti: [],
 };
 
 const STATUS_MAP = {
@@ -74,6 +77,8 @@ export default function FireProtectionPage() {
     const [extForm, setExtForm] = useState({ ...EMPTY_EXT });
     const [extSearch, setExtSearch] = useState('');
     const [extSelectedIds, setExtSelectedIds] = useState(new Set());
+    const [extUploading, setExtUploading] = useState(false);
+    const [hydUploading, setHydUploading] = useState(false);
 
     // ── Hydrants ──
     const [hydrants, setHydrants] = useState([]);
@@ -382,9 +387,84 @@ export default function FireProtectionPage() {
                                             <label className="form-label">{t('odgovornaOsoba')}</label>
                                             <input className="form-input" value={extForm.odgovornaOsoba} onChange={e => setExt('odgovornaOsoba', e.target.value)} />
                                         </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{t('pritisak')}</label>
+                                            <input className="form-input" value={extForm.pritisak || ''} onChange={e => setExt('pritisak', e.target.value)} placeholder="npr. 15 bar" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{t('plomba')}</label>
+                                            <select className="form-select" value={extForm.plomba || 'da'} onChange={e => setExt('plomba', e.target.value)}>
+                                                <option value="da">{t('yes')}</option>
+                                                <option value="ne">{t('no')}</option>
+                                            </select>
+                                        </div>
                                         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                             <label className="form-label">{t('note')}</label>
                                             <textarea className="form-input" rows={2} value={extForm.napomena} onChange={e => setExt('napomena', e.target.value)} />
+                                        </div>
+                                        <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', paddingTop: 16 }}>
+                                            <label className="form-label" style={{ fontWeight: 700 }}>📁 {t('ucitaniDokumenti')}</label>
+                                            
+                                            {(!extForm.dokumenti || extForm.dokumenti.length === 0) ? (
+                                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 12px 0' }}>{t('nemaDokumenata')}</p>
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                                                    {extForm.dokumenti.map((doc, idx) => (
+                                                        <div key={doc.id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.88rem' }}>
+                                                                <span>📎</span>
+                                                                <span style={{ fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px' }}>{doc.name}</span>
+                                                                {doc.size && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({(doc.size / 1024).toFixed(1)} KB)</span>}
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                                <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => window.open(doc.url, '_blank')} title={t('otvori')}>👁️</button>
+                                                                <button type="button" className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => {
+                                                                    const updated = extForm.dokumenti.filter((_, i) => i !== idx);
+                                                                    setExt('dokumenti', updated);
+                                                                }} title={t('obrisi')}>🗑️</button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                <input 
+                                                    type="file" 
+                                                    id="ext-file-upload" 
+                                                    style={{ display: 'none' }} 
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        setExtUploading(true);
+                                                        try {
+                                                            const res = await uploadDocument(file, activeCompanyId, 'fire-protection');
+                                                            const newDoc = {
+                                                                id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                                                                name: file.name,
+                                                                url: res.url,
+                                                                size: file.size,
+                                                                uploadedAt: new Date().toISOString()
+                                                            };
+                                                            setExt('dokumenti', [...(extForm.dokumenti || []), newDoc]);
+                                                        } catch (err) {
+                                                            console.error('Upload failed:', err);
+                                                            alert(t('greskaPriUcitavanjuDatoteke'));
+                                                        } finally {
+                                                            setExtUploading(false);
+                                                        }
+                                                    }} 
+                                                />
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-ghost btn-sm" 
+                                                    disabled={extUploading} 
+                                                    onClick={() => document.getElementById('ext-file-upload')?.click()}
+                                                    style={{ border: '1px dashed var(--border)', padding: '8px 16px' }}
+                                                >
+                                                    {extUploading ? '⏳ ' + t('ucitavanjeDokumenta') : '＋ ' + t('dodajDokument')}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -517,9 +597,84 @@ export default function FireProtectionPage() {
                                                 {Object.entries(STATUS_MAP).filter(([k]) => k !== 'povucen').map(([k]) => <option key={k} value={k}>{t('status_' + k)}</option>)}
                                             </select>
                                         </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{t('pritisak')}</label>
+                                            <input className="form-input" value={hydForm.pritisak || ''} onChange={e => setHyd('pritisak', e.target.value)} placeholder="npr. 8 bar" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{t('plomba')}</label>
+                                            <select className="form-select" value={hydForm.plomba || 'da'} onChange={e => setHyd('plomba', e.target.value)}>
+                                                <option value="da">{t('yes')}</option>
+                                                <option value="ne">{t('no')}</option>
+                                            </select>
+                                        </div>
                                         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                             <label className="form-label">{t('note')}</label>
                                             <textarea className="form-input" rows={2} value={hydForm.napomena} onChange={e => setHyd('napomena', e.target.value)} />
+                                        </div>
+                                        <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', paddingTop: 16 }}>
+                                            <label className="form-label" style={{ fontWeight: 700 }}>📁 {t('ucitaniDokumenti')}</label>
+                                            
+                                            {(!hydForm.dokumenti || hydForm.dokumenti.length === 0) ? (
+                                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 12px 0' }}>{t('nemaDokumenata')}</p>
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                                                    {hydForm.dokumenti.map((doc, idx) => (
+                                                        <div key={doc.id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.88rem' }}>
+                                                                <span>📎</span>
+                                                                <span style={{ fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px' }}>{doc.name}</span>
+                                                                {doc.size && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({(doc.size / 1024).toFixed(1)} KB)</span>}
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                                <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => window.open(doc.url, '_blank')} title={t('otvori')}>👁️</button>
+                                                                <button type="button" className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => {
+                                                                    const updated = hydForm.dokumenti.filter((_, i) => i !== idx);
+                                                                    setHyd('dokumenti', updated);
+                                                                }} title={t('obrisi')}>🗑️</button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                <input 
+                                                    type="file" 
+                                                    id="hyd-file-upload" 
+                                                    style={{ display: 'none' }} 
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        setHydUploading(true);
+                                                        try {
+                                                            const res = await uploadDocument(file, activeCompanyId, 'fire-protection');
+                                                            const newDoc = {
+                                                                id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                                                                name: file.name,
+                                                                url: res.url,
+                                                                size: file.size,
+                                                                uploadedAt: new Date().toISOString()
+                                                            };
+                                                            setHyd('dokumenti', [...(hydForm.dokumenti || []), newDoc]);
+                                                        } catch (err) {
+                                                            console.error('Upload failed:', err);
+                                                            alert(t('greskaPriUcitavanjuDatoteke'));
+                                                        } finally {
+                                                            setHydUploading(false);
+                                                        }
+                                                    }} 
+                                                />
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-ghost btn-sm" 
+                                                    disabled={hydUploading} 
+                                                    onClick={() => document.getElementById('hyd-file-upload')?.click()}
+                                                    style={{ border: '1px dashed var(--border)', padding: '8px 16px' }}
+                                                >
+                                                    {hydUploading ? '⏳ ' + t('ucitavanjeDokumenta') : '＋ ' + t('dodajDokument')}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

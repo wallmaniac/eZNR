@@ -254,6 +254,52 @@ export default function ArchivePage() {
             });
         });
 
+        // Aggregate fire extinguisher documents (stored on extinguisher.dokumenti[])
+        const extinguishers = getAll(COLLECTIONS.FIRE_EXTINGUISHERS) || [];
+        extinguishers.forEach(e => {
+            const eDocs = e.dokumenti || [];
+            eDocs.forEach(d => {
+                if (d.name && (d.url || d.data)) {
+                    docs.push({
+                        id: `ext-doc-${e.id}-${d.id}`,
+                        name: d.name,
+                        data: d.data || null,
+                        url: d.url || null,
+                        category: 'Zapisnici',
+                        description: `${t('fireExtinguisher')} — ${e.serijskiBroj}${e.lokacija ? ` (${e.lokacija})` : ''}`,
+                        size: d.size || null,
+                        uploadedAt: d.uploadedAt || d.datumUpisa || null,
+                        _readonly: true,
+                        _sourceLabel: t('fireExtinguisher') + ` (${e.serijskiBroj})`,
+                        _sourceLink: `/dashboard/fire-protection?openItem=${e.id}`,
+                    });
+                }
+            });
+        });
+
+        // Aggregate hydrant documents (stored on hydrant.dokumenti[])
+        const hydrants = getAll(COLLECTIONS.HYDRANTS) || [];
+        hydrants.forEach(h => {
+            const hDocs = h.dokumenti || [];
+            hDocs.forEach(d => {
+                if (d.name && (d.url || d.data)) {
+                    docs.push({
+                        id: `hyd-doc-${h.id}-${d.id}`,
+                        name: d.name,
+                        data: d.data || null,
+                        url: d.url || null,
+                        category: 'Zapisnici',
+                        description: `${t('hidrant')} — ${h.oznaka}${h.lokacija ? ` (${h.lokacija})` : ''}`,
+                        size: d.size || null,
+                        uploadedAt: d.uploadedAt || d.datumUpisa || null,
+                        _readonly: true,
+                        _sourceLabel: t('hidrant') + ` (${h.oznaka})`,
+                        _sourceLink: `/dashboard/fire-protection?openItem=${h.id}`,
+                    });
+                }
+            });
+        });
+
         setFormDocs(docs);
     }, []);
 

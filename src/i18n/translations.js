@@ -1,5 +1,11 @@
 export const translations = {
   bs: {
+    pritisak: 'Pritisak (bar)',
+    plomba: 'Plomba (ispravna)',
+    ucitaniDokumenti: 'Učitani dokumenti (dokaz o pregledu)',
+    nemaDokumenata: 'Nema učitanih dokumenata.',
+    dodajDokument: 'Učitaj dokument',
+    ucitavanjeDokumenta: 'Učitavanje...',
     notif_db_critical_title: 'Kritično: {0} zapisa u bazi',
     notif_db_critical_msg: 'Performanse mogu biti znatno smanjene. Potrebna je optimizacija upita (company-scoped queries). Kontaktirajte podršku.',
     notif_db_warn_title: 'Baza podataka: {0} zapisa',
@@ -2971,6 +2977,12 @@ export const translations = {
   },
 
   en: {
+    pritisak: 'Pressure (bar)',
+    plomba: 'Seal (intact)',
+    ucitaniDokumenti: 'Uploaded documents (proof of inspection)',
+    nemaDokumenata: 'No documents uploaded.',
+    dodajDokument: 'Upload document',
+    ucitavanjeDokumenta: 'Uploading...',
     notif_db_critical_title: 'Critical: {0} records in database',
     notif_db_critical_msg: 'Performance may be significantly degraded. Query optimization (company-scoped queries) is required. Contact support.',
     notif_db_warn_title: 'Database size: {0} records',
@@ -8905,6 +8917,12 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Zakon o zaštiti od požara',
   },
   de: {
+    pritisak: 'Druck (bar)',
+    plomba: 'Plombe (intakt)',
+    ucitaniDokumenti: 'Hochgeladene Dokumente (Prüfnachweis)',
+    nemaDokumenata: 'Keine Dokumente hochgeladen.',
+    dodajDokument: 'Dokument hochladen',
+    ucitavanjeDokumenta: 'Hochladen...',
     notif_db_critical_title: 'Kritisch: {0} Datensätze in der Datenbank',
     notif_db_critical_msg: 'Die Leistung kann erheblich beeinträchtigt sein. Eine Abfrageoptimierung (unternehmensbezogene Abfragen) ist erforderlich. Kontaktieren Sie den Support.',
     notif_db_warn_title: 'Datenbankgröße: {0} Datensätze',
@@ -11827,6 +11845,12 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Brandschutzgesetz',
   },
   sl: {
+    pritisak: 'Tlak (bar)',
+    plomba: 'Plomba (nepoškodovana)',
+    ucitaniDokumenti: 'Naloženi dokumenti (dokazilo o pregledu)',
+    nemaDokumenata: 'Ni naloženih dokumentov.',
+    dodajDokument: 'Naloži dokument',
+    ucitavanjeDokumenta: 'Nalaganje...',
     notif_db_critical_title: 'Kritično: {0} zapisov v zbirki podatkov',
     notif_db_critical_msg: 'Učinkovitost delovanja se lahko znatno zmanjša. Potrebna je optimizacija poizvedb (company-scoped queries). Obrnite se na podporo.',
     notif_db_warn_title: 'Velikost baze podatkov: {0} zapisov',
@@ -14749,6 +14773,12 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Zakon o varstvu pred požarom',
   },
   sr: {
+    pritisak: 'Pritisak (bar)',
+    plomba: 'Plomba (ispravna)',
+    ucitaniDokumenti: 'Učitani dokumenti (dokaz o pregledu)',
+    nemaDokumenata: 'Nema učitanih dokumenata.',
+    dodajDokument: 'Učitaj dokument',
+    ucitavanjeDokumenta: 'Učitavanje...',
     notif_db_critical_title: 'Kritično: {0} zapisa u bazi',
     notif_db_critical_msg: 'Performanse mogu biti znatno smanjene. Potrebna je optimizacija upita (company-scoped queries). Kontaktirajte podršku.',
     notif_db_warn_title: 'Baza podataka: {0} zapisa',
