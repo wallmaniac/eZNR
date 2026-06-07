@@ -884,8 +884,7 @@ export default function DashboardPage() {
                 })()}
             </CollapsibleWidget>
 
-            {/* Analytics Charts */}
-            <CollapsibleWidget id="analytics" title={t('analitika')} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={true}>
+            <CollapsibleWidget id="analytics" title={t('analitika')} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={false}>
                 <AnalyticsWidgets
                     workers={workers}
                     certs={certs}
@@ -895,6 +894,9 @@ export default function DashboardPage() {
                     riskItems={riskItems}
                     riskAssessments={riskAssessments}
                     medicalExams={medicalExams}
+                    fireExtinguishers={fireExtinguishers}
+                    hydrants={hydrants}
+                    fleetVehicles={fleetVehicles}
                     lang={lang}
                     companyName={companies.find(c => c.id === activeCompanyId)?.naziv || companies[0]?.naziv || ''}
                     companyLogo={companies.find(c => c.id === activeCompanyId)?.logo || companies[0]?.logo || ''}

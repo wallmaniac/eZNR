@@ -131,7 +131,11 @@ function MiniStat({ icon, label, value, color, suffix }) {
 // MAIN ANALYTICS WIDGET
 // ============================================================================
 
-export default function AnalyticsWidgets({ workers, certs, equipment, injuries, diseases, riskItems, riskAssessments, medicalExams, lang, companyName, companyLogo }) {
+export default function AnalyticsWidgets({
+    workers, certs, equipment, injuries, diseases, riskItems, riskAssessments, medicalExams,
+    fireExtinguishers = [], hydrants = [], fleetVehicles = [],
+    lang, companyName, companyLogo
+}) {
     const now = new Date();
     const d30 = 30 * 86400000;
 
@@ -220,6 +224,81 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
         return (medicalExams || []).filter(m => m.vrijediDo && new Date(m.vrijediDo) < now).length;
     }, [medicalExams]);
 
+    const complianceMetrics = useMemo(() => {
+        const activeWorkers = (workers || []).filter(w => w.aktivan !== false);
+        const activeWorkerIds = activeWorkers.map(w => w.id);
+        
+        const daysUntil = (dateStr) => {
+            if (!dateStr) return null;
+            return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+        };
+
+        const nonCompliantWorkers = activeWorkers.filter(w => {
+            const workerCerts = (certs || []).filter(c => c.workerId === w.id);
+            return workerCerts.some(c => {
+                const d = daysUntil(c.vrijediDo);
+                return d !== null && d < 0;
+            });
+        }).length;
+        
+        const workerPct = activeWorkers.length > 0 
+            ? ((activeWorkers.length - nonCompliantWorkers) / activeWorkers.length) * 100 
+            : 100;
+
+        const overdueEquip = (equipment || []).filter(e => {
+            const d = daysUntil(e.iduci || e.sljedeciPregled || e.datumIsteka);
+            return d !== null && d < 0;
+        }).length;
+        const equipPct = (equipment || []).length > 0 
+            ? (((equipment || []).length - overdueEquip) / (equipment || []).length) * 100 
+            : 100;
+
+        const overdueFireExt = (fireExtinguishers || []).filter(f => {
+            const d = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
+            return d !== null && d < 0;
+        }).length;
+        const overdueHydrants = (hydrants || []).filter(h => {
+            const d = daysUntil(h.sljedeciPregled);
+            return d !== null && d < 0;
+        }).length;
+        const totalFireItems = (fireExtinguishers || []).length + (hydrants || []).length;
+        const totalOverdueFire = overdueFireExt + overdueHydrants;
+        const firePct = totalFireItems > 0 
+            ? ((totalFireItems - totalOverdueFire) / totalFireItems) * 100 
+            : 100;
+
+        const overdueVehicles = (fleetVehicles || []).filter(v => {
+            const dReg = daysUntil(v.registracijaIstice);
+            const dTeh = daysUntil(v.tehnickiIstice);
+            return (dReg !== null && dReg < 0) || (dTeh !== null && dTeh < 0);
+        }).length;
+        const fleetPct = (fleetVehicles || []).length > 0 
+            ? (((fleetVehicles || []).length - overdueVehicles) / (fleetVehicles || []).length) * 100 
+            : 100;
+
+        const overallPct = (workerPct + equipPct + firePct + fleetPct) / 4;
+
+        return {
+            worker: { pct: workerPct, total: activeWorkers.length, nonCompliant: nonCompliantWorkers },
+            equip: { pct: equipPct, total: (equipment || []).length, nonCompliant: overdueEquip },
+            fire: { pct: firePct, total: totalFireItems, nonCompliant: totalOverdueFire },
+            fleet: { pct: fleetPct, total: (fleetVehicles || []).length, nonCompliant: overdueVehicles },
+            overall: overallPct
+        };
+    }, [workers, certs, equipment, fireExtinguishers, hydrants, fleetVehicles]);
+
+    const getComplianceColor = (pct) => {
+        if (pct >= 90) return '#22C55E';
+        if (pct >= 70) return '#F59E0B';
+        return '#EF4444';
+    };
+
+    const getComplianceBg = (pct) => {
+        if (pct >= 90) return 'rgba(34,197,94,0.1)';
+        if (pct >= 70) return 'rgba(245,158,11,0.1)';
+        return 'rgba(239,68,68,0.1)';
+    };
+
     // Don't render if no data at all
     if (certs.length === 0 && (injuries || []).length === 0 && (riskItems || []).length === 0 && activeWorkerCount === 0) {
         return null;
@@ -273,6 +352,166 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                 <h2 style={{ fontSize: '1.2rem', marginBottom: 4, display: 'none' }} className="pdf-only-header">
                     {_t('godisnjiIzvjestajZastiteNaRadu', lang)}
                 </h2>
+
+                {/* ZNR Compliance Analytics Hub */}
+                <div className="card" style={{
+                    marginBottom: '16px',
+                    background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '24px',
+                    boxShadow: 'var(--shadow-lg)'
+                }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', alignItems: 'center' }}>
+                        {/* Left side: Large Circular Meter */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px' }}>
+                            <div style={{ position: 'relative', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3.2" />
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.overall)} strokeWidth="3.2"
+                                            strokeDasharray={`${complianceMetrics.overall} ${100 - complianceMetrics.overall}`}
+                                            strokeLinecap="round"
+                                            style={{ transition: 'stroke-dasharray 0.8s ease-in-out', filter: `drop-shadow(0 0 6px ${getComplianceColor(complianceMetrics.overall)}80)` }} />
+                                </svg>
+                                <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <span style={{ fontSize: '1.9rem', fontWeight: 900, fontFamily: 'var(--font-heading)', color: 'var(--text)', lineHeight: 1 }}>
+                                        {complianceMetrics.overall.toFixed(1)}%
+                                    </span>
+                                    <span style={{ fontSize: '0.6rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 1, marginTop: 2 }}>
+                                        {lang === 'en' ? 'Compliance' : 'Usklađenost'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '12px' }}>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: 800 }}>
+                                    {lang === 'en' ? 'Overall ZNR Compliance' : 'Ukupna ZNR Usklađenost'}
+                                </h3>
+                                <span className="badge" style={{
+                                    background: getComplianceBg(complianceMetrics.overall),
+                                    color: getComplianceColor(complianceMetrics.overall),
+                                    border: `1px solid ${getComplianceColor(complianceMetrics.overall)}`,
+                                    fontWeight: 700,
+                                    fontSize: '0.75rem',
+                                    padding: '3px 12px',
+                                    borderRadius: '20px',
+                                    display: 'inline-block'
+                                }}>
+                                    {complianceMetrics.overall >= 90
+                                        ? (lang === 'en' ? 'Excellent Status' : 'Odličan status')
+                                        : complianceMetrics.overall >= 70
+                                            ? (lang === 'en' ? 'Warning - Needs review' : 'Upozorenje - Potreban pregled')
+                                            : (lang === 'en' ? 'Critical Action Required' : 'Kritično - Potrebna akcija')}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Right side: Detailed Modules Grid */}
+                        <div style={{ padding: '5px' }}>
+                            <h4 style={{ margin: '0 0 16px 0', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                                {lang === 'en' ? 'Compliance Breakdown' : 'Pregled po modulima'}
+                            </h4>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '18px' }}>
+                                {/* Module 1: Workers */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                        <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.worker.pct)} strokeWidth="3"
+                                                    strokeDasharray={`${complianceMetrics.worker.pct} ${100 - complianceMetrics.worker.pct}`}
+                                                    strokeLinecap="round"
+                                                    style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                            {complianceMetrics.worker.pct.toFixed(0)}%
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{lang === 'en' ? 'Worker Certifications' : 'Uvjerenja radnika'}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                            {complianceMetrics.worker.nonCompliant > 0 
+                                                ? (lang === 'en' ? `${complianceMetrics.worker.nonCompliant} expired` : `${complianceMetrics.worker.nonCompliant} isteklo`)
+                                                : (lang === 'en' ? 'All valid' : 'Sve uredno')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Module 2: Equipment */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                        <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.equip.pct)} strokeWidth="3"
+                                                    strokeDasharray={`${complianceMetrics.equip.pct} ${100 - complianceMetrics.equip.pct}`}
+                                                    strokeLinecap="round"
+                                                    style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                            {complianceMetrics.equip.pct.toFixed(0)}%
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{lang === 'en' ? 'Equipment Safety' : 'Ispravnost opreme'}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                            {complianceMetrics.equip.nonCompliant > 0 
+                                                ? (lang === 'en' ? `${complianceMetrics.equip.nonCompliant} expired` : `${complianceMetrics.equip.nonCompliant} isteklo`)
+                                                : (lang === 'en' ? 'All valid' : 'Sve uredno')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Module 3: Fire Protection */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                        <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.fire.pct)} strokeWidth="3"
+                                                    strokeDasharray={`${complianceMetrics.fire.pct} ${100 - complianceMetrics.fire.pct}`}
+                                                    strokeLinecap="round"
+                                                    style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                            {complianceMetrics.fire.pct.toFixed(0)}%
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{lang === 'en' ? 'Fire Protection' : 'Zaštita od požara'}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                            {complianceMetrics.fire.nonCompliant > 0 
+                                                ? (lang === 'en' ? `${complianceMetrics.fire.nonCompliant} expired` : `${complianceMetrics.fire.nonCompliant} isteklo`)
+                                                : (lang === 'en' ? 'All valid' : 'Sve uredno')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Module 4: Fleet */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                        <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
+                                            <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.fleet.pct)} strokeWidth="3"
+                                                    strokeDasharray={`${complianceMetrics.fleet.pct} ${100 - complianceMetrics.fleet.pct}`}
+                                                    strokeLinecap="round"
+                                                    style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                            {complianceMetrics.fleet.pct.toFixed(0)}%
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{lang === 'en' ? 'Vehicle Fleet' : 'Vozni park'}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                            {complianceMetrics.fleet.nonCompliant > 0 
+                                                ? (lang === 'en' ? `${complianceMetrics.fleet.nonCompliant} expired` : `${complianceMetrics.fleet.nonCompliant} isteklo`)
+                                                : (lang === 'en' ? 'All valid' : 'Sve uredno')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Mini stats row */}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
