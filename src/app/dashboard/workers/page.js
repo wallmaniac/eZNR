@@ -750,6 +750,7 @@ function WorkersPageInner() {
         setFormData(finalFormData);
 
         loadData();
+        const wasDirty = contextIsDirty;
         markClean();
         isDirtyRef.current = false;
         // Toast feedback
@@ -760,13 +761,24 @@ function WorkersPageInner() {
         openWorkerHandledRef.current = null;
         openedViaUrlRef.current = false;
         if (addNew) {
+            if (typeof window !== 'undefined' && wasDirty) {
+                window.history.go(-1);
+            }
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
             editingWorkerRef.current = null;
             setCertificates([]);
             setPpeAssign([]);
         } else {
-            setShowForm(false);
+            if (typeof window !== 'undefined') {
+                if (wasDirty) {
+                    window.history.go(-2);
+                } else {
+                    window.history.go(-1);
+                }
+            } else {
+                setShowForm(false);
+            }
         }
         setSelectedIds(new Set());
         return savedId;
@@ -966,7 +978,7 @@ function WorkersPageInner() {
                         if (start < 600 || end>= 2200) return true;
                         return false;
                     };
-                    const hasNightShift = wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo);
+                    const hasNightShift = (formData.radnoVrijemeOd && formData.radnoVrijemeDo && isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo)) || (wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo));
                     const _t = new Date();
                     const _expC = certificates.filter(cx => cx.vrijediDo && new Date(cx.vrijediDo) < _t).length;
                     const _valC = certificates.filter(cx => !cx.vrijediDo || new Date(cx.vrijediDo)>= _t).length;
@@ -978,7 +990,7 @@ function WorkersPageInner() {
                         <>
                             {hasNightShift && (
                                 <div style={{ background: 'rgba(239,83,80,0.15)', borderBottom: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px 16px', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                                    🌙 {t('obavezanLjekarskiPregledNajmanje1x')}
+                                    🌙 {t('obavezanLjekarskiPregledNajmanje1x1')}
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>

@@ -14,6 +14,7 @@ import HelpTip from '@/components/HelpTip';
 import { useCountry } from '@/contexts/CountryContext';
 import PageHeader from '@/components/PageHeader';
 import TabBar from '@/components/TabBar';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 const DEFAULT_CERT_TYPES = [
     'Koordinatora ZNR tijekom građenja',
@@ -57,7 +58,8 @@ function EditCertPageInner() {
     const ispitivacRef = useRef(null);
     const [activeTab, setActiveTab] = useState(searchParams?.get('tab') || 'podaci');
 
-    const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
+    const { markDirty, markClean } = useUnsavedChanges();
+    const set = (k, v) => { setFormData(f => ({ ...f, [k]: v })); markDirty(); };
     const { alert: dlgAlert, DialogRenderer } = useDialog();
     const isSavingRef = useRef(false); // prevent duplicate submissions
 
@@ -152,10 +154,15 @@ function EditCertPageInner() {
             };
             update(COLLECTIONS.CERTIFICATES, certId, saveData);
             // Toast feedback (non-blocking)
+            markClean();
             if (typeof window !== 'undefined' && window.eznrToast) {
                 window.eznrToast(t('uvjerenjeSacuvano'), 'success');
             }
-            if (returnTo) { router.push(decodeURIComponent(returnTo)); } else { router.back(); }
+            if (returnTo) {
+                router.replace(decodeURIComponent(returnTo));
+            } else {
+                router.replace('/dashboard/worker-certificates');
+            }
         } finally {
             isSavingRef.current = false;
         }

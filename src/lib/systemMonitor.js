@@ -322,6 +322,16 @@ export function getAdminNotifications() {
 // USER NOTIFICATIONS — Work-related alerts only
 // ============================================================================
 
+const isNightShift = (odStr, doStr) => {
+    if (!odStr || !doStr) return false;
+    const start = parseInt((odStr || '').replace(':', ''));
+    const end = parseInt((doStr || '').replace(':', ''));
+    if (isNaN(start) || isNaN(end)) return false;
+    if (start > end) return true;
+    if (start < 600 || end >= 2200) return true;
+    return false;
+};
+
 export function getUserNotifications(companyId, userCompanyIds = []) {
     const notifications = [];
     const settings = getNotificationSettings();
@@ -990,9 +1000,11 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
 
         // Rule 3: Night Shift periodic medical exam (12-month limit)
-        // If worker has logged entries in nightWork collection
+        // If worker has logged entries in nightWork collection OR has night shift working hours configured
+        const hasNightWorkHours = (worker.radnoVrijemeOd && worker.radnoVrijemeDo && isNightShift(worker.radnoVrijemeOd, worker.radnoVrijemeDo)) ||
+                                  (wp && wp.radnoVrijemeOd && wp.radnoVrijemeDo && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo));
         const hasNightWorkLogs = nightLogs.some(log => log.workerId === worker.id);
-        if (hasNightWorkLogs) {
+        if (hasNightWorkLogs || hasNightWorkHours) {
             const hasValid12m = hasValidExamInMonths(12);
             if (!hasValid12m) {
                 notifications.push(addCompanyBadge({
@@ -1001,7 +1013,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                     category: 'medical',
                     icon: '🌙',
                     title: `${worker.ime} ${worker.prezime} — Istekao pregled za noćni rad`,
-                    message: `Radnik ima evidentiran noćni rad, a nema važeći ljekarski pregled u posljednjih 12 mjeseci. Pravni osnov: ${getCitation(country, 'medicalNight')}.`,
+                    message: `Radnik ima evidentiran noćni rad (ili radi u noćnoj smjeni), a nema važeći ljekarski pregled u posljednjih 12 mjeseci. Pravni osnov: ${getCitation(country, 'medicalNight')}.`,
                     actionLabel: 'Unesi pregled',
                     actionUrl: `/dashboard/medical-exams?openNew=1&workerId=${worker.id}`,
                 }, worker));
@@ -1044,19 +1056,29 @@ export function clearDismissedNotifications() {
 export function getHeaderNotifications(isAdmin, companyId, userCompanyIds = []) {
     const dismissed = getDismissedNotifications();
 
+    let mergedNotifications = [];
+    let stats = null;
+
     if (isAdmin) {
-        const { notifications, stats } = getAdminNotifications();
-        return {
-            notifications: notifications.filter(n => !dismissed.includes(n.id)),
-            stats,
-        };
-    } else {
-        const notifications = getUserNotifications(companyId, userCompanyIds);
-        return {
-            notifications: notifications.filter(n => !dismissed.includes(n.id)),
-            stats: null,
-        };
+        const adminData = getAdminNotifications();
+        mergedNotifications = [...adminData.notifications];
+        stats = adminData.stats;
     }
+
+    const userNotifs = getUserNotifications(companyId, userCompanyIds);
+    mergedNotifications = [...mergedNotifications, ...userNotifs];
+
+    const severityOrder = { critical: 0, urgent: 1, warning: 2, info: 3 };
+    mergedNotifications.sort((a, b) => {
+        const orderA = severityOrder[a.severity] ?? 99;
+        const orderB = severityOrder[b.severity] ?? 99;
+        return orderA - orderB;
+    });
+
+    return {
+        notifications: mergedNotifications.filter(n => !dismissed.includes(n.id)),
+        stats,
+    };
 }
 
 // ============================================================================

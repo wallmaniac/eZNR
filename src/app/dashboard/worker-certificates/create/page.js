@@ -312,9 +312,9 @@ function UvjerenjeFormPage() {
             markClean();
             const returnTo = searchParams?.get('returnTo');
             if (returnTo) {
-                router.push(decodeURIComponent(returnTo));
+                router.replace(decodeURIComponent(returnTo));
             } else {
-                router.push('/dashboard/worker-certificates');
+                router.replace('/dashboard/worker-certificates');
             }
         } finally {
             isSavingRef.current = false;

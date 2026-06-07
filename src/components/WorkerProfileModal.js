@@ -170,6 +170,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
         setWorker({ ...formData });
         setEditMode(false);
         onSaved?.();
+        onClose();
     };
 
     const handleSaveCert = async () => {
