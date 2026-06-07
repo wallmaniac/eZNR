@@ -22,7 +22,7 @@ export default function AdminCompaniesPage() {
     const [formData, setFormData] = useState({
         naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '',
         postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '',
-        aktivan: true, logo: '', parentId: '',
+        aktivan: true, logo: '', parentId: '', subscriptionTier: 'BASIC', country: 'BA',
     });
 
     useEffect(() => {
@@ -40,7 +40,7 @@ export default function AdminCompaniesPage() {
         setUsers(allUsers);
     };
 
-    const emptyForm = { naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '', parentId: '' };
+    const emptyForm = { naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '', parentId: '', subscriptionTier: 'BASIC', country: 'BA' };
 
     const openNew = () => {
         setEditCompany(null);
@@ -56,6 +56,7 @@ export default function AdminCompaniesPage() {
             adresa: c.adresa || '', mjesto: c.mjesto || '', postanskiBroj: c.postanskiBroj || '',
             telefon: c.telefon || '', email: c.email || '', direktor: c.direktor || '',
             strucnoLice: c.strucnoLice || '', aktivan: c.aktivan !== false, logo: c.logo || '', parentId: c.parentId || '',
+            subscriptionTier: c.subscriptionTier || 'BASIC', country: c.country || 'BA',
         });
         setLogoError('');
         setShowModal(true);
@@ -183,13 +184,22 @@ export default function AdminCompaniesPage() {
                                             })()}
                                         </div>
                                     </div>
-                                    <span style={{
-                                        padding: '3px 9px', borderRadius: 10, fontSize: '0.68rem', fontWeight: 600, flexShrink: 0,
-                                        background: c.aktivan !== false ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
-                                        color: c.aktivan !== false ? 'var(--success)' : 'var(--danger)',
-                                    }}>
-                                        {c.aktivan !== false ? '✅ Aktivna' : '⛔ Neaktivna'}
-                                    </span>
+                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                                        <span style={{
+                                            padding: '3px 9px', borderRadius: 10, fontSize: '0.68rem', fontWeight: 700,
+                                            background: c.subscriptionTier === 'ENTERPRISE' ? 'rgba(0,191,166,0.12)' : 'rgba(100,116,139,0.12)',
+                                            color: c.subscriptionTier === 'ENTERPRISE' ? 'var(--primary)' : 'var(--text-muted)',
+                                        }}>
+                                            ⚡ {c.subscriptionTier || 'BASIC'}
+                                        </span>
+                                        <span style={{
+                                            padding: '3px 9px', borderRadius: 10, fontSize: '0.68rem', fontWeight: 600,
+                                            background: c.aktivan !== false ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
+                                            color: c.aktivan !== false ? 'var(--success)' : 'var(--danger)',
+                                        }}>
+                                            {c.aktivan !== false ? '✅ Aktivna' : '⛔ Neaktivna'}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -261,6 +271,26 @@ export default function AdminCompaniesPage() {
                                     {companies.filter(c => c.id !== editCompany?.id && !c.parentId).map(c => (
                                         <option key={c.id} value={c.id}>🏢 {c.naziv}</option>
                                     ))}
+                                </select>
+                            </div>
+
+                            {/* Pretplatnički paket */}
+                            {isSuperAdmin && (
+                                <div className="form-group" style={{ marginTop: 12 }}>
+                                    <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 700 }}>⚡ {t('subscriptionTier') || (lang === 'bs' ? 'Pretplatnički paket' : 'Subscription Tier')}</label>
+                                    <select className="form-select" value={formData.subscriptionTier} onChange={e => setFormData(p => ({ ...p, subscriptionTier: e.target.value }))}>
+                                        <option value="BASIC">Standard / Basic</option>
+                                        <option value="ENTERPRISE">Enterprise (Premium Moduli)</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Država / Jurisdikcija */}
+                            <div className="form-group" style={{ marginTop: 12 }}>
+                                <label className="form-label" style={{ fontWeight: 700 }}>🌍 {t('drzava') || (lang === 'bs' ? 'Država / Jurisdikcija' : 'Country / Jurisdiction')}</label>
+                                <select className="form-select" value={formData.country} onChange={e => setFormData(p => ({ ...p, country: e.target.value }))}>
+                                    <option value="BA">🇧🇦 BiH</option>
+                                    <option value="HR">🇭🇷 HR</option>
                                 </select>
                             </div>
 

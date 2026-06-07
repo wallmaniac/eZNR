@@ -27,7 +27,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const [switchingCompany, setSwitchingCompany] = useState(false);
     const [mobileExpanded, setMobileExpanded] = useState(true);
     const [companySearchTerm, setCompanySearchTerm] = useState('');
-    const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
+    const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '', country: 'BA' });
     const [syncTrigger, setSyncTrigger] = useState(0);
     const profileRef = useRef(null);
     const notifRef = useRef(null);
@@ -229,7 +229,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             if (sourceId) seedCompanyData(newComp.id, sourceId);
             switchCompany(newComp.id);
             setShowNewCompanyModal(false);
-            setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
+            setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '', country: 'BA' });
             router.push('/dashboard');
         } catch (err) {
             console.error('[Header] Failed to create company natively:', err);
@@ -740,6 +740,13 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     </select>
                                 </div>
                             )}
+                            <div className="form-group" style={{ marginTop: 12 }}>
+                                <label className="form-label">{t('drzava') || (lang === 'bs' ? 'Država / Jurisdikcija' : 'Country / Jurisdiction')}</label>
+                                <select className="form-input" value={newCompanyData.country} onChange={e => setNewCompanyData(p => ({ ...p, country: e.target.value }))}>
+                                    <option value="BA">🇧🇦 BiH</option>
+                                    <option value="HR">🇭🇷 HR</option>
+                                </select>
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowNewCompanyModal(false)}>{t('cancel')}</button>

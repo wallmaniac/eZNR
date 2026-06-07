@@ -2885,7 +2885,7 @@ function CountryMigrationPanel({ lang, t }) {
         {t('skeniraSveKompanijeUFirestoreu')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <select className="form-select" value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} style={{ width: 100, height: 38 }}>
+        <select className="form-select" value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} style={{ width: 130, height: 38, padding: '0 8px', fontSize: '0.85rem' }}>
           <option value="BA">🇧🇦 BA</option>
           <option value="HR">🇭🇷 HR</option>
         </select>

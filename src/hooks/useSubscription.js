@@ -15,7 +15,7 @@ const ENTERPRISE_MODULES = [
 ];
 
 export function useSubscription() {
-    const { activeCompanyId } = useAuth();
+    const { activeCompanyId, isSuperAdmin } = useAuth();
     const [tier, setTier] = useState('BASIC');
 
     useEffect(() => {
@@ -36,6 +36,7 @@ export function useSubscription() {
     }, [activeCompanyId]);
 
     const hasAccess = (moduleKey) => {
+        if (isSuperAdmin) return true; // Superadmin always has access
         if (ENTERPRISE_MODULES.includes(moduleKey)) {
             return tier === 'ENTERPRISE';
         }
