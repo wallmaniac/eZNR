@@ -10,6 +10,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { uploadSecureFile, deleteSecureFile } from '@/lib/storageService';
 import PageHeader from '@/components/PageHeader';
+import SubscriptionGate from '@/components/SubscriptionGate';
 
 function FleetDocumentsInner() {
     const { t, lang } = useLanguage();
@@ -391,7 +392,9 @@ function FleetDocumentsInner() {
 export default function FleetDocuments() {
     return (
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
-            <FleetDocumentsInner />
+            <SubscriptionGate moduleKey="grpFleet">
+                <FleetDocumentsInner />
+            </SubscriptionGate>
         </Suspense>
     );
 }

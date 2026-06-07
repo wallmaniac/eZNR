@@ -9,6 +9,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import PageHeader from '@/components/PageHeader';
+import SubscriptionGate from '@/components/SubscriptionGate';
 
 function FleetAssignmentsInner() {
     const { t, lang } = useLanguage();
@@ -308,7 +309,9 @@ function FleetAssignmentsInner() {
 export default function FleetAssignments() {
     return (
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>⏳</div>}>
-            <FleetAssignmentsInner />
+            <SubscriptionGate moduleKey="grpFleet">
+                <FleetAssignmentsInner />
+            </SubscriptionGate>
         </Suspense>
     );
 }

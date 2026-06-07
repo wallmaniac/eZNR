@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import SubscriptionGate from '@/components/SubscriptionGate';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import { usePagination } from '@/hooks/usePagination';
@@ -753,7 +754,9 @@ function FleetInner() {
 export default function FleetPage() {
     return (
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje / Loading...</div>}>
-            <FleetInner />
+            <SubscriptionGate moduleKey="grpFleet">
+                <FleetInner />
+            </SubscriptionGate>
         </Suspense>
     );
 }

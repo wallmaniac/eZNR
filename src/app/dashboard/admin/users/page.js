@@ -26,7 +26,7 @@ export default function AdminUsersPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         username: '', password: '', firstName: '', lastName: '', email: '',
-        role: 'officer', companyIds: [], aktivan: true,
+        role: 'officer', companyIds: [], aktivan: true, subscriptionTier: 'BASIC',
     });
 
     useEffect(() => {
@@ -72,7 +72,7 @@ export default function AdminUsersPage() {
 
     const openNew = () => {
         setEditUser(null);
-        setFormData({ username: '', password: '', firstName: '', lastName: '', email: '', role: 'officer', companyIds: [], aktivan: true });
+        setFormData({ username: '', password: '', firstName: '', lastName: '', email: '', role: 'officer', companyIds: [], aktivan: true, subscriptionTier: 'BASIC' });
         setShowModal(true);
     };
 
@@ -82,6 +82,7 @@ export default function AdminUsersPage() {
             username: u.username, password: u.password || '', firstName: u.firstName,
             lastName: u.lastName, email: u.email || '', role: u.role,
             companyIds: u.companyIds || [], aktivan: u.aktivan !== false,
+            subscriptionTier: u.subscriptionTier || 'BASIC',
         });
         setShowModal(true);
     };
@@ -97,6 +98,11 @@ export default function AdminUsersPage() {
         setIsSaving(true);
         try {
             if (editUser) {
+                if (isSuperAdmin && payload.subscriptionTier && payload.companyIds) {
+                    payload.companyIds.forEach(compId => {
+                        update(COLLECTIONS.COMPANIES, compId, { subscriptionTier: payload.subscriptionTier });
+                    });
+                }
                 update(COLLECTIONS.USERS, editUser.id, payload);
                 setShowModal(false);
                 refreshData();
@@ -134,6 +140,11 @@ export default function AdminUsersPage() {
                 // 2. Save user to Firestore with the new UID
                 payload.creatorId = user?.id;
                 payload.id = data.uid;
+                if (isSuperAdmin && payload.subscriptionTier && payload.companyIds) {
+                    payload.companyIds.forEach(compId => {
+                        update(COLLECTIONS.COMPANIES, compId, { subscriptionTier: payload.subscriptionTier });
+                    });
+                }
                 create(COLLECTIONS.USERS, payload);
                 setShowModal(false);
                 refreshData();
@@ -397,6 +408,21 @@ export default function AdminUsersPage() {
                                     </select>
                                 </div>
                             </div>
+
+                            {isSuperAdmin && (
+                                <div className="form-group" style={{ marginTop: 12 }}>
+                                    <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 700 }}>⚡ {t('subscriptionTier') || (lang === 'bs' ? 'Pretplatnički paket za sve firme' : 'Subscription Tier for all companies')}</label>
+                                    <select className="form-select" value={formData.subscriptionTier || 'BASIC'} onChange={e => setFormData(p => ({ ...p, subscriptionTier: e.target.value }))}>
+                                        <option value="BASIC">Standard / Basic</option>
+                                        <option value="ENTERPRISE">Enterprise (Premium Moduli)</option>
+                                    </select>
+                                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
+                                        {lang === 'bs' 
+                                            ? '* Snimanjem će se ovaj pretplatnički paket primijeniti na sve dodijeljene firme ovog korisnika.' 
+                                            : '* Saving will apply this subscription tier to all assigned companies of this user.'}
+                                    </span>
+                                </div>
+                            )}
 
                             {/* Company assignment */}
                             <div style={{ marginTop: 16 }}>
