@@ -4,100 +4,40 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const bannerTranslations = {
     bs: {
-        title: 'Kolačići & Privatnost',
-        desc: 'Kako bismo vam pružili najbolje korisničko iskustvo i osigurali stabilnost platforme, koristimo kolačiće i lokalnu pohranu.',
-        customize: 'Prilagodi',
-        acceptAll: 'Prihvati sve',
-        declineAll: 'Odbij neobavezne',
-        saveChoices: 'Sačuvaj izbor',
-        essential: 'Neophodni',
-        essentialDesc: 'Potrebni za rad aplikacije (sesije, jezik, postavke).',
-        analytical: 'Analitički',
-        analyticalDesc: 'Praćenje stabilnosti rada aplikacije i performansi.',
-        marketing: 'Marketinški',
-        marketingDesc: 'Za obavještenja o ažuriranjima i interaktivne alate.'
+        desc: 'Koristimo kolačiće za optimalan rad i stabilnost platforme.',
+        accept: 'Prihvati',
+        decline: 'Odbij'
     },
     hr: {
-        title: 'Kolačići & Privatnost',
-        desc: 'Kako bismo vam pružili najbolje korisničko iskustvo i osigurali stabilnost platforme, koristimo kolačiće i lokalno spremište.',
-        customize: 'Prilagodi',
-        acceptAll: 'Prihvati sve',
-        declineAll: 'Odbij neobavezne',
-        saveChoices: 'Spremi izbor',
-        essential: 'Neophodni',
-        essentialDesc: 'Potrebni za rad aplikacije (sesije, jezik, postavke).',
-        analytical: 'Analitički',
-        analyticalDesc: 'Praćenje stabilnosti rada aplikacije i performansi.',
-        marketing: 'Marketinški',
-        marketingDesc: 'Za obavijesti o ažuriranjima i interaktivne alate.'
+        desc: 'Koristimo kolačiće za optimalan rad i stabilnost platforme.',
+        accept: 'Prihvati',
+        decline: 'Odbij'
     },
     en: {
-        title: 'Cookies & Privacy',
-        desc: 'To provide the best user experience and ensure platform stability, we use cookies and local storage.',
-        customize: 'Customize',
-        acceptAll: 'Accept All',
-        declineAll: 'Decline Optional',
-        saveChoices: 'Save Choices',
-        essential: 'Essential',
-        essentialDesc: 'Required for basic app functionality (sessions, language, settings).',
-        analytical: 'Analytical',
-        analyticalDesc: 'Used for system stability, logs, and performance tracking.',
-        marketing: 'Marketing',
-        marketingDesc: 'For system updates, user notices, and helper widgets.'
+        desc: 'We use cookies to ensure optimal performance and stability.',
+        accept: 'Accept',
+        decline: 'Decline'
     },
     de: {
-        title: 'Cookies & Datenschutz',
-        desc: 'Um Ihnen das beste Benutzererlebnis zu bieten und die Plattformstabilität zu gewährleisten, verwenden wir Cookies und lokalen Speicher.',
-        customize: 'Anpassen',
-        acceptAll: 'Alle akzeptieren',
-        declineAll: 'Optionale ablehnen',
-        saveChoices: 'Auswahl speichern',
-        essential: 'Notwendig',
-        essentialDesc: 'Erforderlich für grundlegende App-Funktionen (Sitzungen, Sprache, Einstellungen).',
-        analytical: 'Analytisch',
-        analyticalDesc: 'Wird zur Überwachung der Systemstabilität und der Leistung verwendet.',
-        marketing: 'Marketing',
-        marketingDesc: 'Für System-Updates, Benutzerbenachrichtigungen und Widgets.'
+        desc: 'Wir verwenden Cookies, um Leistung und Stabilität zu gewährleisten.',
+        accept: 'Akzeptieren',
+        decline: 'Ablehnen'
     },
     sl: {
-        title: 'Piškotki & Zasebnost',
-        desc: 'Da bi vam zagotovili najboljšo uporabniško izkušnjo in zagotovili stabilnost platforme, uporabljamo piškotke in lokalno shranjevanje.',
-        customize: 'Prilagodi',
-        acceptAll: 'Sprejmi vse',
-        declineAll: 'Zavrni izbirne',
-        saveChoices: 'Shrani izbiro',
-        essential: 'Nujni',
-        essentialDesc: 'Potrebni za delovanje aplikacije (seje, jezik, nastavitve).',
-        analytical: 'Analitični',
-        analyticalDesc: 'Spremljanje stabilnosti delovanja aplikacije in delovanja.',
-        marketing: 'Trženjski',
-        marketingDesc: 'Za obvestila o posodobitvah in interaktivna orodja.'
+        desc: 'Za optimalno delovanje in stabilnost uporabljamo piškotke.',
+        accept: 'Sprejmi',
+        decline: 'Zavrni'
     },
     sr: {
-        title: 'Колачићи & Приватност',
-        desc: 'Како бисмо вам пружили најбоље корисничко искуство и осигурали стабилност платформе, користимо колачиће и локалну меморију.',
-        customize: 'Прилагоди',
-        acceptAll: 'Прихвати све',
-        declineAll: 'Одбиј необавезне',
-        saveChoices: 'Сачувај избор',
-        essential: 'Неопходни',
-        essentialDesc: 'Потребни за рад апликације (сесије, језик, поставке).',
-        analytical: 'Аналитички',
-        analyticalDesc: 'Праћење стабилности рада апликације и перформанси.',
-        marketing: 'Маркетиншки',
-        marketingDesc: 'За обавештења о ажурирањима и интерактивне алате.'
+        desc: 'Користимо колачиће за оптималан рад и стабилност платформе.',
+        accept: 'Прихвати',
+        decline: 'Одбиј'
     }
 };
 
 export default function GDPRConsentBanner() {
     const { lang } = useLanguage();
     const [isVisible, setIsVisible] = useState(false);
-    const [showCustomize, setShowCustomize] = useState(false);
-    const [consent, setConsent] = useState({
-        essential: true,
-        analytical: false,
-        marketing: false
-    });
 
     const t = bannerTranslations[lang] || bannerTranslations.bs;
 
@@ -105,8 +45,8 @@ export default function GDPRConsentBanner() {
         if (typeof window !== 'undefined') {
             const savedConsent = localStorage.getItem('eznr_gdpr_consent');
             if (!savedConsent) {
-                // Delay showing to allow layout and transitions to settle
-                const timer = setTimeout(() => setIsVisible(true), 1200);
+                // Subtle slide-in delay
+                const timer = setTimeout(() => setIsVisible(true), 1500);
                 return () => clearTimeout(timer);
             }
         }
@@ -114,25 +54,16 @@ export default function GDPRConsentBanner() {
 
     const saveConsent = (updatedConsent) => {
         localStorage.setItem('eznr_gdpr_consent', JSON.stringify(updatedConsent));
-        // Dispatch custom event to notify other settings pages in real-time
         window.dispatchEvent(new CustomEvent('eznr:gdpr-consent-changed', { detail: updatedConsent }));
         setIsVisible(false);
     };
 
     const handleAcceptAll = () => {
-        const fullConsent = { essential: true, analytical: true, marketing: true };
-        setConsent(fullConsent);
-        saveConsent(fullConsent);
+        saveConsent({ essential: true, analytical: true, marketing: true });
     };
 
     const handleDeclineAll = () => {
-        const minimalConsent = { essential: true, analytical: false, marketing: false };
-        setConsent(minimalConsent);
-        saveConsent(minimalConsent);
-    };
-
-    const handleSaveChoices = () => {
-        saveConsent(consent);
+        saveConsent({ essential: true, analytical: false, marketing: false });
     };
 
     if (!isVisible) return null;
@@ -140,253 +71,82 @@ export default function GDPRConsentBanner() {
     return (
         <div style={{
             position: 'fixed',
-            bottom: 24,
-            left: '50%',
-            transform: 'translateX(-50%)',
+            bottom: 20,
+            left: 20,
             zIndex: 99999,
-            width: '90%',
-            maxWidth: 620,
-            background: 'rgba(26, 29, 39, 0.88)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderRadius: 16,
+            width: 'calc(100% - 40px)',
+            maxWidth: 320,
+            background: 'rgba(26, 29, 39, 0.90)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: 12,
             border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
-            padding: '24px 28px',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.30)',
+            padding: '14px 16px',
             color: '#E2E8F0',
-            animation: 'gdprSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            animation: 'gdprSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             fontFamily: "'Plus Jakarta Sans', sans-serif"
         }}>
             <style>{`
                 @keyframes gdprSlideUp {
-                    from { transform: translate(-50%, 30px); opacity: 0; }
-                    to { transform: translate(-50%, 0); opacity: 1; }
-                }
-                .gdpr-toggle-input {
-                    appearance: none;
-                    width: 36px;
-                    height: 20px;
-                    background-color: #2D3148;
-                    border-radius: 20px;
-                    position: relative;
-                    cursor: pointer;
-                    outline: none;
-                    transition: background-color 0.2s;
-                }
-                .gdpr-toggle-input:checked {
-                    background-color: #00BFA6;
-                }
-                .gdpr-toggle-input::before {
-                    content: '';
-                    position: absolute;
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background-color: #FFFFFF;
-                    top: 2px;
-                    left: 2px;
-                    transition: transform 0.2s;
-                }
-                .gdpr-toggle-input:checked::before {
-                    transform: translateX(16px);
-                }
-                .gdpr-toggle-input:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-                .gdpr-btn-link {
-                    background: none;
-                    border: none;
-                    color: var(--primary, #00BFA6);
-                    font-weight: 700;
-                    font-size: 0.86rem;
-                    cursor: pointer;
-                    padding: 8px 12px;
-                    border-radius: 8px;
-                    transition: all 0.15s;
-                }
-                .gdpr-btn-link:hover {
-                    background: rgba(0, 191, 166, 0.08);
+                    from { transform: translateY(20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
                 }
             `}</style>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Title & Icon */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '1.5rem' }}>🍪</span>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.3px', color: '#FFFFFF' }}>
-                        {t.title}
-                    </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Text description */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>🍪</span>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#CBD5E1', lineHeight: 1.45, fontWeight: 500 }}>
+                        {t.desc}
+                    </p>
                 </div>
 
-                {/* Description */}
-                <p style={{ margin: 0, fontSize: '0.88rem', color: '#94A3B8', lineHeight: 1.6 }}>
-                    {t.desc}
-                </p>
-
-                {/* Optional Customization Panel */}
-                {showCustomize && (
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 12,
-                        padding: '16px 20px',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        borderRadius: 12,
-                        border: '1px solid rgba(255, 255, 255, 0.04)',
-                        marginTop: 4,
-                        animation: 'fadeIn 0.2s ease-out'
-                    }}>
-                        {/* Essential */}
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                            <div>
-                                <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#FFFFFF' }}>{t.essential}</div>
-                                <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 2 }}>{t.essentialDesc}</div>
-                            </div>
-                            <input
-                                type="checkbox"
-                                className="gdpr-toggle-input"
-                                checked={true}
-                                disabled={true}
-                                readOnly={true}
-                            />
-                        </div>
-                        
-                        <hr style={{ margin: 0, border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }} />
-
-                        {/* Analytical */}
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                            <div>
-                                <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#FFFFFF' }}>{t.analytical}</div>
-                                <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 2 }}>{t.analyticalDesc}</div>
-                            </div>
-                            <input
-                                type="checkbox"
-                                className="gdpr-toggle-input"
-                                checked={consent.analytical}
-                                onChange={(e) => setConsent(c => ({ ...c, analytical: e.target.checked }))}
-                            />
-                        </div>
-
-                        <hr style={{ margin: 0, border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }} />
-
-                        {/* Marketing */}
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                            <div>
-                                <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#FFFFFF' }}>{t.marketing}</div>
-                                <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 2 }}>{t.marketingDesc}</div>
-                            </div>
-                            <input
-                                type="checkbox"
-                                className="gdpr-toggle-input"
-                                checked={consent.marketing}
-                                onChange={(e) => setConsent(c => ({ ...c, marketing: e.target.checked }))}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Controls */}
+                {/* Compact Buttons row */}
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 12,
-                    marginTop: 4
+                    justifyContent: 'flex-end',
+                    gap: 8,
+                    marginTop: 2
                 }}>
-                    <div>
-                        {!showCustomize && (
-                            <button
-                                onClick={() => setShowCustomize(true)}
-                                className="gdpr-btn-link"
-                            >
-                                ⚙️ {t.customize}
-                            </button>
-                        )}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 10 }}>
-                        {showCustomize ? (
-                            <>
-                                <button
-                                    onClick={handleDeclineAll}
-                                    style={{
-                                        background: 'none',
-                                        border: '1px solid rgba(255,255,255,0.15)',
-                                        color: '#E2E8F0',
-                                        cursor: 'pointer',
-                                        padding: '9px 16px',
-                                        borderRadius: 8,
-                                        fontWeight: 600,
-                                        fontSize: '0.84rem',
-                                        transition: 'all 0.15s'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                >
-                                    {t.declineAll}
-                                </button>
-                                <button
-                                    onClick={handleSaveChoices}
-                                    style={{
-                                        background: 'var(--primary, #00BFA6)',
-                                        border: 'none',
-                                        color: '#FFFFFF',
-                                        cursor: 'pointer',
-                                        padding: '9px 18px',
-                                        borderRadius: 8,
-                                        fontWeight: 700,
-                                        fontSize: '0.84rem',
-                                        transition: 'all 0.15s'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                                >
-                                    💾 {t.saveChoices}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={handleDeclineAll}
-                                    style={{
-                                        background: 'none',
-                                        border: '1px solid rgba(255,255,255,0.15)',
-                                        color: '#E2E8F0',
-                                        cursor: 'pointer',
-                                        padding: '9px 16px',
-                                        borderRadius: 8,
-                                        fontWeight: 600,
-                                        fontSize: '0.84rem',
-                                        transition: 'all 0.15s'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                >
-                                    {t.declineAll}
-                                </button>
-                                <button
-                                    onClick={handleAcceptAll}
-                                    style={{
-                                        background: 'var(--primary, #00BFA6)',
-                                        border: 'none',
-                                        color: '#FFFFFF',
-                                        cursor: 'pointer',
-                                        padding: '9px 18px',
-                                        borderRadius: 8,
-                                        fontWeight: 700,
-                                        fontSize: '0.84rem',
-                                        transition: 'all 0.15s'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                                >
-                                    👍 {t.acceptAll}
-                                </button>
-                            </>
-                        )}
-                    </div>
+                    <button
+                        onClick={handleDeclineAll}
+                        style={{
+                            background: 'transparent',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            color: '#E2E8F0',
+                            cursor: 'pointer',
+                            padding: '5px 12px',
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            fontSize: '0.78rem',
+                            transition: 'all 0.15s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                        {t.decline}
+                    </button>
+                    <button
+                        onClick={handleAcceptAll}
+                        style={{
+                            background: 'var(--primary, #00BFA6)',
+                            border: 'none',
+                            color: '#FFFFFF',
+                            cursor: 'pointer',
+                            padding: '6px 14px',
+                            borderRadius: 6,
+                            fontWeight: 700,
+                            fontSize: '0.78rem',
+                            transition: 'all 0.15s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    >
+                        {t.accept}
+                    </button>
                 </div>
             </div>
         </div>
