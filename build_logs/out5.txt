@@ -1,6 +1,0 @@
-[dotenv@17.3.1] injecting env (11) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
-▲ Next.js 16.1.6 (Turbopack)
-- Environments: .env.local
-
-  Creating an optimized production build ...
-[dotenv@17.3.1] injecting env (11) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`

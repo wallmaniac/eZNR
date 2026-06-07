@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getRawAll, seedCompanyData, getSyncStatus } from '@/lib/dataStore';
+import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getRawAll, seedCompanyData } from '@/lib/dataStore';
 import { updateUserProfile } from '@/lib/authService';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -33,111 +33,6 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const searchRef = useRef(null);
     const companyRef = useRef(null);
     const langRef = useRef(null);
-
-    const [syncStatus, setSyncStatus] = useState({ activeWrites: 0, offlineQueue: 0, isOnline: true });
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        setSyncStatus(getSyncStatus());
-
-        const handleSyncChange = (e) => {
-            if (e && e.detail) {
-                setSyncStatus(e.detail);
-            } else {
-                setSyncStatus(getSyncStatus());
-            }
-        };
-
-        const handleQueueChange = () => {
-            setSyncStatus(getSyncStatus());
-        };
-
-        window.addEventListener('eznr:sync-status-changed', handleSyncChange);
-        window.addEventListener('eznr:offline-queue-changed', handleQueueChange);
-
-        return () => {
-            window.removeEventListener('eznr:sync-status-changed', handleSyncChange);
-            window.removeEventListener('eznr:offline-queue-changed', handleQueueChange);
-        };
-    }, []);
-
-    const getSyncStatusText = () => {
-        const l = lang || 'bs';
-        if (!syncStatus.isOnline) {
-            const pendingCount = syncStatus.offlineQueue;
-            if (l === 'en') return `Offline (${pendingCount})`;
-            if (l === 'de') return `Offline (${pendingCount})`;
-            if (l === 'sl') return `Brez povezave (${pendingCount})`;
-            if (l === 'sr') return `Ван мреже (${pendingCount})`;
-            if (l === 'hr') return `Izvan mreže (${pendingCount})`;
-            return `Izvan mreže (${pendingCount})`;
-        }
-        if (syncStatus.activeWrites > 0 || syncStatus.offlineQueue > 0) {
-            if (l === 'en') return 'Saving...';
-            if (l === 'de') return 'Speichern...';
-            if (l === 'sl') return 'Shranjevanje...';
-            if (l === 'sr') return 'Чување...';
-            if (l === 'hr') return 'Spremanje...';
-            return 'Spremanje...';
-        }
-        if (l === 'en') return 'Synced';
-        if (l === 'de') return 'Synchronisiert';
-        if (l === 'sl') return 'Sinhronizirano';
-        if (l === 'sr') return 'Синхронизовано';
-        if (l === 'hr') return 'Sinkronizirano';
-        return 'Sinkronizirano';
-    };
-
-    const getSyncTooltip = () => {
-        const l = lang || 'bs';
-        if (!syncStatus.isOnline) {
-            if (l === 'en') return 'You are offline. Changes are saved locally and will auto-sync when online. Click to force flush.';
-            return 'Nalazite se izvan mreže. Promjene se spremaju lokalno i sinkronizirat će se automatski kada se povežete. Kliknite za pokušaj slanja.';
-        }
-        if (syncStatus.activeWrites > 0 || syncStatus.offlineQueue > 0) {
-            if (l === 'en') return 'Saving changes to the cloud...';
-            return 'U toku je spremanje promjena u oblak...';
-        }
-        if (l === 'en') return 'All changes are successfully saved to Firebase Firestore.';
-        return 'Sve promjene su uspješno spremljene na Firebase Firestore server.';
-    };
-
-    const handleSyncClick = async () => {
-        if (typeof window !== 'undefined' && navigator.onLine && syncStatus.offlineQueue > 0) {
-            try {
-                const { _flushOfflineQueue } = require('@/lib/dataStore');
-                await _flushOfflineQueue();
-            } catch (err) {
-                console.error('[Header] Failed to flush offline queue:', err);
-            }
-        }
-    };
-
-    const getSyncStyles = () => {
-        if (!syncStatus.isOnline) {
-            return {
-                bg: 'rgba(245,158,11,0.08)',
-                border: '1.5px solid rgba(245,158,11,0.3)',
-                color: 'var(--warning)',
-                icon: '⚠️'
-            };
-        }
-        if (syncStatus.activeWrites > 0 || syncStatus.offlineQueue > 0) {
-            return {
-                bg: 'rgba(0,191,166,0.08)',
-                border: '1.5px solid rgba(0,191,166,0.35)',
-                color: 'var(--primary)',
-                icon: <span className="sync-spin" style={{ display: 'inline-block' }}>🔄</span>
-            };
-        }
-        return {
-            bg: 'rgba(34,197,94,0.08)',
-            border: '1.5px solid rgba(34,197,94,0.3)',
-            color: 'var(--success)',
-            icon: '☁️'
-        };
-    };
 
     // Companies list — source of truth depending on role
     // AuthContext safely loads ALL companies for Superadmin and ASSIGNED companies for Officer natively from Firestore.
