@@ -486,50 +486,6 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
 
-                    {/* Sync Status Pill (Mobile) */}
-                    <button 
-                        onClick={handleSyncClick}
-                        title={getSyncTooltip()}
-                        style={{
-                            width: 34,
-                            height: 32,
-                            borderRadius: 8,
-                            border: getSyncStyles().border,
-                            background: getSyncStyles().bg,
-                            color: getSyncStyles().color,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.9rem',
-                            cursor: (syncStatus.isOnline && syncStatus.offlineQueue > 0) ? 'pointer' : 'default',
-                            flexShrink: 0,
-                            padding: 0,
-                            position: 'relative'
-                        }}
-                    >
-                        {getSyncStyles().icon}
-                        {syncStatus.offlineQueue > 0 && (
-                            <span style={{
-                                position: 'absolute',
-                                top: -3,
-                                right: -3,
-                                minWidth: 14,
-                                height: 14,
-                                borderRadius: '50%',
-                                background: '#EF4444',
-                                color: 'white',
-                                fontSize: '0.55rem',
-                                fontWeight: 800,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '0 2px',
-                                border: '1px solid var(--bg-card)'
-                            }}>
-                                {syncStatus.offlineQueue}
-                            </span>
-                        )}
-                    </button>
 
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                         style={{ ...iBtn({ fontSize: '0.95rem', width: 34, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
@@ -728,39 +684,6 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* ══ RIGHT ISLAND: Lang + Theme | Notifs + Profile ══ */}
                     <div style={island}>
-                        {/* Sync Status Pill (Desktop) */}
-                        <div 
-                            title={getSyncTooltip()}
-                            onClick={handleSyncClick}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '4px 10px',
-                                borderRadius: 100,
-                                fontSize: '0.72rem',
-                                fontWeight: 700,
-                                background: getSyncStyles().bg,
-                                border: getSyncStyles().border,
-                                color: getSyncStyles().color,
-                                cursor: (syncStatus.isOnline && syncStatus.offlineQueue > 0) ? 'pointer' : 'default',
-                                transition: 'all 0.2s ease',
-                                userSelect: 'none',
-                                marginRight: 4,
-                            }}
-                            onMouseEnter={e => {
-                                if (syncStatus.offlineQueue > 0 && syncStatus.isOnline) {
-                                    e.currentTarget.style.filter = 'brightness(0.95)';
-                                }
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.filter = 'none';
-                            }}
-                        >
-                            {getSyncStyles().icon}
-                            <span style={{ fontSize: '0.72rem' }}>{getSyncStatusText()}</span>
-                        </div>
-
                         <div ref={langRef} style={{ position: 'relative' }}>
                             <button onClick={() => { setShowLangMenu(v => !v); setShowProfile(false); setShowNotifs(false); setShowCompanyMenu(false); }}
                                 style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60, justifyContent: 'flex-start' })}

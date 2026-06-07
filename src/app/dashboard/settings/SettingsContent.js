@@ -1,6 +1,7 @@
 'use client';
-import { collection, getDocs, writeBatch } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { deleteUser } from 'firebase/auth';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -311,6 +312,165 @@ function translateLogDetail(detail, lang, t) {
   return translated.filter(Boolean).join(' | ');
 }
 
+const gdprLocalTrans = {
+  bs: {
+    title: '🔒 GDPR, Privatnost i Prava Korisnika',
+    cookieConsent: 'Upravljanje kolačićima',
+    cookieConsentDesc: 'Podesite koje kategorije kolačića i lokalne pohrane prihvatate prilikom korištenja eZNR platforme.',
+    essential: 'Neophodni kolačići (Sistemski)',
+    essentialDesc: 'Ovi kolačići su neophodni za rad platforme (npr. sesija, jezik, tema, lokalna sinhronizacija podataka) i ne mogu se isključiti.',
+    analytical: 'Analitički kolačići',
+    analyticalDesc: 'Koriste se za praćenje performansi platforme, automatsko bilježenje grešaka i optimizaciju brzine rada.',
+    marketing: 'Marketinški kolačići',
+    marketingDesc: 'Omogućavaju prikaz obavijesti o novim verzijama, interaktivnu pomoć asistentice Zia i ankete o zadovoljstvu.',
+    saveConsent: 'Sačuvaj postavke kolačića',
+    resetConsent: 'Poništi pristanak kolačića (Prikaži baner)',
+    portability: 'Prenosivost podataka (Pravo na pristup i izvoz)',
+    portabilityDesc: 'U skladu sa GDPR regulativom (Član 20), imate pravo preuzeti sve vaše lične podatke koje eZNR obrađuje u strukturiranom obliku.',
+    exportBtn: '📥 Izvezi moje podatke (JSON)',
+    forget: 'Pravo na zaborav (Brisanje računa)',
+    forgetDesc: 'Brisanjem računa trajno uklanjate svoj profil iz baze podataka i brišete pristup eZNR sistemu. Ova akcija je nepovratna.',
+    deleteBtn: '🗑️ Trajno obriši moj račun',
+    confirmDeleteTitle: 'Potvrda brisanja računa',
+    confirmDeleteDesc: 'Da biste trajno obrisali račun, unesite vašu lozinku za potvrdu identiteta. Svi vaši profilni podaci bit će trajno obrisani iz sistema.',
+    enterPassword: 'Unesite lozinku',
+    cancel: 'Odustani',
+    deleteConfirm: '🗑️ Da, trajno obriši račun',
+    deleting: 'Brisanje u toku...',
+    successSaved: 'Postavke kolačića su uspješno ažurirane!'
+  },
+  hr: {
+    title: '🔒 GDPR, Privatnost i Prava Korisnika',
+    cookieConsent: 'Upravljanje kolačićima',
+    cookieConsentDesc: 'Podesite koje kategorije kolačića i lokalne pohrane prihvaćate prilikom korištenja eZNR platforme.',
+    essential: 'Neophodni kolačići (Sistemski)',
+    essentialDesc: 'Ovi kolačići su neophodni za rad platforme (npr. sesija, jezik, tema, lokalna sinkronizacija podataka) i ne mogu se isključiti.',
+    analytical: 'Analitički kolačići',
+    analyticalDesc: 'Koriste se za praćenje performansi platforme, automatsko bilježenje grešaka i optimizaciju brzine rada.',
+    marketing: 'Marketinški kolačići',
+    marketingDesc: 'Omogućavaju prikaz obavijesti o novim verzijama, interaktivnu pomoć asistentice Zia i ankete o zadovoljstvu.',
+    saveConsent: 'Spremi postavke kolačića',
+    resetConsent: 'Poništi pristanak kolačića (Prikaži baner)',
+    portability: 'Prenosivost podataka (Pravo na pristup i izvoz)',
+    portabilityDesc: 'U skladu sa GDPR regulativom (Član 20), imate pravo preuzeti sve vaše osobne podatke koje eZNR obrađuje u strukturiranom obliku.',
+    exportBtn: '📥 Izvezi moje podatke (JSON)',
+    forget: 'Pravo na zaborav (Brisanje računa)',
+    forgetDesc: 'Brisanjem računa trajno uklanjate svoj profil iz baze podataka i brišete pristup eZNR sustavu. Ova akcija je nepovratna.',
+    deleteBtn: '🗑️ Trajno obriši moj račun',
+    confirmDeleteTitle: 'Potvrda brisanja računa',
+    confirmDeleteDesc: 'Da biste trajno obrisali račun, unesite vašu lozinku za potvrdu identiteta. Svi vaši profilni podaci bit će trajno obrisani iz sustava.',
+    enterPassword: 'Unesite lozinku',
+    cancel: 'Odustani',
+    deleteConfirm: '🗑️ Da, trajno obriši račun',
+    deleting: 'Brisanje u tijeku...',
+    successSaved: 'Postavke kolačića su uspješno ažurirane!'
+  },
+  en: {
+    title: '🔒 GDPR, Privacy & User Rights',
+    cookieConsent: 'Cookie Preferences',
+    cookieConsentDesc: 'Manage which categories of cookies and local storage items you accept when using eZNR.',
+    essential: 'Essential Cookies (System)',
+    essentialDesc: 'Required for basic functionality (session, language, theme, sync) and cannot be disabled.',
+    analytical: 'Analytical Cookies',
+    analyticalDesc: 'Used for performance monitoring, automatic error logging, and optimization.',
+    marketing: 'Marketing Cookies',
+    marketingDesc: 'Enables release notifications, Zia interactive AI help, and user feedback surveys.',
+    saveConsent: 'Save Cookie Settings',
+    resetConsent: 'Reset Cookie Consent (Show Banner)',
+    portability: 'Data Portability (Right to Access & Export)',
+    portabilityDesc: 'Under GDPR (Article 20), you can download all personal data processed by eZNR in a structured machine-readable format.',
+    exportBtn: '📥 Export My Data (JSON)',
+    forget: 'Right to be Forgotten (Account Deletion)',
+    forgetDesc: 'Deleting your account permanently removes your profile from the database and revokes eZNR access. This action is irreversible.',
+    deleteBtn: '🗑️ Permanently Delete My Account',
+    confirmDeleteTitle: 'Confirm Account Deletion',
+    confirmDeleteDesc: 'To permanently delete your account, please enter your password to confirm your identity. All profile data will be permanently wiped.',
+    enterPassword: 'Enter password',
+    cancel: 'Cancel',
+    deleteConfirm: '🗑️ Yes, Permanently Delete',
+    deleting: 'Deleting...',
+    successSaved: 'Cookie preferences updated successfully!'
+  },
+  de: {
+    title: '🔒 GDPR, Datenschutz & Benutzerrechte',
+    cookieConsent: 'Cookie-Einstellungen',
+    cookieConsentDesc: 'Verwalten Sie, welche Cookie-Kategorien Sie bei der Nutzung von eZNR akzeptieren.',
+    essential: 'Notwendige Cookies (System)',
+    essentialDesc: 'Erforderlich für grundlegende Funktionen (Sitzung, Sprache, Thema, Synchronisierung) und können nicht deaktiviert werden.',
+    analytical: 'Analytische Cookies',
+    analyticalDesc: 'Verwendet für Leistungsüberwachung, automatische Fehlerprotokollierung und Optimierung.',
+    marketing: 'Marketing-Cookies',
+    marketingDesc: 'Ermöglicht Versionsbenachrichtigungen, interaktive Zia-KI-Hilfe und Feedback-Umfragen.',
+    saveConsent: 'Cookie-Einstellungen speichern',
+    resetConsent: 'Einwilligung zurücksetzen (Banner anzeigen)',
+    portability: 'Datenübertragbarkeit (Recht auf Auskunft & Export)',
+    portabilityDesc: 'Nach der DSGVO (Artikel 20) können Sie alle von eZNR verarbeiteten personenbezogenen Daten im JSON-Format herunterladen.',
+    exportBtn: '📥 Meine Daten exportieren (JSON)',
+    forget: 'Recht auf Vergessenwerden (Kontolöschung)',
+    forgetDesc: 'Das Löschen Ihres Kontos entfernt Ihr Profil dauerhaft aus der Datenbank und hebt den Zugriff auf eZNR auf. Dies kann nicht rückgängig gemacht werden.',
+    deleteBtn: '🗑️ Mein Konto dauerhaft löschen',
+    confirmDeleteTitle: 'Kontolöschung bestätigen',
+    confirmDeleteDesc: 'Bitte geben Sie Ihr Passwort ein, um Ihre Identität zu bestätigen. Alle Profildaten werden dauerhaft gelöscht.',
+    enterPassword: 'Passwort eingeben',
+    cancel: 'Abbrechen',
+    deleteConfirm: '🗑️ Ja, dauerhaft löschen',
+    deleting: 'Löschen...',
+    successSaved: 'Cookie-Einstellungen erfolgreich aktualisiert!'
+  },
+  sl: {
+    title: '🔒 GDPR, Zasebnost in Pravice Uporabnika',
+    cookieConsent: 'Nastavitve piškotkov',
+    cookieConsentDesc: 'Upravljajte s tem, katere kategorije piškotkov sprejemate med uporabo eZNR.',
+    essential: 'Nujni piškotki (Sistemski)',
+    essentialDesc: 'Potrebni za osnovno delovanje (seje, jezik, tema, sinhronizacija) in jih ni mogoče onemogočiti.',
+    analytical: 'Analitični piškotki',
+    analyticalDesc: 'Uporabljajo se za spremljanje uspešnosti, samodejno beleženje napak in optimizacijo.',
+    marketing: 'Trženjski piškotki',
+    marketingDesc: 'Omogoča obvestila o različicah, interaktivno pomoč asistentke Zia in ankete.',
+    saveConsent: 'Shrani nastavitve piškotkov',
+    resetConsent: 'Ponastavi pristanek (Prikaži pasico)',
+    portability: 'Prenosljivost podatkov (Pravica do izvoza)',
+    portabilityDesc: 'V skladu z GDPR (člen 20) lahko prenesete vse svoje osebne podatke v strukturirani obliki.',
+    exportBtn: '📥 Izvozi moje podatke (JSON)',
+    forget: 'Pravica do pozabe (Izbris računa)',
+    forgetDesc: 'Z izbrisom računa trajno odstranite svoj profil iz baze in prekličete dostop do eZNR. Ta akcija je dokončna.',
+    deleteBtn: '🗑️ Trajno izbriši moj račun',
+    confirmDeleteTitle: 'Potrditev izbrisa računa',
+    confirmDeleteDesc: 'Za trajen izbris računa vnesite geslo, da potrdite svojo identiteto. Vsi vaši podatki bodo trajno izbrisani.',
+    enterPassword: 'Vnesite geslo',
+    cancel: 'Prekliči',
+    deleteConfirm: '🗑️ Da, trajno izbriši račun',
+    deleting: 'Brisanje...',
+    successSaved: 'Nastavitve piškotkov so posodobljene!'
+  },
+  sr: {
+    title: '🔒 GDPR, Приватност и Права Корисника',
+    cookieConsent: 'Управљање колачићима',
+    cookieConsentDesc: 'Подесите које категорије колачића прихватате приликом коришћења eZNR платформе.',
+    essential: 'Неопходни колачићи (Системски)',
+    essentialDesc: 'Ови колачићи су неопходни за рад платформе (нпр. сесија, језик, тема, локарна синхронизација) и не могу се искључити.',
+    analytical: 'Аналитички колачићи',
+    analyticalDesc: 'Користе се за праћење перформанси платформе, аутоматско бележење грешака и оптимизацију.',
+    marketing: 'Маркетиншки колачићи',
+    marketingDesc: 'Омогућавају приказ обавештења о новим верзијама и помоћ асистенткиње Zia.',
+    saveConsent: 'Сачувај поставке колачиća',
+    resetConsent: 'Поништи пристанак (Прикажи банер)',
+    portability: 'Преносивост података (Право на извоз)',
+    portabilityDesc: 'У складу са GDPR регулативом, имате право преузети све ваше личне податке у структурисаном облику.',
+    exportBtn: '📥 Извези моје податке (JSON)',
+    forget: 'Право на заборав (Брисање налога)',
+    forgetDesc: 'Брисањем налога трајно уклањате свој профил из базе података. Ова акција је неповратна.',
+    deleteBtn: '🗑️ Трајно обриши мој налог',
+    confirmDeleteTitle: 'Потврда брисања налога',
+    confirmDeleteDesc: 'Да бисте трајно обрисали налог, унесите лозинку за потврду идентитета. Сви профилни подаци биће трајно обрисани.',
+    enterPassword: 'Унесите лозинку',
+    cancel: 'Одустани',
+    deleteConfirm: '🗑️ Да, трајно обриши налог',
+    deleting: 'Брисање у току...',
+    successSaved: 'Поставке колачића су успешно ажурисане!'
+  }
+};
+
 export default function SettingsContent() {
   const { t, lang, setLang, toggleLang } = useLanguage();
   const { user, isAdmin, isSuperAdmin, activeCompanyId, logout, changePassword, reauthenticate, changeEmail, changeName, updateUserContext } = useAuth();
@@ -392,6 +552,134 @@ export default function SettingsContent() {
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
   const [notifSyncError, setNotifSyncError] = useState(false);
+
+  // GDPR and Account Deletion states
+  const [gdprConsent, setGdprConsent] = useState({ essential: true, analytical: false, marketing: false });
+  const [gdprSaved, setGdprSaved] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  // Load GDPR Consent from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('eznr_gdpr_consent');
+      if (saved) {
+        try {
+          setGdprConsent(JSON.parse(saved));
+        } catch (e) {
+          console.error('[Settings] Failed to parse GDPR consent:', e);
+        }
+      }
+    }
+  }, []);
+
+  // Listen to GDPR consent changes (e.g. from banner)
+  useEffect(() => {
+    const handleConsentChange = (e) => {
+      if (e && e.detail) {
+        setGdprConsent(e.detail);
+      }
+    };
+    window.addEventListener('eznr:gdpr-consent-changed', handleConsentChange);
+    return () => window.removeEventListener('eznr:gdpr-consent-changed', handleConsentChange);
+  }, []);
+
+  const handleSaveGdprConsent = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eznr_gdpr_consent', JSON.stringify(gdprConsent));
+      setGdprSaved(true);
+      setTimeout(() => setGdprSaved(false), 3000);
+      // Notify other instances
+      window.dispatchEvent(new CustomEvent('eznr:gdpr-consent-changed', { detail: gdprConsent }));
+    }
+  };
+
+  const handleResetGdprConsent = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('eznr_gdpr_consent');
+      window.location.reload(); // Refresh to trigger the consent banner
+    }
+  };
+
+  const handleExportData = () => {
+    try {
+      const logs = getUserLog(1000);
+      const myLogs = logs.filter(l => l.userId === user?.id);
+      
+      const exportPayload = {
+        profile: {
+          id: user?.id,
+          firstName: user?.firstName || '',
+          lastName: user?.lastName || '',
+          email: user?.email || '',
+          role: user?.role || '',
+          companyIds: user?.companyIds || [],
+          username: user?.username || '',
+        },
+        activityLogs: myLogs,
+        exportedAt: new Date().toISOString(),
+        version: APP_VERSION,
+      };
+
+      const jsonStr = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `eznr_osobni_podaci_${user?.firstName || 'user'}_${user?.lastName || 'data'}.json`.toLowerCase();
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[Settings] Failed to export data:', err);
+    }
+  };
+
+  const handleDeleteAccountConfirm = async () => {
+    setDeleteError('');
+    if (!deletePassword) {
+      setDeleteError(lang === 'en' ? 'Password is required.' : 'Lozinka je obavezna.');
+      return;
+    }
+    setDeleting(true);
+    try {
+      // 1. Re-authenticate
+      await reauthenticate(deletePassword);
+      
+      const userId = user?.id;
+      if (!userId) {
+        throw new Error('Korisnički ID nije validan.');
+      }
+      
+      // 2. Delete Firestore profile
+      await deleteDoc(doc(db, 'users', userId));
+      
+      // 3. Delete Firebase Auth user
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        await deleteUser(currentUser);
+      }
+      
+      setDeleting(false);
+      setShowDeleteModal(false);
+      
+      // 4. Logout and redirect
+      await logout();
+      router.push('/login');
+    } catch (err) {
+      setDeleting(false);
+      const code = err?.code || err?.message || '';
+      if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+        setDeleteError(lang === 'en' ? 'Incorrect password. Please try again.' : 'Pogrešna lozinka. Pokušajte ponovo.');
+      } else {
+        setDeleteError(lang === 'en' ? `Failed to delete account: ${err.message}` : `Neuspješno brisanje računa: ${err.message}`);
+      }
+    }
+  };
+
 
   // Load notif settings from Firestore whenever notifications tab is opened
   useEffect(() => {
@@ -773,6 +1061,7 @@ export default function SettingsContent() {
       { key: 'system', label: t('sistem'), icon: '🛡️' },
       { key: 'statistics', label: t('statistika'), icon: '📊' },
     ] : []),
+    { key: 'gdpr', label: lang === 'en' ? 'GDPR & Privacy' : lang === 'de' ? 'GDPR & Datenschutz' : lang === 'sl' ? 'GDPR in Zasebnost' : lang === 'sr' ? 'ГДПР и Приватност' : 'GDPR i Privatnost', icon: '🔒' },
   ];
 
 
@@ -2303,6 +2592,224 @@ export default function SettingsContent() {
                   {t('logJePrazan')}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 8: GDPR & PRIVACY                             */}
+      {/* ══════════════════════════════════════════════════ */}
+      {currentTab === 'gdpr' && (
+        <div className="animate-fadeIn">
+          {/* Cookie consent settings */}
+          <div className="card" style={{ marginBottom: 20 }}>
+            <div className="card-body">
+              <h3 style={{ marginBottom: 12 }}>🍪 {gdprLocalTrans[lang || 'bs']?.cookieConsent}</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+                {gdprLocalTrans[lang || 'bs']?.cookieConsentDesc}
+              </p>
+
+              {/* Toggles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--bg-input)', padding: 20, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{gdprLocalTrans[lang || 'bs']?.essential}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>{gdprLocalTrans[lang || 'bs']?.essentialDesc}</div>
+                  </div>
+                  <input type="checkbox" className="gdpr-toggle-input" checked={true} disabled={true} readOnly={true} style={{ pointerEvents: 'none', opacity: 0.6 }} />
+                </div>
+                
+                <hr style={{ margin: 0, border: 'none', borderTop: '1px solid var(--border-light)' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{gdprLocalTrans[lang || 'bs']?.analytical}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>{gdprLocalTrans[lang || 'bs']?.analyticalDesc}</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="gdpr-toggle-input"
+                    checked={gdprConsent.analytical}
+                    onChange={e => setGdprConsent(c => ({ ...c, analytical: e.target.checked }))}
+                    style={{
+                      appearance: 'none',
+                      width: '36px',
+                      height: '20px',
+                      backgroundColor: gdprConsent.analytical ? 'var(--primary)' : '#2D3148',
+                      borderRadius: '20px',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      transition: 'background-color 0.2s',
+                    }}
+                  />
+                </div>
+
+                <hr style={{ margin: 0, border: 'none', borderTop: '1px solid var(--border-light)' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.86rem' }}>{gdprLocalTrans[lang || 'bs']?.marketing}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>{gdprLocalTrans[lang || 'bs']?.marketingDesc}</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="gdpr-toggle-input"
+                    checked={gdprConsent.marketing}
+                    onChange={e => setGdprConsent(c => ({ ...c, marketing: e.target.checked }))}
+                    style={{
+                      appearance: 'none',
+                      width: '36px',
+                      height: '20px',
+                      backgroundColor: gdprConsent.marketing ? 'var(--primary)' : '#2D3148',
+                      borderRadius: '20px',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      transition: 'background-color 0.2s',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button className="btn btn-primary" onClick={handleSaveGdprConsent}>
+                  💾 {gdprLocalTrans[lang || 'bs']?.saveConsent}
+                </button>
+                <button className="btn" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }} onClick={handleResetGdprConsent}>
+                  🔄 {gdprLocalTrans[lang || 'bs']?.resetConsent}
+                </button>
+                {gdprSaved && <span style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.85rem', marginLeft: 8 }} className="animate-fadeIn">✅ {gdprLocalTrans[lang || 'bs']?.successSaved}</span>}
+              </div>
+            </div>
+          </div>
+
+          {/* Data Portability (Export) */}
+          <div className="card" style={{ marginBottom: 20 }}>
+            <div className="card-body">
+              <h3 style={{ marginBottom: 12 }}>📥 {gdprLocalTrans[lang || 'bs']?.portability}</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+                {gdprLocalTrans[lang || 'bs']?.portabilityDesc}
+              </p>
+              <button className="btn btn-primary" onClick={handleExportData}>
+                {gdprLocalTrans[lang || 'bs']?.exportBtn}
+              </button>
+            </div>
+          </div>
+
+          {/* Account deletion (Right to forgotten) */}
+          <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.02)' }}>
+            <div className="card-body">
+              <h3 style={{ color: 'var(--danger)', marginBottom: 12 }}>🗑️ {gdprLocalTrans[lang || 'bs']?.forget}</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+                {gdprLocalTrans[lang || 'bs']?.forgetDesc}
+              </p>
+              <button className="btn btn-danger" onClick={() => { setDeletePassword(''); setDeleteError(''); setShowDeleteModal(true); }}>
+                {gdprLocalTrans[lang || 'bs']?.deleteBtn}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Account Verification Modal ── */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99998,
+          background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'fadeIn 0.12s ease-out',
+        }}>
+          <div style={{
+            background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)',
+            padding: '32px 36px', maxWidth: 440, width: '90%',
+            boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border)',
+            animation: 'slideUp 0.15s ease-out', position: 'relative',
+            color: 'var(--text)'
+          }}>
+            {/* × close button */}
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              style={{
+                position: 'absolute', top: 14, right: 14,
+                background: 'none', border: 'none', fontSize: '1.1rem',
+                cursor: 'pointer', color: 'var(--text-muted)',
+                lineHeight: 1, padding: '4px 6px', borderRadius: 6,
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+              title="Zatvori"
+            >✕</button>
+
+            {/* Icon & Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <span style={{ fontSize: '1.6rem' }}>⚠️</span>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>
+                {gdprLocalTrans[lang || 'bs']?.confirmDeleteTitle}
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p style={{ margin: '0 0 20px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.88rem' }}>
+              {gdprLocalTrans[lang || 'bs']?.confirmDeleteDesc}
+            </p>
+
+            {/* Password input */}
+            <div className="form-group" style={{ marginBottom: 18 }}>
+              <label className="form-label" style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                {gdprLocalTrans[lang || 'bs']?.enterPassword}
+              </label>
+              <input
+                type="password"
+                className="form-input"
+                placeholder="••••••••"
+                value={deletePassword}
+                onChange={e => setDeletePassword(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleDeleteAccountConfirm(); }}
+                autoFocus
+              />
+            </div>
+
+            {/* Error Message */}
+            {deleteError && (
+              <div style={{
+                padding: '10px 14px', borderRadius: 8,
+                background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)',
+                fontSize: '0.8rem', fontWeight: 600, marginBottom: 18,
+                border: '1px solid rgba(239, 68, 68, 0.2)'
+              }} className="animate-fadeIn">
+                ⚠️ {deleteError}
+              </div>
+            )}
+
+            {/* Footer Buttons */}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                className="btn"
+                style={{
+                  padding: '9px 18px', borderRadius: 'var(--radius-md)',
+                  background: 'var(--bg-input)', color: 'var(--text)',
+                  border: '1px solid var(--border)', cursor: 'pointer',
+                  fontWeight: 600, fontSize: '0.88rem'
+                }}
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                {gdprLocalTrans[lang || 'bs']?.cancel}
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{
+                  padding: '9px 20px', borderRadius: 'var(--radius-md)',
+                  fontWeight: 700, fontSize: '0.88rem'
+                }}
+                onClick={handleDeleteAccountConfirm}
+                disabled={deleting}
+              >
+                {deleting ? gdprLocalTrans[lang || 'bs']?.deleting : gdprLocalTrans[lang || 'bs']?.deleteConfirm}
+              </button>
             </div>
           </div>
         </div>

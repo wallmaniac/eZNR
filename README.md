@@ -338,10 +338,28 @@ maskPIIInput() → "Je li W[m7x2k] na bolovanju?"
          ↓
 Gemini odgovara: "Da, W[m7x2k] je na bolovanju od..."
          ↓
-unmaskPIIOutput() → "Da, **Marko Marković** je na bolovanju od..."
-         ↓
-Korisnik vidi normalan odgovor s imenom
-```
+### 🇪🇺 Implementacija GDPR Zahtjeva (Usklađenost i Privatnost)
+
+Aplikacija u potpunosti implementira i podržava standarde zaštite privatnosti u skladu s Općom uredbom o zaštiti podataka (GDPR):
+
+- **Globalni Banner za Pristanak Kolačića (Cookie Consent Banner)**:
+  - Korisnik pri prvom posjetu može odabrati razine praćenja podataka.
+  - Podijeljen je na tri razine:
+    - **Neophodni (Essential)**: Ključni sistemski podaci (jezik, sesije, lokalna pohrana) nužni za rad aplikacije. Ne mogu se isključiti.
+    - **Analitički (Analytical)**: Praćenje performansi sustava i telemetrija pogrešaka za optimizaciju.
+    - **Marketinški (Marketing)**: Obavijesti o novostima i interaktivni asistent Zia.
+  - Odluke se spremaju u `localStorage` i poštuju kroz sve dijelove aplikacije.
+
+- **Upravljanje postavkama privatnosti**:
+  - U postavkama profila dodan je tab **🔒 GDPR i Privatnost** gdje korisnik može u bilo kojem trenutku izmijeniti ili poništiti svoje odluke o privoli.
+
+- **Pravo na prenosivost podataka (Član 20. GDPR-a - Export Data)**:
+  - Korisnici mogu jednim klikom preuzeti sve svoje podatke koje aplikacija obrađuje (profilni podaci i kompletna povijest aktivnosti na platformi) u strukturiranom, strojno čitljivom JSON formatu.
+
+- **Pravo na zaborav / Brisanje računa (Član 17. GDPR-a - Delete Account)**:
+  - Korisnik može zatražiti trajno brisanje svog korisničkog računa.
+  - Iz sigurnosnih razloga, postupak zahtijeva ponovni unos lozinke (re-autentikaciju).
+  - Nakon uspješne provjere, sustav trajno briše korisnički profil iz Firestore baze podataka (`/users/{uid}`) i uklanja njegov račun iz Firebase Authentication sustava.
 
 ---
 
