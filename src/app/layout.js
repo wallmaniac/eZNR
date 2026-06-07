@@ -40,8 +40,6 @@ export const viewport = {
   viewportFit: 'cover'
 };
 
-import GDPRConsentBanner from '@/components/GDPRConsentBanner';
-
 export default function RootLayout({ children }) {
   return (
     <html lang="bs">
@@ -62,7 +60,6 @@ export default function RootLayout({ children }) {
                   <Suspense fallback={null}>
                     {children}
                   </Suspense>
-                  <GDPRConsentBanner />
                 </ToastProvider>
               </CountryProvider>
             </LanguageProvider>

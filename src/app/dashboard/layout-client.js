@@ -13,6 +13,7 @@ import OfflineIndicator from '@/components/mobile/OfflineIndicator';
 import GlobalLongPress from '@/components/mobile/GlobalLongPress';
 import GlobalSwipeNav from '@/components/mobile/GlobalSwipeNav';
 import { LoadingProgressBar } from '@/components/SkeletonUI';
+import GDPRConsentBanner from '@/components/GDPRConsentBanner';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading, activeCompanyId, switchCompany } = useAuth();
@@ -210,6 +211,7 @@ export default function DashboardLayout({ children }) {
 
             <UndoBar />
             <AIAssistant />
+            <GDPRConsentBanner />
         </div>
     );
 }
