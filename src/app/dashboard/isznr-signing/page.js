@@ -21,7 +21,12 @@ export default function ISZNRSigningPage() {
   
   const { alert, confirm, DialogRenderer } = useDialog();
   const { user, activeCompanyId } = useAuth();
-  const [documents, setDocuments] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('general');
+  const [generalDocs, setGeneralDocs] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [zapisnici, setZapisnici] = useState([]);
+  const [workers, setWorkers] = useState([]);
+
   const [activeTab, setActiveTab] = useState('sign');
   const [showSignModal, setShowSignModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -55,7 +60,10 @@ export default function ISZNRSigningPage() {
   }, [openMenuId]);
 
   const loadData = useCallback(() => {
-    setDocuments(getAll(COLLECTIONS.ISZNR_DOCUMENTS));
+    setGeneralDocs(getAll(COLLECTIONS.ISZNR_DOCUMENTS) || []);
+    setCertificates(getAll(COLLECTIONS.CERTIFICATES) || []);
+    setZapisnici(getAll(COLLECTIONS.ZAPISNICI) || []);
+    setWorkers(getAll(COLLECTIONS.WORKERS) || []);
   }, []);
   useEffect(() => {
       loadData();
@@ -66,8 +74,35 @@ export default function ISZNRSigningPage() {
   const docTypes = useMemo(() => getAll(COLLECTIONS.ISZNR_DOC_TYPES), []);
   const getDocTypeName = (id) => docTypes.find(dt => dt.id === id)?.naziv || id;
 
+  const currentDocs = useMemo(() => {
+    if (selectedCategory === 'certificates') {
+      return certificates.map(c => {
+        const w = workers.find(x => x.id === c.workerId);
+        const wName = w ? `${w.ime} ${w.prezime}` : '';
+        return {
+          ...c,
+          naslov: `${wName ? wName + ' — ' : ''}${c.naziv || c.ime || 'Uvjerenje'}`,
+          tipDokumentaName: c.tipUvjerenjaIme || c.tipUvjerenja || 'Uvjerenje',
+          datum: c.datum || '',
+        };
+      });
+    } else if (selectedCategory === 'zapisnici') {
+      return zapisnici.map(z => ({
+        ...z,
+        naslov: `${z.broj ? z.broj + ' — ' : ''}${z.naziv || 'Zapisnik'}`,
+        tipDokumentaName: z.vrsta || 'Zapisnik',
+        datum: z.datum || '',
+      }));
+    } else {
+      return generalDocs.map(g => ({
+        ...g,
+        tipDokumentaName: getDocTypeName(g.tipDokumentaId) || 'Opšti dokument',
+      }));
+    }
+  }, [selectedCategory, generalDocs, certificates, zapisnici, workers, docTypes]);
+
   const filteredDocs = useMemo(() => {
-    let result = documents;
+    let result = currentDocs;
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       result = result.filter(d => d.naslov.toLowerCase().includes(q));
@@ -75,15 +110,15 @@ export default function ISZNRSigningPage() {
     if (activeTab === 'signed') result = result.filter(d => d.potpisano);
     if (activeTab === 'unsigned') result = result.filter(d => !d.potpisano);
     return result;
-  }, [documents, searchTerm, activeTab]);
+  }, [currentDocs, searchTerm, activeTab]);
 
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredDocs, 'datum');
 
   const stats = useMemo(() => ({
-    total: documents.length,
-    signed: documents.filter(d => d.potpisano).length,
-    unsigned: documents.filter(d => !d.potpisano).length,
-  }), [documents]);
+    total: currentDocs.length,
+    signed: currentDocs.filter(d => d.potpisano).length,
+    unsigned: currentDocs.filter(d => !d.potpisano).length,
+  }), [currentDocs]);
 
   const openSignModal = (doc = null) => {
     setOpenMenuId(null);
@@ -105,7 +140,7 @@ export default function ISZNRSigningPage() {
 
   const handleBatchSign = () => {
     if (batchSelected.length === 0) return;
-    const firstDoc = documents.find(d => d.id === batchSelected[0]);
+    const firstDoc = currentDocs.find(d => d.id === batchSelected[0]);
     setSelectedDoc(firstDoc);
     setSignStep(1);
   };
@@ -135,6 +170,12 @@ export default function ISZNRSigningPage() {
     setPinError('');
     setSignStep(2);
 
+    const collection = selectedCategory === 'certificates' 
+      ? COLLECTIONS.CERTIFICATES 
+      : selectedCategory === 'zapisnici' 
+        ? COLLECTIONS.ZAPISNICI 
+        : COLLECTIONS.ISZNR_DOCUMENTS;
+
     setTimeout(() => {
       const signatureData = {
         potpisano: true,
@@ -145,15 +186,15 @@ export default function ISZNRSigningPage() {
         certifikat: `eZNR-CERT-${Date.now().toString(36).toUpperCase()}`,
         algoritam: 'SHA-256 + RSA-2048',
       };
-      if (batchMode && batchSelected.length> 0) {
+      if (batchMode && batchSelected.length > 0) {
         batchSelected.forEach(docId => {
-          update(COLLECTIONS.ISZNR_DOCUMENTS, docId, {
+          update(collection, docId, {
             ...signatureData,
             potpis: generateSignatureHash(),
           });
         });
       } else if (selectedDoc) {
-        update(COLLECTIONS.ISZNR_DOCUMENTS, selectedDoc.id, signatureData);
+        update(collection, selectedDoc.id, signatureData);
       }
       loadData();
       setSignStep(3);
@@ -182,7 +223,13 @@ export default function ISZNRSigningPage() {
 
   const handleRevokeSignature = async (doc) => {
     const ok = await confirm(t('revokeDigitalSignatureOnThis')); if (!ok) return;
-    update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, {
+    const collection = selectedCategory === 'certificates' 
+      ? COLLECTIONS.CERTIFICATES 
+      : selectedCategory === 'zapisnici' 
+        ? COLLECTIONS.ZAPISNICI 
+        : COLLECTIONS.ISZNR_DOCUMENTS;
+
+    update(collection, doc.id, {
       potpisano: false,
       datumPotpisa: null,
       potpis: null,
@@ -195,7 +242,13 @@ export default function ISZNRSigningPage() {
   const handleDeleteDoc = async (doc) => {
     setOpenMenuId(null);
     const ok = await confirm(t('obrisatiDokument')); if (!ok) return;
-    remove(COLLECTIONS.ISZNR_DOCUMENTS, doc.id);
+    const collection = selectedCategory === 'certificates' 
+      ? COLLECTIONS.CERTIFICATES 
+      : selectedCategory === 'zapisnici' 
+        ? COLLECTIONS.ZAPISNICI 
+        : COLLECTIONS.ISZNR_DOCUMENTS;
+
+    remove(collection, doc.id);
     loadData();
   };
 
@@ -222,6 +275,18 @@ export default function ISZNRSigningPage() {
 
       <div className="alert alert-info" style={{ marginBottom: 20 }}>
         ℹ️ {t('digitalDocumentSigningUsesA')}
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <button className={`btn ${selectedCategory === 'general' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setSelectedCategory('general'); setSelectedDoc(null); setBatchSelected([]); }}>
+          📁 {lang === 'en' ? 'General Documents' : 'Opšta dokumenta'} ({generalDocs.length})
+        </button>
+        <button className={`btn ${selectedCategory === 'certificates' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setSelectedCategory('certificates'); setSelectedDoc(null); setBatchSelected([]); }}>
+          📜 {lang === 'en' ? 'Worker Certificates' : 'Uvjerenja radnika'} ({certificates.length})
+        </button>
+        <button className={`btn ${selectedCategory === 'zapisnici' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setSelectedCategory('zapisnici'); setSelectedDoc(null); setBatchSelected([]); }}>
+          📋 {lang === 'en' ? 'Minutes / Records' : 'Zapisnici o ispitivanju'} ({zapisnici.length})
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
@@ -296,7 +361,7 @@ export default function ISZNRSigningPage() {
                         </div>
                     </td>
                     <td style={{ fontWeight: 600 }}>{doc.naslov}</td>
-                    <td><span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{getDocTypeName(doc.tipDokumentaId)}</span></td>
+                    <td><span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{doc.tipDokumentaName}</span></td>
                     <td>{formatDate(doc.datum)}</td>
                     <td>
                       {doc.potpisano ? (
@@ -344,7 +409,7 @@ export default function ISZNRSigningPage() {
               </div>
 
               {signStep === 0 && (() => {
-                const unsignedDocs = documents.filter(d => !d.potpisano);
+                const unsignedDocs = currentDocs.filter(d => !d.potpisano);
                 const modalFiltered = modalDocSearch.trim()
                   ? unsignedDocs.filter(d => d.naslov.toLowerCase().includes(modalDocSearch.toLowerCase()))
                   : unsignedDocs;
@@ -445,31 +510,33 @@ export default function ISZNRSigningPage() {
                       </div>
                     )}
 
-                    <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 16 }}>
-                      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
-                        {t('orCreateNew')}
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">{t('documentTitle')} *</label>
-                        <input className="form-input" value={newDocForm.naslov} onChange={e => setNewDocForm(p => ({ ...p, naslov: e.target.value }))}
-                          placeholder={t('egInspectionReport')} />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
-                        <div className="form-group">
-                          <label className="form-label">{t('documentTypes')}</label>
-                          <select className="form-input" value={newDocForm.tipDokumenta} onChange={e => setNewDocForm(p => ({ ...p, tipDokumenta: e.target.value }))}>
-                            {docTypes.map(dt => <option key={dt.id} value={dt.oznaka}>{dt.naziv}</option>)}
-                          </select>
+                    {selectedCategory === 'general' && (
+                      <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 16 }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
+                          {t('orCreateNew')}
                         </div>
                         <div className="form-group">
-                          <label className="form-label">{t('napomena')}</label>
-                          <input className="form-input" value={newDocForm.napomena} onChange={e => setNewDocForm(p => ({ ...p, napomena: e.target.value }))} />
+                          <label className="form-label">{t('documentTitle')} *</label>
+                          <input className="form-input" value={newDocForm.naslov} onChange={e => setNewDocForm(p => ({ ...p, naslov: e.target.value }))}
+                            placeholder={t('egInspectionReport')} />
                         </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
+                          <div className="form-group">
+                            <label className="form-label">{t('documentTypes')}</label>
+                            <select className="form-input" value={newDocForm.tipDokumenta} onChange={e => setNewDocForm(p => ({ ...p, tipDokumenta: e.target.value }))}>
+                              {docTypes.map(dt => <option key={dt.id} value={dt.oznaka}>{dt.naziv}</option>)}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">{t('napomena')}</label>
+                            <input className="form-input" value={newDocForm.napomena} onChange={e => setNewDocForm(p => ({ ...p, napomena: e.target.value }))} />
+                          </div>
+                        </div>
+                        <button className="btn btn-primary" onClick={handleNewDocForSigning} disabled={!newDocForm.naslov.trim()} style={{ marginTop: 12 }}>
+                          📄 {t('createSign')}
+                        </button>
                       </div>
-                      <button className="btn btn-primary" onClick={handleNewDocForSigning} disabled={!newDocForm.naslov.trim()} style={{ marginTop: 12 }}>
-                        📄 {t('createSign')}
-                      </button>
-                    </div>
+                    )}
                   </div>
                 );
               })()}
@@ -607,7 +674,7 @@ export default function ISZNRSigningPage() {
             </div>
             <div className="modal-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('tip')}</div><div style={{ fontWeight: 600 }}>{getDocTypeName(showDetailModal.tipDokumentaId)}</div></div>
+                <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('tip')}</div><div style={{ fontWeight: 600 }}>{showDetailModal.tipDokumentaName || getDocTypeName(showDetailModal.tipDokumentaId)}</div></div>
                 <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('date')}</div><div style={{ fontWeight: 600 }}>{formatDate(showDetailModal.datum)}</div></div>
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('status')}</div>

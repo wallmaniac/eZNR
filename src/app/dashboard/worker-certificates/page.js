@@ -39,9 +39,19 @@ function buildBulkPrintHtml(selectedRows, workers, lang, t) {
           ${r.ovlastenaFirma ? `<tr><td class="lbl">${t('ovlastenaTvrtka')}</td><td class="val">${r.ovlastenaFirma}</td></tr>` : ''}
         </table>
         <div class="cert-footer">
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <div class="sig-label">${t('authorisedPerson')}</div>
+          <div class="sig-block" style="text-align: center;">
+            ${r.potpisano ? `
+              <div style="border: 2px dashed #00BFA6; padding: 6px 10px; border-radius: 4px; background: rgba(0, 191, 166, 0.04); font-size: 8pt; text-align: left; display: inline-block; width: 100%; max-width: 250px; margin-top: -10px;">
+                <div style="font-weight: 700; color: #00BFA6; text-transform: uppercase; margin-bottom: 2px; font-size: 8.5pt;">⚡ Digitalni potpis</div>
+                <div>Potpisnik: <strong>${r.potpisnik}</strong></div>
+                <div style="font-size: 7.5pt; color: #555;">Datum: ${r.datumPotpisa ? new Date(r.datumPotpisa).toLocaleString('bs-BA') : ''}</div>
+                <div style="font-family: monospace; font-size: 6pt; color: #777; word-break: break-all; margin-top: 4px;">ID: ${r.certifikat}</div>
+              </div>
+              <div class="sig-label" style="margin-top: 6px;">${t('authorisedPerson')}</div>
+            ` : `
+              <div class="sig-line"></div>
+              <div class="sig-label">${t('authorisedPerson')}</div>
+            `}
           </div>
           <div class="sig-block">
             <div class="sig-line"></div>
@@ -558,7 +568,20 @@ function WorkerCertificatesInner() {
                         <td style={{ color: r.isExpired ? 'var(--danger)' : diff <= 60 ? '#FF9800' : undefined, fontWeight: r.isExpired || diff <= 60 ? 700 : undefined }}>
                           {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
                         </td>
-                        <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (t('isteklo')) : (t('vrijedi'))}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+                            <span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`} style={{ width: '100%', display: 'block', textAlign: 'center' }}>{r.isExpired ? (t('isteklo')) : (t('vrijedi'))}</span>
+                            {r.potpisano ? (
+                              <span className="badge badge-success" style={{ background: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.2)', width: '100%', display: 'block', textAlign: 'center', cursor: 'default' }} title={`${t('potpisnik') || 'Potpisnik'}: ${r.potpisnik}`}>
+                                🛡️ {lang === 'en' ? 'Signed' : 'Potpisano'}
+                              </span>
+                            ) : (
+                              <span className="badge" style={{ background: 'var(--bg-badge)', color: 'var(--text-muted)', border: '1px solid var(--border)', width: '100%', display: 'block', textAlign: 'center', cursor: 'pointer' }} onClick={() => router.push('/dashboard/isznr-signing')} title={lang === 'en' ? 'Click to sign' : 'Kliknite za potpisivanje'}>
+                                ✍️ {lang === 'en' ? 'Unsigned' : 'Čeka potpis'}
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
                       </tr>
                     );

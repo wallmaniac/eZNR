@@ -1,6 +1,7 @@
 'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -93,6 +94,7 @@ const menuItemSt = {
 export default function ZapisniciPage() {
     const { lang, t } = useLanguage();
     const country = useCountry();
+    const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const [activeTab, setActiveTab] = useState('list');
 
@@ -498,6 +500,7 @@ export default function ZapisniciPage() {
                                                 <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{t('broj')}{sortIcon('broj')}</th>
                                                 <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{t('datum')}{sortIcon('datum')}</th>
                                                 <th style={{ width: 200 }}>{t('vrsta')}</th>
+                                                <th style={{ width: 110 }}>{lang === 'en' ? 'Signature' : 'Potpis'}</th>
                                                 <th style={{ width: 70, textAlign: 'center' }}>{t('dokument')}</th>
                                             </tr>
                                         </thead>
@@ -578,6 +581,17 @@ export default function ZapisniciPage() {
                                                                 {item.vrsta}
                                                             </span>
                                                         ) : '—'}
+                                                    </td>
+                                                    <td>
+                                                        {item.potpisano ? (
+                                                            <span className="badge badge-success" style={{ background: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.2)', padding: '2px 8px', borderRadius: 6, fontSize: '0.78rem', fontWeight: 600, display: 'inline-block' }} title={`${lang === 'en' ? 'Signer' : 'Potpisnik'}: ${item.potpisnik}`}>
+                                                                🛡️ {lang === 'en' ? 'Signed' : 'Potpisano'}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="badge" style={{ background: 'var(--bg-badge)', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: 6, fontSize: '0.78rem', fontWeight: 600, display: 'inline-block', cursor: 'pointer' }} onClick={() => router.push('/dashboard/isznr-signing')} title={lang === 'en' ? 'Click to sign' : 'Kliknite za potpisivanje'}>
+                                                                ✍️ {lang === 'en' ? 'Unsigned' : 'Čeka potpis'}
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td style={{ textAlign: 'center' }}>
                                                         {item.idbKey ? (

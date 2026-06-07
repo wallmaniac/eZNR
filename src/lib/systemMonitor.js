@@ -918,6 +918,97 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }, sampleQ || {}));
     }
 
+    // ── ZNR Compliance Alerts (BiH/FBiH & Croatia legal rules) ──
+    const activeWorkers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan !== false);
+    const workplaces = filterByCompany(getAll(COLLECTIONS.WORKPLACES));
+    const allMedExams = filterByCompany(getAll(COLLECTIONS.MEDICAL_EXAMS));
+    const nightLogs = filterByCompany(getAll('nightWork') || []);
+
+    activeWorkers.forEach(worker => {
+        // Find latest medical exam for this worker
+        const workerExams = allMedExams
+            .filter(me => me.workerId === worker.id && me.datumPregleda)
+            .sort((a, b) => b.datumPregleda.localeCompare(a.datumPregleda));
+        
+        const latestExam = workerExams[0] || null;
+        
+        // Expiry calculation helpers
+        const hasValidExamInMonths = (months) => {
+            if (!latestExam) return false;
+            // Check if latest exam date is within N months
+            const examDate = new Date(latestExam.datumPregleda);
+            const limitDate = new Date();
+            limitDate.setMonth(limitDate.getMonth() - months);
+            if (examDate < limitDate) return false;
+            
+            // Check if it has a vrijediDo date that is already passed
+            if (latestExam.vrijediDo && new Date(latestExam.vrijediDo) < today) {
+                return false;
+            }
+            return true;
+        };
+
+        // Workplace lookup
+        const wp = workplaces.find(x => x.id === worker.radnoMjestoId || x.naziv === worker.radnoMjesto);
+
+        // Rule 1: Special Conditions Medical Exam (12-month limit)
+        // If worker.posebniUvjeti === true or workplace has posebniUvjetiRada === true
+        const isSpecialConditions = worker.posebniUvjeti === true || wp?.posebniUvjetiRada === true;
+        if (isSpecialConditions) {
+            const hasValid12m = hasValidExamInMonths(12);
+            if (!hasValid12m) {
+                notifications.push(addCompanyBadge({
+                    id: `user_znr_rule1_${worker.id}_${companyId}`,
+                    severity: 'urgent',
+                    category: 'medical',
+                    icon: '🚨',
+                    title: `${worker.ime} ${worker.prezime} — Nedostaje ljekarski pregled (posebni uvjeti)`,
+                    message: `Radnik radi u posebnim uvjetima rada, a nema važeći ljekarski pregled u posljednjih 12 mjeseci. Pravni osnov: ${getCitation(country, 'medical')}.`,
+                    actionLabel: 'Unesi pregled',
+                    actionUrl: `/dashboard/medical-exams?openNew=1&workerId=${worker.id}`,
+                }, worker));
+            }
+        }
+
+        // Rule 2: Computer Work Exam (24-month limit)
+        // If workplace has radNaRacunalu === true
+        const isComputerWork = wp?.radNaRacunalu === true;
+        if (isComputerWork && !isSpecialConditions) { // Rule 1 takes precedence
+            const hasValid24m = hasValidExamInMonths(24);
+            if (!hasValid24m) {
+                notifications.push(addCompanyBadge({
+                    id: `user_znr_rule2_${worker.id}_${companyId}`,
+                    severity: 'warning',
+                    category: 'medical',
+                    icon: '💻',
+                    title: `${worker.ime} ${worker.prezime} — Potreban pregled vida (rad na računaru)`,
+                    message: `Radnik obavlja rad na računaru, a nema pregled u posljednja 24 mjeseca.`,
+                    actionLabel: 'Unesi pregled',
+                    actionUrl: `/dashboard/medical-exams?openNew=1&workerId=${worker.id}`,
+                }, worker));
+            }
+        }
+
+        // Rule 3: Night Shift periodic medical exam (12-month limit)
+        // If worker has logged entries in nightWork collection
+        const hasNightWorkLogs = nightLogs.some(log => log.workerId === worker.id);
+        if (hasNightWorkLogs) {
+            const hasValid12m = hasValidExamInMonths(12);
+            if (!hasValid12m) {
+                notifications.push(addCompanyBadge({
+                    id: `user_znr_rule3_${worker.id}_${companyId}`,
+                    severity: 'urgent',
+                    category: 'medical',
+                    icon: '🌙',
+                    title: `${worker.ime} ${worker.prezime} — Istekao pregled za noćni rad`,
+                    message: `Radnik ima evidentiran noćni rad, a nema važeći ljekarski pregled u posljednjih 12 mjeseci. Pravni osnov: ${getCitation(country, 'medicalNight')}.`,
+                    actionLabel: 'Unesi pregled',
+                    actionUrl: `/dashboard/medical-exams?openNew=1&workerId=${worker.id}`,
+                }, worker));
+            }
+        }
+    });
+
     const severityOrder = { critical: 0, urgent: 1, warning: 2, info: 3 };
     notifications.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
