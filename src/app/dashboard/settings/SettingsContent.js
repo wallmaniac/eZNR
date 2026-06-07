@@ -2008,6 +2008,42 @@ export default function SettingsContent() {
               </div>
             )}
 
+            {/* ── Zaštita od požara (ZOP) ── */}
+            <SectionHeader icon="🧯" title={lang === 'bs' || lang === 'hr' ? 'Zaštita od požara (ZOP)' : 'Fire Protection (ZOP)'} />
+            <Toggle
+              checked={notifSettings.fireExpiryEnabled ?? true}
+              onChange={v => updateNotif('fireExpiryEnabled', v)}
+              label={lang === 'bs' || lang === 'hr' ? 'Obavijest o isteku servisa/pregleda protupožarne opreme' : 'Fire protection service/inspection alerts'}
+              description={lang === 'bs' || lang === 'hr' ? 'Upozori me kada vatrogasnim aparatima ili hidrantima ističe rok ispitivanja' : 'Warn me when fire extinguishers or hydrants require testing'}
+            />
+            {(notifSettings.fireExpiryEnabled ?? true) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('upozoriMe')}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.fireExpiryDays || 30} onChange={e => updateNotif('fireExpiryDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('danaPrijeIsteka')}</span>
+              </div>
+            )}
+
+            {/* ── Evakuacija ── */}
+            <SectionHeader icon="🚨" title={lang === 'bs' || lang === 'hr' ? 'Evakuacija' : 'Evacuation'} />
+            <Toggle
+              checked={notifSettings.evacExpiryEnabled ?? true}
+              onChange={v => updateNotif('evacExpiryEnabled', v)}
+              label={lang === 'bs' || lang === 'hr' ? 'Obavijest o vježbama i revizijama planova evakuacije' : 'Evacuation drill and plan revision alerts'}
+              description={lang === 'bs' || lang === 'hr' ? 'Upozori me kada planovima evakuacije ističe rok revizije ili kada je potrebno održati vježbu evakuacije' : 'Warn me when evacuation plans require revision or when drills are due'}
+            />
+            {(notifSettings.evacExpiryEnabled ?? true) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('upozoriMe')}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.evacExpiryDays || 30} onChange={e => updateNotif('evacExpiryDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('danaPrijeIsteka')}</span>
+              </div>
+            )}
+
             {/* ── Admin-only notifications ── */}
             {isAdmin && (
               <>

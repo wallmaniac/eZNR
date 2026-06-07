@@ -10,6 +10,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import PageHeader from '@/components/PageHeader';
+import SubscriptionGate from '@/components/SubscriptionGate';
 
 const EMPTY = {
     lokacija: '', datumIzrade: '', datumRevizije: '',
@@ -137,7 +138,7 @@ export default function EvacuationPage() {
     const getDrillsForPlan = (planId) => drills.filter(d => d.planId === planId);
 
     return (
-        <>
+        <SubscriptionGate moduleKey="evacuationPlans">
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 {/* Header */}
@@ -462,6 +463,6 @@ export default function EvacuationPage() {
                 </div>
             </div>
             {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} onSaved={() => setViewWorkerId(null)} />}
-        </>
+        </SubscriptionGate>
     );
 }

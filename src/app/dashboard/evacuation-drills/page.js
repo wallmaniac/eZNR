@@ -12,6 +12,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import PageHeader from '@/components/PageHeader';
+import SubscriptionGate from '@/components/SubscriptionGate';
 
 const EMPTY = {
     planId: '', datumVjezbe: '',
@@ -174,7 +175,7 @@ function EvacuationDrillsInner() {
     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
     return (
-        <>
+        <SubscriptionGate moduleKey="evacuationDrills">
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 {/* Header */}
@@ -520,7 +521,7 @@ function EvacuationDrillsInner() {
                 </div>
             </div>
             {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} onSaved={() => setViewWorkerId(null)} />}
-        </>
+        </SubscriptionGate>
     );
 }
 export default function EvacuationDrillsPage() { return <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Učitavanje / Loading...</div>}><EvacuationDrillsInner /></Suspense>; }

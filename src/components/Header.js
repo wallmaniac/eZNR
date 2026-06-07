@@ -28,6 +28,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const [mobileExpanded, setMobileExpanded] = useState(true);
     const [companySearchTerm, setCompanySearchTerm] = useState('');
     const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
+    const [syncTrigger, setSyncTrigger] = useState(0);
     const profileRef = useRef(null);
     const notifRef = useRef(null);
     const searchRef = useRef(null);
@@ -83,6 +84,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         document.addEventListener('keydown', handleKeyDown);
         return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKeyDown); };
     }, [searchFocused]);
+
+    useEffect(() => {
+        const handleSync = () => {
+            setSyncTrigger(prev => prev + 1);
+        };
+        window.addEventListener('eznr:data-synced', handleSync);
+        return () => window.removeEventListener('eznr:data-synced', handleSync);
+    }, []);
 
     const searchResults = useMemo(() => {
         if (!searchTerm || searchTerm.length < 2) return [];
@@ -166,7 +175,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 companyName: n.companyName
             };
         });
-    }, [isAdmin, activeCompanyId, user?.companyIds, t]);
+    }, [isAdmin, activeCompanyId, user?.companyIds, t, syncTrigger]);
 
     const handleSearchNav = (result) => {
         setSearchTerm(''); setSearchFocused(false);

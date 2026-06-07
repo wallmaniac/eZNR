@@ -46,6 +46,10 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
     calendarWeek: true,
     fleetExpiryEnabled: true,
     fleetExpiryDays: 30,
+    fireExpiryEnabled: true,
+    fireExpiryDays: 30,
+    evacExpiryEnabled: true,
+    evacExpiryDays: 30,
 
     // Calendar Settings
     calShowCerts: true,
@@ -619,6 +623,184 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
         }
     }
 
+    // ── Fire Protection (Extinguishers & Hydrants) ──
+    if (settings.fireExpiryEnabled ?? true) {
+        const extinguishers = filterByCompany(getAll(COLLECTIONS.FIRE_EXTINGUISHERS));
+        const hydrants = filterByCompany(getAll(COLLECTIONS.HYDRANTS));
+        
+        let expired = 0;
+        let warningCount = 0;
+        
+        const checkExpiry = (dateStr) => {
+            if (!dateStr) return null;
+            const days = Math.floor((new Date(dateStr) - today) / 86400000);
+            if (days < 0) return 'expired';
+            if (days <= (settings.fireExpiryDays || 30)) return 'warning';
+            return null;
+        };
+
+        extinguishers.forEach(ext => {
+            const status = checkExpiry(ext.sljedeciServis);
+            if (status === 'expired' || ext.status === 'neispravan') expired++;
+            else if (status === 'warning') warningCount++;
+        });
+
+        hydrants.forEach(hyd => {
+            const status = checkExpiry(hyd.sljedeciPregled);
+            if (status === 'expired' || hyd.status === 'neispravan') expired++;
+            else if (status === 'warning') warningCount++;
+        });
+
+        if (expired > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_fire_expired_' + companyId,
+                severity: 'urgent',
+                category: 'equipment',
+                icon: '🧯',
+                title: `${expired} stavki protupožarne opreme je isteklo ili je neispravno!`,
+                message: `Ukupno ${expired} vatrogasnih aparata/hidranata zahtijeva hitan servis ili pregled.`,
+                titleKey: 'notif_fire_expired_title',
+                titleArgs: [expired],
+                messageKey: 'notif_fire_expired_msg',
+                messageArgs: [expired],
+                actionLabel: 'Pogledaj ZOP',
+                actionLabelKey: 'notif_view_fire',
+                actionUrl: '/dashboard/fire-protection',
+            }, extinguishers[0] || hydrants[0] || {}));
+        }
+
+        if (warningCount > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_fire_warning_' + companyId,
+                severity: 'warning',
+                category: 'equipment',
+                icon: '🧯',
+                title: `${warningCount} pregleda protupožarne opreme ističe uskoro`,
+                message: `Planirajte servis za ${warningCount} vatrogasnih aparata/hidranata u narednih ${settings.fireExpiryDays || 30} dana.`,
+                titleKey: 'notif_fire_warning_title',
+                titleArgs: [warningCount],
+                messageKey: 'notif_fire_warning_msg',
+                messageArgs: [warningCount, settings.fireExpiryDays || 30],
+                actionLabel: 'Pogledaj ZOP',
+                actionLabelKey: 'notif_view_fire',
+                actionUrl: '/dashboard/fire-protection',
+            }, extinguishers.find(e => checkExpiry(e.sljedeciServis) === 'warning') || hydrants.find(h => checkExpiry(h.sljedeciPregled) === 'warning') || {}));
+        }
+    }
+
+    // ── Evacuation (Plans & Drills) ──
+    if (settings.evacExpiryEnabled ?? true) {
+        const plans = filterByCompany(getAll(COLLECTIONS.EVACUATION_PLANS));
+        const drills = filterByCompany(getAll(COLLECTIONS.EVACUATION_DRILLS));
+        
+        let expiredPlans = 0;
+        let warningPlans = 0;
+        
+        const checkExpiry = (dateStr) => {
+            if (!dateStr) return null;
+            const days = Math.floor((new Date(dateStr) - today) / 86400000);
+            if (days < 0) return 'expired';
+            if (days <= (settings.evacExpiryDays || 30)) return 'warning';
+            return null;
+        };
+
+        plans.forEach(plan => {
+            const status = checkExpiry(plan.datumRevizije);
+            if (status === 'expired' || plan.status === 'revizija') expiredPlans++;
+            else if (status === 'warning') warningPlans++;
+        });
+
+        if (expiredPlans > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_evac_plan_expired_' + companyId,
+                severity: 'urgent',
+                category: 'documents',
+                icon: '🚨',
+                title: `${expiredPlans} planova evakuacije zahtijeva reviziju!`,
+                message: `${expiredPlans} planova evakuacije je prošlo rok revizije.`,
+                titleKey: 'notif_evac_plan_expired_title',
+                titleArgs: [expiredPlans],
+                messageKey: 'notif_evac_plan_expired_msg',
+                messageArgs: [expiredPlans],
+                actionLabel: 'Pogledaj evakuaciju',
+                actionLabelKey: 'notif_view_evac',
+                actionUrl: '/dashboard/evacuation',
+            }, plans.find(p => checkExpiry(p.datumRevizije) === 'expired' || p.status === 'revizija') || {}));
+        }
+
+        if (warningPlans > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_evac_plan_warning_' + companyId,
+                severity: 'warning',
+                category: 'documents',
+                icon: '🚨',
+                title: `${warningPlans} planova evakuacije pred revizijom`,
+                message: `Planirajte reviziju za ${warningPlans} planova evakuacije u narednih ${settings.evacExpiryDays || 30} dana.`,
+                titleKey: 'notif_evac_plan_warning_title',
+                titleArgs: [warningPlans],
+                messageKey: 'notif_evac_plan_warning_msg',
+                messageArgs: [warningPlans, settings.evacExpiryDays || 30],
+                actionLabel: 'Pogledaj evakuaciju',
+                actionLabelKey: 'notif_view_evac',
+                actionUrl: '/dashboard/evacuation',
+            }, plans.find(p => checkExpiry(p.datumRevizije) === 'warning') || {}));
+        }
+
+        // ── Evacuation Drills ──
+        const lastDrill = drills.length > 0 
+            ? drills.sort((a, b) => (b.datumVjezbe || '').localeCompare(a.datumVjezbe || ''))[0] 
+            : null;
+        
+        if (!lastDrill) {
+            notifications.push(addCompanyBadge({
+                id: 'user_evac_drill_missing_' + companyId,
+                severity: 'urgent',
+                category: 'documents',
+                icon: '🏃',
+                title: 'Nije zabilježena nijedna vježba evakuacije!',
+                message: 'Zakonska je obaveza provođenje vježbe evakuacije svake 2 godine.',
+                titleKey: 'notif_evac_drill_missing_title',
+                messageKey: 'notif_evac_drill_missing_msg',
+                actionLabel: 'Vježbe evakuacije',
+                actionLabelKey: 'notif_view_evac',
+                actionUrl: '/dashboard/evacuation-drills',
+            }, {}));
+        } else {
+            const daysSinceDrill = Math.floor((today - new Date(lastDrill.datumVjezbe)) / 86400000);
+            if (daysSinceDrill > 730) {
+                notifications.push(addCompanyBadge({
+                    id: 'user_evac_drill_expired_' + companyId,
+                    severity: 'urgent',
+                    category: 'documents',
+                    icon: '🏃',
+                    title: 'Vježba evakuacije je istekla!',
+                    message: `Zadnja vježba evakuacije je održana prije ${daysSinceDrill} dana (zakonski rok je 2 godine).`,
+                    titleKey: 'notif_evac_drill_expired_title',
+                    messageKey: 'notif_evac_drill_expired_msg',
+                    messageArgs: [daysSinceDrill],
+                    actionLabel: 'Vježbe evakuacije',
+                    actionLabelKey: 'notif_view_evac',
+                    actionUrl: '/dashboard/evacuation-drills',
+                }, lastDrill));
+            } else if (daysSinceDrill > 670) {
+                const daysRemaining = 730 - daysSinceDrill;
+                notifications.push(addCompanyBadge({
+                    id: 'user_evac_drill_warning_' + companyId,
+                    severity: 'warning',
+                    category: 'documents',
+                    icon: '🏃',
+                    title: 'Vježba evakuacije ističe uskoro',
+                    message: `Vježba evakuacije ističe za ${daysRemaining} dana (rok od 2 godine ističe uskoro).`,
+                    titleKey: 'notif_evac_drill_warning_title',
+                    messageKey: 'notif_evac_drill_warning_msg',
+                    messageArgs: [daysRemaining],
+                    actionLabel: 'Vježbe evakuacije',
+                    actionLabelKey: 'notif_view_evac',
+                    actionUrl: '/dashboard/evacuation-drills',
+                }, lastDrill));
+            }
+        }
+    }
 
     // ── Workers without certificates ──
     if (settings.workersNoCerts) {

@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Icon3D from '@/components/Icon3D';
 import { getUIBranding, UI_DEFAULTS } from '@/lib/brandingService';
 import InstallPWA from '@/components/InstallPWA';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const menuItems = [
     // ── Top-level standalone ───────────────────────────────────────────────────
@@ -234,6 +235,7 @@ const SIDEBAR_TOOLTIPS = {
 export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
     const { t, lang } = useLanguage();
     const { user, logout, isAdmin, isSuperAdmin, activeCompanyId } = useAuth();
+    const { hasAccess } = useSubscription();
     const router = useRouter();
     const pathname = usePathname();
     const [openMenus, setOpenMenus] = useState({});
@@ -352,6 +354,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                     if (c.children) return c.children.some(gc => isActive(gc.path));
                     return isActive(c.path);
                 });
+                const locked = !hasAccess(item.key);
 
                 return (
                     <div key={item.key}>
@@ -371,7 +374,10 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 </span>
                                 {(isDrawerMode || !collapsed) && (
                                     <>
-                                        <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                        <span style={sidebarStyles.menuLabel}>
+                                            {t(item.key)}
+                                            {locked && <span style={{ marginLeft: 6, fontSize: '0.75rem', opacity: 0.6 }} title="Enterprise tier required">🔒</span>}
+                                        </span>
                                         <span style={{
                                             ...sidebarStyles.arrow,
                                             transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
@@ -399,7 +405,10 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                     <Icon3D name={item.icon} size={(!isDrawerMode && collapsed) ? 24 : 20} />
                                 </span>
                                 {(isDrawerMode || !collapsed) && (
-                                    <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                    <span style={sidebarStyles.menuLabel}>
+                                        {t(item.key)}
+                                        {locked && <span style={{ marginLeft: 6, fontSize: '0.75rem', opacity: 0.6 }} title="Enterprise tier required">🔒</span>}
+                                    </span>
                                 )}
                             </Link>
                         )}
@@ -408,6 +417,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         {hasChildren && isOpen && (isDrawerMode || !collapsed) && (
                             <div style={sidebarStyles.submenu}>
                                 {item.children.map((child) => {
+                                    const childLocked = !hasAccess(child.key);
                                     // Nested group (e.g. Obrasci i uputnice)
                                     if (child.children) {
                                         const childGroupOpen = openMenus[child.key];
@@ -427,29 +437,38 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                                 >
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                         <Icon3D name={child.icon} size={18} />
-                                                        <span>{childLabel}</span>
+                                                        <span>
+                                                            {childLabel}
+                                                            {childLocked && <span style={{ marginLeft: 4, fontSize: '0.7rem', opacity: 0.6 }} title="Enterprise tier required">🔒</span>}
+                                                        </span>
                                                     </span>
                                                     <span style={{ fontSize: '0.7rem', opacity: 0.5, transition: 'transform 0.2s', transform: childGroupOpen ? 'rotate(90deg)' : 'none' }}>›</span>
                                                 </button>
                                                 {childGroupOpen && (
                                                     <div style={{ ...sidebarStyles.submenu, marginLeft: 12 }}>
-                                                        {child.children.map(gc => (
-                                                            <Link
-                                                                key={gc.key}
-                                                                href={gc.path}
-                                                                prefetch={true}
-                                                                onClick={handleNavClick}
-                                                                title={tip(gc.key)}
-                                                                style={{
-                                                                    ...sidebarStyles.submenuItem,
-                                                                    ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
-                                                                    textDecoration: 'none',
-                                                                }}
-                                                            >
-                                                                <Icon3D name={gc.icon} size={18} />
-                                                                <span>{t(gc.key)}</span>
-                                                            </Link>
-                                                        ))}
+                                                        {child.children.map(gc => {
+                                                            const gcLocked = !hasAccess(gc.key);
+                                                            return (
+                                                                <Link
+                                                                    key={gc.key}
+                                                                    href={gc.path}
+                                                                    prefetch={true}
+                                                                    onClick={handleNavClick}
+                                                                    title={tip(gc.key)}
+                                                                    style={{
+                                                                        ...sidebarStyles.submenuItem,
+                                                                        ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
+                                                                        textDecoration: 'none',
+                                                                    }}
+                                                                >
+                                                                    <Icon3D name={gc.icon} size={18} />
+                                                                    <span>
+                                                                        {t(gc.key)}
+                                                                        {gcLocked && <span style={{ marginLeft: 4, fontSize: '0.7rem', opacity: 0.6 }} title="Enterprise tier required">🔒</span>}
+                                                                    </span>
+                                                                </Link>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
@@ -470,7 +489,10 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             }}
                                         >
                                             <Icon3D name={child.icon} size={18} />
-                                            <span>{t(child.key)}</span>
+                                            <span>
+                                                {t(child.key)}
+                                                {childLocked && <span style={{ marginLeft: 4, fontSize: '0.7rem', opacity: 0.6 }} title="Enterprise tier required">🔒</span>}
+                                            </span>
                                         </Link>
                                     );
                                 })}

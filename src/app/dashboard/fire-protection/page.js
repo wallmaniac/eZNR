@@ -16,6 +16,7 @@ import { generateFireProtectionReport } from '@/lib/pdfReportGenerator';
 import * as XLSX from 'xlsx';
 import PageHeader from '@/components/PageHeader';
 import { uploadDocument } from '@/lib/storageService';
+import SubscriptionGate from '@/components/SubscriptionGate';
 
 // ── Fire Extinguisher ──
 const EMPTY_EXT = {
@@ -286,8 +287,9 @@ export default function FireProtectionPage() {
     );
 
     return (
-        <div className="animate-fadeIn">
-            <DialogRenderer />
+        <SubscriptionGate moduleKey="grpFireProtection">
+            <div className="animate-fadeIn">
+                <DialogRenderer />
             
             <PrintPortal isPrinting={showPrintModal}>
                 <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', padding: '10mm' }}>
@@ -949,5 +951,6 @@ export default function FireProtectionPage() {
                 </>
             )}
         </div>
+        </SubscriptionGate>
     );
 }
