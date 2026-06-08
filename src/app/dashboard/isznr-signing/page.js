@@ -20,7 +20,11 @@ export default function ISZNRSigningPage() {
   const { t, lang } = useLanguage();
   
   const { alert, confirm, DialogRenderer } = useDialog();
-  const { user, activeCompanyId } = useAuth();
+  const { user, activeCompanyId, isSuperAdmin } = useAuth();
+
+  // Gating access check: available only to superadmins or users with explicit permission
+  const hasAccess = isSuperAdmin || user?.isznrSigningPermission === true || user?.role === 'superadmin';
+
   const [selectedCategory, setSelectedCategory] = useState('general');
   const [generalDocs, setGeneralDocs] = useState([]);
   const [certificates, setCertificates] = useState([]);
@@ -96,6 +100,7 @@ export default function ISZNRSigningPage() {
     } else {
       return generalDocs.map(g => ({
         ...g,
+        naslov: g.naslov || g.naziv || 'Dokument',
         tipDokumentaName: getDocTypeName(g.tipDokumentaId) || 'Opšti dokument',
       }));
     }
@@ -105,7 +110,7 @@ export default function ISZNRSigningPage() {
     let result = currentDocs;
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
-      result = result.filter(d => d.naslov.toLowerCase().includes(q));
+      result = result.filter(d => (d.naslov || '').toLowerCase().includes(q));
     }
     if (activeTab === 'signed') result = result.filter(d => d.potpisano);
     if (activeTab === 'unsigned') result = result.filter(d => !d.potpisano);
@@ -258,7 +263,24 @@ export default function ISZNRSigningPage() {
     { key: 'unsigned', label: t('unsigned'), icon: '📝', count: stats.unsigned },
   ];
 
-  const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+  if (!hasAccess) {
+    return (
+      <div className="card" style={{ maxWidth: 520, margin: '100px auto', padding: '40px 30px', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+        <div style={{ fontSize: '4rem', marginBottom: 20 }}>🔐</div>
+        <h2 style={{ color: 'var(--danger)', marginBottom: 12, fontSize: '1.5rem', fontWeight: 700 }}>
+          {lang === 'en' ? 'Access Restricted' : 'Pristup ograničen'}
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.6', marginBottom: 24 }}>
+          {lang === 'en' 
+            ? 'This module is restricted. The digital signing function is only available to users with explicit permission from the Superadmin.' 
+            : 'Ovaj modul je ograničen. Funkcija digitalnog potpisivanja dostupna je isključivo korisnicima s izričitim odobrenjem od strane superadministratora.'}
+        </p>
+        <button className="btn btn-primary" onClick={() => window.location.href = '/dashboard'} style={{ width: '100%', justifyContent: 'center' }}>
+          🏠 {lang === 'en' ? 'Return to Dashboard' : 'Povratak na nadzornu ploču'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn">
@@ -411,7 +433,7 @@ export default function ISZNRSigningPage() {
               {signStep === 0 && (() => {
                 const unsignedDocs = currentDocs.filter(d => !d.potpisano);
                 const modalFiltered = modalDocSearch.trim()
-                  ? unsignedDocs.filter(d => d.naslov.toLowerCase().includes(modalDocSearch.toLowerCase()))
+                  ? unsignedDocs.filter(d => (d.naslov || '').toLowerCase().includes(modalDocSearch.toLowerCase()))
                   : unsignedDocs;
                 return (
                   <div>
