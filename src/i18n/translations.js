@@ -8178,7 +8178,7 @@ export const translations = {
     razduz: 'Dug.',
     nemaLjekarskihPregleda: 'Nema liječničkih pregleda.',
     istekao: 'isteklo',
-    vrijedi: 'Vrijedi toga',
+    vrijedi: 'Vrijedi',
     nemaDokumenata: 'Nema dokumenata.',
 
     // ── Missing language names ──
@@ -11131,7 +11131,7 @@ export const translations = {
     razduz: 'Schulden.',
     nemaLjekarskihPregleda: 'Keine ärztlichen Untersuchungen.',
     istekao: 'Abgelaufen',
-    vrijedi: 'Es lohnt sich',
+    vrijedi: 'Gültig',
     nemaDokumenata: 'Keine Dokumente.',
 
     // ── Auto-translated keys ──
@@ -11893,7 +11893,7 @@ export const translations = {
     'infoPeriodic': 'Fristen nach Art der Gefahr',
     'infoExtraordinary': 'Nach einer gesundheitlichen Veränderung, einem Unfall oder längerer Krankheit',
     'infoNightWork': 'min. alle 2 Jahre für Nachtarbeiter',
-    'status_vrijedi': 'Es lohnt sich',
+    'status_vrijedi': 'Gültig',
     'status_isteklo': 'Abgelaufen',
     'status_bezRoka': 'Keine Frist',
     'periodicExamIntervalsNote': 'Die Fristen für regelmäßige Inspektionen{0} variieren je nach Art der Gefahr. Nachtarbeiter – min. alle 2 Jahre.',
@@ -13192,7 +13192,7 @@ export const translations = {
     otvoriProfil: 'Odpri profil',
     ozoOprema: 'OVO oprema',
     isticeUskoro: 'Kmalu poteče',
-    isteklo: 'potekel',
+    isteklo: 'poteklo',
     upozorenja: 'Opozorila',
     analitika: 'analitika',
     kalendar: 'Koledar',
@@ -14079,7 +14079,7 @@ export const translations = {
     razduz: 'Dolg.',
     nemaLjekarskihPregleda: 'Brez zdravniških pregledov.',
     istekao: 'potekel',
-    vrijedi: 'Vredno je',
+    vrijedi: 'Veljavno',
     nemaDokumenata: 'Brez dokumentov.',
 
     // ── Auto-translated keys ──
@@ -14841,8 +14841,8 @@ export const translations = {
     'infoPeriodic': 'roki glede na vrsto nevarnosti',
     'infoExtraordinary': 'Po spremembi zdravstvenega stanja, nesreči ali daljši bolezni',
     'infoNightWork': 'min. vsaki 2 leti za nočne delavce',
-    'status_vrijedi': 'Vredno je',
-    'status_isteklo': 'potekel',
+    'status_vrijedi': 'Veljavno',
+    'status_isteklo': 'poteklo',
     'status_bezRoka': 'Brez roka',
     'periodicExamIntervalsNote': 'Roki za redne preglede{0} se razlikujejo glede na vrsto nevarnosti. Nočni delavci — min. vsaki 2 leti.',
     changeView: 'Spremeni pogled',
@@ -16140,7 +16140,7 @@ export const translations = {
     otvoriProfil: 'Otvori profil',
     ozoOprema: 'LZO oprema',
     isticeUskoro: 'Uskoro ističe',
-    isteklo: 'Istekao',
+    isteklo: 'Isteklo',
     upozorenja: 'Upozorenja',
     analitika: 'Analitika',
     kalendar: 'Kalendar',
@@ -17027,7 +17027,7 @@ export const translations = {
     razduz: 'Dug.',
     nemaLjekarskihPregleda: 'Nema lekarskih pregleda.',
     istekao: 'Istekao',
-    vrijedi: 'Vredi toga',
+    vrijedi: 'Vredi',
     nemaDokumenata: 'Bez dokumenata.',
 
     // ── Auto-translated keys ──
@@ -17789,8 +17789,8 @@ export const translations = {
     'infoPeriodic': 'rokovi po vrsti opasnosti',
     'infoExtraordinary': 'Posle promene zdravlja, nezgode ili duge bolesti',
     'infoNightWork': 'min. svake 2 godine za noćne radnike',
-    'status_vrijedi': 'Vredi toga',
-    'status_isteklo': 'Istekao',
+    'status_vrijedi': 'Vredi',
+    'status_isteklo': 'Isteklo',
     'status_bezRoka': 'Nema roka',
     'periodicExamIntervalsNote': 'Rokovi za periodične inspekcije{0} razlikuju se u zavisnosti od vrste opasnosti. Noćni radnici — min. svake 2 godine.',
     changeView: 'Promeni pregled',
