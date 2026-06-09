@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential, clearAllBiometricCredentials } from '@/lib/webAuthn';
 
 export default function LoginPage() {
@@ -176,7 +177,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={styles.page}>
+    <div className="login-page-container" style={styles.page}>
+      {/* Back button */}
+      <Link href="/" style={styles.backButton} className="login-back-button">
+        ← {t('nazad')}
+      </Link>
       {/* Animated background */}
       <div style={styles.bgPattern} />
       <div style={styles.bgGlow1} />
@@ -213,7 +218,7 @@ export default function LoginPage() {
       {/* ── Single centered card ── */}
       <div style={styles.card}>
         {/* Full logo banner — same as email header */}
-        <div style={styles.logoHeader}>
+        <Link href="/" style={{ display: 'block', cursor: 'pointer', ...styles.logoHeader }}>
           <Image
             src="/email-header.png"
             alt="eZNR – Digitalna platforma zaštite na radu"
@@ -222,7 +227,7 @@ export default function LoginPage() {
             style={{ width: '100%', height: 'auto', display: 'block' }}
             priority
           />
-        </div>
+        </Link>
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -270,6 +275,7 @@ export default function LoginPage() {
               />
               <button
                 type="button"
+                className="login-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
@@ -277,7 +283,6 @@ export default function LoginPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: 'rgba(255,255,255,0.5)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -306,6 +311,7 @@ export default function LoginPage() {
                   />
                   <button
                     type="button"
+                    className="login-password-toggle"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={{
                       position: 'absolute',
@@ -313,7 +319,6 @@ export default function LoginPage() {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      color: 'rgba(255,255,255,0.5)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -500,6 +505,26 @@ export default function LoginPage() {
 }
 
 const styles = {
+  backButton: {
+    position: 'fixed',
+    top: 16,
+    left: 16,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '7px 14px',
+    background: 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: 50,
+    color: 'white',
+    textDecoration: 'none',
+    fontSize: '0.82rem',
+    fontWeight: 600,
+    fontFamily: 'var(--font-heading)',
+    backdropFilter: 'blur(10px)',
+    transition: 'all 0.2s',
+    zIndex: 10,
+  },
   page: {
     minHeight: '100vh',
     display: 'flex',
