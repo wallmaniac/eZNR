@@ -3097,18 +3097,27 @@ p {
 }
 
 .btn-login {
-  background: rgba(0, 191, 166, 0.1);
-  border: 1px solid rgba(0, 191, 166, 0.3);
-  color: var(--c-primary);
-  padding: 10px 24px;
-  border-radius: 12px;
-  transition: 0.2s;
+  background: rgba(0, 191, 166, 0.12) !important;
+  border: 1.5px solid var(--c-primary) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+  padding: 8px 24px !important;
+  border-radius: 50px !important;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(0, 191, 166, 0.25);
 }
 
 @media (hover: hover) {
   .btn-login:hover {
-    background: rgba(0, 191, 166, 0.2);
+    background: var(--c-primary) !important;
+    color: #000000 !important;
+    box-shadow: 0 0 20px rgba(0, 191, 166, 0.6) !important;
+    transform: translateY(-2px) !important;
   }
 }
 
@@ -4319,4 +4328,13 @@ button.btn-primary-glow {
   background: rgba(255, 255, 255, 0.18) !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
   color: var(--primary) !important;
+}
+
+/* Heading colors readability fix on landing page */
+.landing-root h1:not(.gradient-text):not(.hero-title),
+.landing-root h2:not(.gradient-text):not(.hero-title),
+.landing-root h3:not(.gradient-text):not(.hero-title),
+.landing-root h4:not(.gradient-text):not(.hero-title),
+.landing-root h5:not(.gradient-text):not(.hero-title) {
+  color: #ffffff !important;
 }
