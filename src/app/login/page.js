@@ -19,6 +19,7 @@ const recoverTexts = {
     forgotBothText: "Ako ste zaboravili i e-mail i lozinku, kontaktirajte našu tehničku podršku telefonski ili putem e-maila za provjeru identiteta i obnovu pristupa:",
     supportPhone: "Telefon: +387 (0)33 922 922",
     supportEmail: "E-mail: podrska@zastitanaradu.ba",
+    sending: "Slanje...",
   },
   hr: {
     passwordTab: "Zaboravljena lozinka",
@@ -31,6 +32,7 @@ const recoverTexts = {
     forgotBothText: "Ako ste zaboravili i e-mail i lozinku, kontaktirajte našu tehničku podršku telefonski ili putem e-maila za provjeru identiteta i obnovu pristupa:",
     supportPhone: "Telefon: +385 (0)1 922 922",
     supportEmail: "E-mail: podrska@zastitanaradu.ba",
+    sending: "Slanje...",
   },
   en: {
     passwordTab: "Forgot Password",
@@ -43,6 +45,7 @@ const recoverTexts = {
     forgotBothText: "If you have forgotten both your email and password, please contact our support team via phone or email to verify your identity and restore access:",
     supportPhone: "Phone: +387 (0)33 922 922",
     supportEmail: "Email: support@zastitanaradu.ba",
+    sending: "Sending...",
   },
   de: {
     passwordTab: "Passwort vergessen",
@@ -55,6 +58,7 @@ const recoverTexts = {
     forgotBothText: "Wenn Sie sowohl E-Mail-Adresse als auch Passwort vergessen haben, wenden Sie sich an unseren Support per Telefon oder E-Mail, um Ihre Identität zu bestätigen:",
     supportPhone: "Tel: +387 (0)33 922 922",
     supportEmail: "E-Mail: podrska@zastitanaradu.ba",
+    sending: "Wird gesendet...",
   },
   sl: {
     passwordTab: "Pozabljeno geslo",
@@ -67,6 +71,7 @@ const recoverTexts = {
     forgotBothText: "Če ste pozabili tako e-pošto kot geslo, se obrnite na našo tehnično podporo po telefonu ali e-pošti, da potrdimo vašo identiteto:",
     supportPhone: "Telefon: +387 (0)33 922 922",
     supportEmail: "E-pošta: podrska@zastitanaradu.ba",
+    sending: "Pošiljanje...",
   },
   sr: {
     passwordTab: "Zaboravljena lozinka",
@@ -79,6 +84,7 @@ const recoverTexts = {
     forgotBothText: "Ako ste zaboravili i e-mail i lozinku, kontaktirajte našu tehničku podršku telefonski ili putem e-maila za proveru identiteta i obnovu pristupa:",
     supportPhone: "Telefon: +387 (0)33 922 922",
     supportEmail: "E-mail: podrska@zastitanaradu.ba",
+    sending: "Slanje...",
   }
 };
 
@@ -113,6 +119,7 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotTab, setForgotTab] = useState('password');
+  const [isSendingForgot, setIsSendingForgot] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -477,19 +484,22 @@ export default function LoginPage() {
                         <input
                           className="form-input" style={{ ...styles.input, flex: 1 }}
                           type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
-                          placeholder="email@example.com"
+                          placeholder="email@example.com" disabled={isSendingForgot}
                         />
-                        <button type="button" className="btn btn-primary btn-sm" onClick={async () => {
-                          if (!forgotEmail) return;
+                        <button type="button" className="btn btn-primary btn-sm" disabled={isSendingForgot} onClick={async () => {
+                          if (!forgotEmail || isSendingForgot) return;
+                          setIsSendingForgot(true);
                           try {
                             await forgotPassword(forgotEmail);
                             setForgotSent(true);
                           } catch (err) {
                             setLoginError(t('emailNotFound'));
                             setShowForgotPassword(false);
+                          } finally {
+                            setIsSendingForgot(false);
                           }
                         }}>
-                          {t('posalji')}
+                          {isSendingForgot ? (recoverTexts[lang]?.sending || recoverTexts.bs.sending) : t('posalji')}
                         </button>
                       </div>
                     </>
