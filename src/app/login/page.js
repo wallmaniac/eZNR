@@ -7,6 +7,81 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential, clearAllBiometricCredentials } from '@/lib/webAuthn';
 
+const recoverTexts = {
+  bs: {
+    passwordTab: "Zaboravljena lozinka",
+    emailTab: "Zaboravljen e-mail",
+    bothTab: "Zaboravljeno oboje",
+    resetText: "Unesite e-mail za resetovanje lozinke:",
+    forgotEmailTitle: "Zaboravili ste e-mail?",
+    forgotEmailText: "Ukoliko ne znate e-mail adresu s kojom ste registrovani, obratite se administratoru svoje tvrtke koji Vas može pronaći u popisu radnika. Također možete kontaktirati našu podršku na:",
+    forgotBothTitle: "Zaboravili ste oboje?",
+    forgotBothText: "Ako ste zaboravili i e-mail i lozinku, kontaktirajte našu tehničku podršku telefonski ili putem e-maila za provjeru identiteta i obnovu pristupa:",
+    supportPhone: "Telefon: +387 (0)33 922 922",
+    supportEmail: "E-mail: podrska@zastitanaradu.ba",
+  },
+  hr: {
+    passwordTab: "Zaboravljena lozinka",
+    emailTab: "Zaboravljen e-mail",
+    bothTab: "Zaboravljeno oboje",
+    resetText: "Unesite e-mail za ponovno postavljanje lozinke:",
+    forgotEmailTitle: "Zaboravili ste e-mail?",
+    forgotEmailText: "Ako ne znate e-mail adresu s kojom ste registrirani, obratite se administratoru svoje tvrtke koji Vas može pronaći u popisu radnika. Također možete kontaktirati našu podršku na:",
+    forgotBothTitle: "Zaboravili ste oboje?",
+    forgotBothText: "Ako ste zaboravili i e-mail i lozinku, kontaktirajte našu tehničku podršku telefonski ili putem e-maila za provjeru identiteta i obnovu pristupa:",
+    supportPhone: "Telefon: +385 (0)1 922 922",
+    supportEmail: "E-mail: podrska@zastitanaradu.ba",
+  },
+  en: {
+    passwordTab: "Forgot Password",
+    emailTab: "Forgot Email",
+    bothTab: "Forgot Both",
+    resetText: "Enter your email to reset password:",
+    forgotEmailTitle: "Forgot your email?",
+    forgotEmailText: "If you do not know the email address you registered with, please contact your company administrator who can look you up in the directory. You can also contact our support at:",
+    forgotBothTitle: "Forgot both?",
+    forgotBothText: "If you have forgotten both your email and password, please contact our support team via phone or email to verify your identity and restore access:",
+    supportPhone: "Phone: +387 (0)33 922 922",
+    supportEmail: "Email: support@zastitanaradu.ba",
+  },
+  de: {
+    passwordTab: "Passwort vergessen",
+    emailTab: "E-Mail vergessen",
+    bothTab: "Beides vergessen",
+    resetText: "Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen:",
+    forgotEmailTitle: "E-Mail-Adresse vergessen?",
+    forgotEmailText: "Wenn Sie die registrierte E-Mail-Adresse nicht kennen, wenden Sie sich bitte an den Administrator Ihres Unternehmens. Sie können sich auch an unseren Support wenden:",
+    forgotBothTitle: "Beides vergessen?",
+    forgotBothText: "Wenn Sie sowohl E-Mail-Adresse als auch Passwort vergessen haben, wenden Sie sich an unseren Support per Telefon oder E-Mail, um Ihre Identität zu bestätigen:",
+    supportPhone: "Tel: +387 (0)33 922 922",
+    supportEmail: "E-Mail: podrska@zastitanaradu.ba",
+  },
+  sl: {
+    passwordTab: "Pozabljeno geslo",
+    emailTab: "Pozabljena e-pošta",
+    bothTab: "Pozabljeno oboje",
+    resetText: "Vnesite e-poštni naslov za ponastavitev gesla:",
+    forgotEmailTitle: "Pozabili e-pošto?",
+    forgotEmailText: "Če ne veste e-poštnega naslova, s katerim ste registrirani, se obrnite na skrbnika svojega podjetja. Lahko se obrnete tudi na našo podporo na:",
+    forgotBothTitle: "Pozabili oboje?",
+    forgotBothText: "Če ste pozabili tako e-pošto kot geslo, se obrnite na našo tehnično podporo po telefonu ali e-pošti, da potrdimo vašo identiteto:",
+    supportPhone: "Telefon: +387 (0)33 922 922",
+    supportEmail: "E-pošta: podrska@zastitanaradu.ba",
+  },
+  sr: {
+    passwordTab: "Zaboravljena lozinka",
+    emailTab: "Zaboravljen e-mail",
+    bothTab: "Zaboravljeno oboje",
+    resetText: "Unesite e-mail za resetovanje lozinke:",
+    forgotEmailTitle: "Zaboravili ste e-mail?",
+    forgotEmailText: "Ukoliko ne znate e-mail adresu s kojom ste registrovani, obratite se administratoru svoje firme koji Vas može pronaći u spisku radnika. Takođe možete kontaktirati našu podršku na:",
+    forgotBothTitle: "Zaboravili ste oboje?",
+    forgotBothText: "Ako ste zaboravili i e-mail i lozinku, kontaktirajte našu tehničku podršku telefonski ili putem e-maila za proveru identiteta i obnovu pristupa:",
+    supportPhone: "Telefon: +387 (0)33 922 922",
+    supportEmail: "E-mail: podrska@zastitanaradu.ba",
+  }
+};
+
 export default function LoginPage() {
   const { t, lang, setLang } = useLanguage();
   const { login, register, isAuthenticated, forgotPassword } = useAuth();
@@ -37,6 +112,7 @@ export default function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+  const [forgotTab, setForgotTab] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -351,49 +427,112 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Forgot password modal */}
+          {/* Forgot password / account recovery modal */}
           {showForgotPassword && (
-            <div style={{ padding: '14px', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 12 }}>
-              {forgotSent ? (
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
-                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
-                    {t('passwordResetEmailSent')}
-                  </div>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowForgotPassword(false); setForgotSent(false); setForgotEmail(''); }}>
-                    {t('zatvori')}
+            <div style={{ padding: '16px', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              
+              {/* Tab headers */}
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 6, gap: 10 }}>
+                {['password', 'email', 'both'].map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setForgotTab(tab)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: forgotTab === tab ? '#00BFA6' : 'rgba(255,255,255,0.5)',
+                      fontWeight: forgotTab === tab ? 700 : 500,
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                      padding: '4px 0',
+                      borderBottom: forgotTab === tab ? '2px solid #00BFA6' : 'none',
+                      outline: 'none',
+                    }}
+                  >
+                    {recoverTexts[lang]?.[tab + 'Tab'] || recoverTexts.bs[tab + 'Tab']}
                   </button>
+                ))}
+              </div>
+
+              {/* Tab content */}
+              {forgotTab === 'password' && (
+                <div>
+                  {forgotSent ? (
+                    <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
+                      <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
+                        {t('passwordResetEmailSent')}
+                      </div>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowForgotPassword(false); setForgotSent(false); setForgotEmail(''); }}>
+                        {t('zatvori')}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontWeight: 600 }}>
+                        {recoverTexts[lang]?.resetText || recoverTexts.bs.resetText}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          className="form-input" style={{ ...styles.input, flex: 1 }}
+                          type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                          placeholder="email@example.com"
+                        />
+                        <button type="button" className="btn btn-primary btn-sm" onClick={async () => {
+                          if (!forgotEmail) return;
+                          try {
+                            await forgotPassword(forgotEmail);
+                            setForgotSent(true);
+                          } catch (err) {
+                            setLoginError(t('emailNotFound'));
+                            setShowForgotPassword(false);
+                          }
+                        }}>
+                          {t('posalji')}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontWeight: 600 }}>
-                    {t('enterEmailToResetPassword')}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input
-                      className="form-input" style={{ ...styles.input, flex: 1 }}
-                      type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
-                      placeholder="email@example.com"
-                    />
-                    <button type="button" className="btn btn-primary btn-sm" onClick={async () => {
-                      if (!forgotEmail) return;
-                      try {
-                        await forgotPassword(forgotEmail);
-                        setForgotSent(true);
-                      } catch (err) {
-                        setLoginError(t('emailNotFound'));
-                        setShowForgotPassword(false);
-                      }
-                    }}>
-                      {t('posalji')}
-                    </button>
-                  </div>
-                  <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '0.75rem' }}
-                    onClick={() => setShowForgotPassword(false)}>
-                    {t('cancel')}
-                  </button>
-                </>
               )}
+
+              {forgotTab === 'email' && (
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 700, color: 'white', marginBottom: 6 }}>
+                    {recoverTexts[lang]?.forgotEmailTitle || recoverTexts.bs.forgotEmailTitle}
+                  </div>
+                  <p style={{ marginBottom: 8 }}>
+                    {recoverTexts[lang]?.forgotEmailText || recoverTexts.bs.forgotEmailText}
+                  </p>
+                  <div style={{ background: 'rgba(255,255,255,0.04)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div>📞 {recoverTexts[lang]?.supportPhone || recoverTexts.bs.supportPhone}</div>
+                    <div style={{ marginTop: 4 }}>✉️ {recoverTexts[lang]?.supportEmail || recoverTexts.bs.supportEmail}</div>
+                  </div>
+                </div>
+              )}
+
+              {forgotTab === 'both' && (
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 700, color: 'white', marginBottom: 6 }}>
+                    {recoverTexts[lang]?.forgotBothTitle || recoverTexts.bs.forgotBothTitle}
+                  </div>
+                  <p style={{ marginBottom: 8 }}>
+                    {recoverTexts[lang]?.forgotBothText || recoverTexts.bs.forgotBothText}
+                  </p>
+                  <div style={{ background: 'rgba(255,255,255,0.04)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div>📞 {recoverTexts[lang]?.supportPhone || recoverTexts.bs.supportPhone}</div>
+                    <div style={{ marginTop: 4 }}>✉️ {recoverTexts[lang]?.supportEmail || recoverTexts.bs.supportEmail}</div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button type="button" className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem' }}
+                  onClick={() => setShowForgotPassword(false)}>
+                  {t('cancel')}
+                </button>
+              </div>
             </div>
           )}
 

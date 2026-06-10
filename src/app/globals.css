@@ -2923,8 +2923,8 @@ a {
   --c-border: rgba(255, 255, 255, 0.08);
   --c-primary: #00BFA6;
   --c-primary-glow: rgba(0, 191, 166, 0.4);
-  --c-text: #ffffff;
-  --c-text-muted: rgba(255, 255, 255, 0.65);
+  --c-text: #E2E8F0; /* Soft premium slate-200 instead of stark white */
+  --c-text-muted: rgba(226, 232, 240, 0.65);
   --font-main: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --radius-lg: 24px;
   --radius-md: 16px;
@@ -2960,7 +2960,15 @@ p {
 }
 
 .text-center {
-  textAlign: center;
+  text-align: center !important;
+}
+
+.center {
+  text-align: center !important;
+}
+
+.section-header.center h2 {
+  text-align: center !important;
 }
 
 /* Backgrounds */
@@ -4336,5 +4344,10 @@ button.btn-primary-glow {
 .landing-root h3:not(.gradient-text):not(.hero-title),
 .landing-root h4:not(.gradient-text):not(.hero-title),
 .landing-root h5:not(.gradient-text):not(.hero-title) {
-  color: #ffffff !important;
+  color: #F1F5F9 !important; /* Soft slate-100 instead of stark white */
+}
+
+/* Remove hover underline from Prijava button in navbar */
+.nav-links a.btn-login::after {
+  display: none !important;
 }
