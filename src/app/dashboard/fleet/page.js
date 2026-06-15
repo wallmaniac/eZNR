@@ -67,6 +67,7 @@ function FleetInner() {
     const [workers, setWorkers] = useState([]);
     const [orgUnits, setOrgUnits] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterOrgUnitId, setFilterOrgUnitId] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [activeTab, setActiveTab] = useState('osnovno');
     const [editingId, setEditingId] = useState(null);
@@ -179,12 +180,14 @@ function FleetInner() {
 
     // Filter & sort
     const filtered = vehicles.filter(v => {
-        if (!searchTerm) return true;
-        const q = searchTerm.toLowerCase();
-        return (v.registracija || '').toLowerCase().includes(q)
-            || (v.marka || '').toLowerCase().includes(q)
-            || (v.model || '').toLowerCase().includes(q)
-            || (v.vozacIme || '').toLowerCase().includes(q);
+        const matchesSearch = !searchTerm || (
+            (v.registracija || '').toLowerCase().includes(searchTerm.toLowerCase())
+            || (v.marka || '').toLowerCase().includes(searchTerm.toLowerCase())
+            || (v.model || '').toLowerCase().includes(searchTerm.toLowerCase())
+            || (v.vozacIme || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        const matchesOrgUnit = !filterOrgUnitId || v.orgJedinicaId === filterOrgUnitId;
+        return matchesSearch && matchesOrgUnit;
     });
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'registracija');
@@ -581,10 +584,36 @@ function FleetInner() {
                             <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew} title={t('addNewVehicle')}>+ {t('newVehicle')}</button>
                             <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
-                                <input placeholder={t('searchVehicles')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                                <input placeholder={t('searchVehicles')} value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
+                                {searchTerm && <button onClick={() => { setSearchTerm(''); setPage(1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                             </div>
+                            <select
+                                className="form-select"
+                                value={filterOrgUnitId}
+                                title={t('filtrirajPoOdjelu')}
+                                onChange={(e) => { setFilterOrgUnitId(e.target.value); setPage(1); }}
+                                style={{
+                                    height: 38,
+                                    borderRadius: 20,
+                                    border: '2px solid var(--primary)',
+                                    padding: '0 32px 0 16px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    color: 'var(--text)',
+                                    background: 'var(--bg-card)',
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                    flexShrink: 0,
+                                    minWidth: 150,
+                                    width: 'auto'
+                                }}
+                            >
+                                <option value="">{t('sviOdjeli')}</option>
+                                {orgUnits.map(o => (
+                                    <option key={o.id} value={o.id}>{o.naziv}</option>
+                                ))}
+                            </select>
                             <PDFExportButton
                                 label={lang !== 'en' ? 'Izvještaji' : 'Reports'}
                                 title={t('prikaziPdfIzvjestaje')}
