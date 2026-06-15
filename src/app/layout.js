@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { CountryProvider } from '@/contexts/CountryContext';
+import PWAAutoUpdater from '@/components/PWAAutoUpdater';
 
 // App completely relies on client-side state hooks, HTML is static skeleton
 
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body>
+        <PWAAutoUpdater />
         <AuthProvider>
           <ThemeProvider>
             <LanguageProvider>
@@ -69,4 +71,5 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
 

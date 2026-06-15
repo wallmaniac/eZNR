@@ -163,7 +163,7 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0, lan
    MAIN PAGE
    ═══════════════════════════════════════════════ */
 
-export default function RiskAssessmentPage() {
+function RiskAssessmentPageContent() {
     const { t, lang } = useLanguage();
     const tr = (bsText, enText, deText = enText, slText = enText, hrText = bsText, srText = bsText) => {
         if (lang === 'en') return enText;
@@ -2558,5 +2558,15 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
     }
 
     return null;
+}
+
+import SubscriptionGate from '@/components/SubscriptionGate';
+
+export default function RiskAssessmentPage() {
+    return (
+        <SubscriptionGate moduleKey="riskAssessment">
+            <RiskAssessmentPageContent />
+        </SubscriptionGate>
+    );
 }
 

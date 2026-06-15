@@ -87,7 +87,7 @@ const BUILTIN_TEMPLATES = [
   { naziv: 'Test za rad na siguran način - predložak', oznaka: 'ZOS-TEST', zaVrstu: 'Djelatnik', prikaziNaPortalu: true },
 ];
 
-export default function QuestionnairesPage() {
+function QuestionnairesPageContent() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { user, activeCompanyId } = useAuth();
@@ -1083,5 +1083,15 @@ export default function QuestionnairesPage() {
 
       </div>
     </div>
+  );
+}
+
+import SubscriptionGate from '@/components/SubscriptionGate';
+
+export default function QuestionnairesPage() {
+  return (
+    <SubscriptionGate moduleKey="questionnaires">
+      <QuestionnairesPageContent />
+    </SubscriptionGate>
   );
 }

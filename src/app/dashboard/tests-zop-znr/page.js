@@ -9,7 +9,7 @@ import { useState } from 'react';
 import TestGenerator from './TestGenerator';
 
 import PageHeader from '@/components/PageHeader';
-export default function TestsZopZnrPage() {
+function TestsZopZnrPageContent() {
     const { lang , t } = useLanguage();
     
     const country = useCountry();
@@ -188,5 +188,15 @@ export default function TestsZopZnrPage() {
                 <TestGenerator />
             )}
         </div>
+    );
+}
+
+import SubscriptionGate from '@/components/SubscriptionGate';
+
+export default function TestsZopZnrPage() {
+    return (
+        <SubscriptionGate moduleKey="testoviZopZnr">
+            <TestsZopZnrPageContent />
+        </SubscriptionGate>
     );
 }

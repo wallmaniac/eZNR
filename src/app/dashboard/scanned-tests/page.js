@@ -209,7 +209,7 @@ const EXPORT_TRANSLATIONS = {
     }
 };
 
-export default function ScannedTestsPage() {
+function ScannedTestsPageContent() {
     const { t, lang } = useLanguage();
     const getExp = useCallback((k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k], [lang]);
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -808,5 +808,15 @@ export default function ScannedTestsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+import SubscriptionGate from '@/components/SubscriptionGate';
+
+export default function ScannedTestsPage() {
+    return (
+        <SubscriptionGate moduleKey="scannedTests">
+            <ScannedTestsPageContent />
+        </SubscriptionGate>
     );
 }

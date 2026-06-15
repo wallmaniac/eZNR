@@ -27,6 +27,8 @@ export default function AdminUsersPage() {
     const [formData, setFormData] = useState({
         username: '', password: '', firstName: '', lastName: '', email: '',
         role: 'officer', companyIds: [], aktivan: true, subscriptionTier: 'BASIC',
+        fleetEnabled: true, riskAssessmentEnabled: true, questionnairesEnabled: true,
+        testoviEnabled: true, fireProtectionEnabled: true,
     });
 
     useEffect(() => {
@@ -72,7 +74,11 @@ export default function AdminUsersPage() {
 
     const openNew = () => {
         setEditUser(null);
-        setFormData({ username: '', password: '', firstName: '', lastName: '', email: '', role: 'officer', companyIds: [], aktivan: true, subscriptionTier: 'BASIC' });
+        setFormData({
+            username: '', password: '', firstName: '', lastName: '', email: '', role: 'officer', companyIds: [], aktivan: true, subscriptionTier: 'BASIC',
+            fleetEnabled: true, riskAssessmentEnabled: true, questionnairesEnabled: true,
+            testoviEnabled: true, fireProtectionEnabled: true,
+        });
         setShowModal(true);
     };
 
@@ -83,6 +89,11 @@ export default function AdminUsersPage() {
             lastName: u.lastName, email: u.email || '', role: u.role,
             companyIds: u.companyIds || [], aktivan: u.aktivan !== false,
             subscriptionTier: u.subscriptionTier || 'BASIC',
+            fleetEnabled: u.fleetEnabled !== false,
+            riskAssessmentEnabled: u.riskAssessmentEnabled !== false,
+            questionnairesEnabled: u.questionnairesEnabled !== false,
+            testoviEnabled: u.testoviEnabled !== false,
+            fireProtectionEnabled: u.fireProtectionEnabled !== false,
         });
         setShowModal(true);
     };
@@ -100,7 +111,14 @@ export default function AdminUsersPage() {
             if (editUser) {
                 if (isSuperAdmin && payload.subscriptionTier && payload.companyIds) {
                     payload.companyIds.forEach(compId => {
-                        update(COLLECTIONS.COMPANIES, compId, { subscriptionTier: payload.subscriptionTier });
+                        update(COLLECTIONS.COMPANIES, compId, { 
+                            subscriptionTier: payload.subscriptionTier,
+                            fleetEnabled: payload.fleetEnabled,
+                            riskAssessmentEnabled: payload.riskAssessmentEnabled,
+                            questionnairesEnabled: payload.questionnairesEnabled,
+                            testoviEnabled: payload.testoviEnabled,
+                            fireProtectionEnabled: payload.fireProtectionEnabled
+                        });
                     });
                 }
                 update(COLLECTIONS.USERS, editUser.id, payload);
@@ -142,7 +160,14 @@ export default function AdminUsersPage() {
                 payload.id = data.uid;
                 if (isSuperAdmin && payload.subscriptionTier && payload.companyIds) {
                     payload.companyIds.forEach(compId => {
-                        update(COLLECTIONS.COMPANIES, compId, { subscriptionTier: payload.subscriptionTier });
+                        update(COLLECTIONS.COMPANIES, compId, { 
+                            subscriptionTier: payload.subscriptionTier,
+                            fleetEnabled: payload.fleetEnabled,
+                            riskAssessmentEnabled: payload.riskAssessmentEnabled,
+                            questionnairesEnabled: payload.questionnairesEnabled,
+                            testoviEnabled: payload.testoviEnabled,
+                            fireProtectionEnabled: payload.fireProtectionEnabled
+                        });
                     });
                 }
                 create(COLLECTIONS.USERS, payload);
@@ -316,14 +341,25 @@ export default function AdminUsersPage() {
                                             {u.aktivan !== false ? '✅ Aktivan' : '⛔ Neaktivan'}
                                         </button>
                                     </div>
+
                                     {/* Email */}
                                     {u.email && (
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 6, wordBreak: 'break-all' }}>
                                             📧 {u.email}
                                         </div>
                                     )}
+
+                                    {/* User module permissions badges */}
+                                    <div style={{ marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+                                        {u.fleetEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(33,150,243,0.08)', color: 'var(--info)' }}>🚗 Vozni park</span>}
+                                        {u.riskAssessmentEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(0,191,166,0.08)', color: 'var(--primary)' }}>⚠️ Procjena rizika</span>}
+                                        {u.questionnairesEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(123,31,162,0.08)', color: '#7B1FA2' }}>❓ Upitnici</span>}
+                                        {u.testoviEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(255,152,0,0.08)', color: 'var(--warning)' }}>📝 Testovi</span>}
+                                        {u.fireProtectionEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(244,67,54,0.08)', color: 'var(--danger)' }}>🧯 Požar/Evak</span>}
+                                    </div>
+
                                     {/* Companies */}
-                                    {(u.companyIds || []).length> 0 && (
+                                    {(u.companyIds || []).length > 0 && (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                             {(u.companyIds || []).map(cid => (
                                                 <button key={cid} onClick={() => setShowCompanyDetail(getCompanyById(cid))} style={{
@@ -412,15 +448,84 @@ export default function AdminUsersPage() {
                             {isSuperAdmin && (
                                 <div className="form-group" style={{ marginTop: 12 }}>
                                     <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 700 }}>⚡ {t('subscriptionTier') || (lang === 'bs' ? 'Pretplatnički paket za sve firme' : 'Subscription Tier for all companies')}</label>
-                                    <select className="form-select" value={formData.subscriptionTier || 'BASIC'} onChange={e => setFormData(p => ({ ...p, subscriptionTier: e.target.value }))}>
+                                    <select 
+                                        className="form-select" 
+                                        value={formData.subscriptionTier || 'BASIC'} 
+                                        onChange={e => {
+                                            const tier = e.target.value;
+                                            setFormData(p => {
+                                                const updated = { ...p, subscriptionTier: tier };
+                                                if (tier === 'ENTERPRISE') {
+                                                    updated.fleetEnabled = true;
+                                                    updated.riskAssessmentEnabled = true;
+                                                    updated.questionnairesEnabled = true;
+                                                    updated.testoviEnabled = true;
+                                                    updated.fireProtectionEnabled = true;
+                                                } else if (tier === 'FLEET_ONLY') {
+                                                    updated.fleetEnabled = true;
+                                                    updated.riskAssessmentEnabled = false;
+                                                    updated.questionnairesEnabled = false;
+                                                    updated.testoviEnabled = false;
+                                                    updated.fireProtectionEnabled = false;
+                                                } else if (tier === 'BASIC') {
+                                                    updated.fleetEnabled = false;
+                                                    updated.riskAssessmentEnabled = false;
+                                                    updated.questionnairesEnabled = false;
+                                                    updated.testoviEnabled = false;
+                                                    updated.fireProtectionEnabled = false;
+                                                }
+                                                return updated;
+                                            });
+                                        }}
+                                    >
                                         <option value="BASIC">Standard / Basic</option>
                                         <option value="ENTERPRISE">Enterprise (Premium Moduli)</option>
+                                        <option value="FLEET_ONLY">{lang === 'bs' ? 'Samo Vozni Park (Fleet Only)' : 'Fleet Only'}</option>
                                     </select>
                                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
                                         {lang === 'bs' 
-                                            ? '* Snimanjem će se ovaj pretplatnički paket primijeniti na sve dodijeljene firme ovog korisnika.' 
-                                            : '* Saving will apply this subscription tier to all assigned companies of this user.'}
+                                            ? '* Snimanjem će se ovaj pretplatnički paket primijeniti na sve dodijeljene firme i na samog korisnika.' 
+                                            : '* Saving will apply this subscription tier to all assigned companies and the user profile.'}
                                     </span>
+                                </div>
+                            )}
+
+                            {/* Aktivni moduli za korisnika */}
+                            {isSuperAdmin && (
+                                <div style={{ marginTop: 16, padding: 14, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>🔌 {lang === 'bs' ? 'Dozvoljeni moduli (Primjenjuje se na sve njegove firme)' : 'Allowed Modules (Applies to all of their companies)'}</div>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }} onClick={() => setFormData(p => ({ ...p, fleetEnabled: true, riskAssessmentEnabled: true, questionnairesEnabled: true, testoviEnabled: true, fireProtectionEnabled: true }))}>
+                                                {lang === 'bs' ? 'Označi sve' : 'Select all'}
+                                            </button>
+                                            <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 6px', fontSize: '0.7rem', color: 'var(--danger)' }} onClick={() => setFormData(p => ({ ...p, fleetEnabled: false, riskAssessmentEnabled: false, questionnairesEnabled: false, testoviEnabled: false, fireProtectionEnabled: false }))}>
+                                                {lang === 'bs' ? 'Odmrkni sve' : 'Clear all'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="user-fleet-enabled-check" checked={formData.fleetEnabled} onChange={e => setFormData(p => ({ ...p, fleetEnabled: e.target.checked }))} />
+                                            <label htmlFor="user-fleet-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>🚗 {lang === 'bs' ? 'Vozni park (Fleet Management)' : 'Fleet Management'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="user-risk-enabled-check" checked={formData.riskAssessmentEnabled} onChange={e => setFormData(p => ({ ...p, riskAssessmentEnabled: e.target.checked }))} />
+                                            <label htmlFor="user-risk-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>⚠️ {lang === 'bs' ? 'Procjena rizika (Risk Assessment)' : 'Risk Assessment'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="user-quest-enabled-check" checked={formData.questionnairesEnabled} onChange={e => setFormData(p => ({ ...p, questionnairesEnabled: e.target.checked }))} />
+                                            <label htmlFor="user-quest-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>❓ {lang === 'bs' ? 'Upitnici i ankete (Questionnaires)' : 'Questionnaires'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="user-testovi-enabled-check" checked={formData.testoviEnabled} onChange={e => setFormData(p => ({ ...p, testoviEnabled: e.target.checked }))} />
+                                            <label htmlFor="user-testovi-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>📝 {lang === 'bs' ? 'Testovi ZOP/ZNR i skenirani testovi' : 'ZOP/ZNR & Scanned Tests'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="user-fire-enabled-check" checked={formData.fireProtectionEnabled} onChange={e => setFormData(p => ({ ...p, fireProtectionEnabled: e.target.checked }))} />
+                                            <label htmlFor="user-fire-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>🧯 {lang === 'bs' ? 'Zaštita od požara i evakuacija' : 'Fire Protection & Evacuation'}</label>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 

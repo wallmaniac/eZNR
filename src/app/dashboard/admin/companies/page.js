@@ -23,6 +23,8 @@ export default function AdminCompaniesPage() {
         naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '',
         postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '',
         aktivan: true, logo: '', parentId: '', subscriptionTier: 'BASIC', country: 'BA',
+        fleetEnabled: true, riskAssessmentEnabled: true, questionnairesEnabled: true,
+        testoviEnabled: true, fireProtectionEnabled: true,
     });
 
     useEffect(() => {
@@ -40,7 +42,12 @@ export default function AdminCompaniesPage() {
         setUsers(allUsers);
     };
 
-    const emptyForm = { naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '', parentId: '', subscriptionTier: 'BASIC', country: 'BA' };
+    const emptyForm = {
+        naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '', parentId: '',
+        subscriptionTier: 'BASIC', country: 'BA',
+        fleetEnabled: true, riskAssessmentEnabled: true, questionnairesEnabled: true,
+        testoviEnabled: true, fireProtectionEnabled: true
+    };
 
     const openNew = () => {
         setEditCompany(null);
@@ -57,6 +64,11 @@ export default function AdminCompaniesPage() {
             telefon: c.telefon || '', email: c.email || '', direktor: c.direktor || '',
             strucnoLice: c.strucnoLice || '', aktivan: c.aktivan !== false, logo: c.logo || '', parentId: c.parentId || '',
             subscriptionTier: c.subscriptionTier || 'BASIC', country: c.country || 'BA',
+            fleetEnabled: c.fleetEnabled !== false,
+            riskAssessmentEnabled: c.riskAssessmentEnabled !== false,
+            questionnairesEnabled: c.questionnairesEnabled !== false,
+            testoviEnabled: c.testoviEnabled !== false,
+            fireProtectionEnabled: c.fireProtectionEnabled !== false,
         });
         setLogoError('');
         setShowModal(true);
@@ -187,8 +199,16 @@ export default function AdminCompaniesPage() {
                                     <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                                         <span style={{
                                             padding: '3px 9px', borderRadius: 10, fontSize: '0.68rem', fontWeight: 700,
-                                            background: c.subscriptionTier === 'ENTERPRISE' ? 'rgba(0,191,166,0.12)' : 'rgba(100,116,139,0.12)',
-                                            color: c.subscriptionTier === 'ENTERPRISE' ? 'var(--primary)' : 'var(--text-muted)',
+                                            background: c.subscriptionTier === 'ENTERPRISE' 
+                                                ? 'rgba(0,191,166,0.12)' 
+                                                : c.subscriptionTier === 'FLEET_ONLY'
+                                                    ? 'rgba(33,150,243,0.12)' 
+                                                    : 'rgba(100,116,139,0.12)',
+                                            color: c.subscriptionTier === 'ENTERPRISE' 
+                                                ? 'var(--primary)' 
+                                                : c.subscriptionTier === 'FLEET_ONLY'
+                                                    ? 'var(--info)' 
+                                                    : 'var(--text-muted)',
                                         }}>
                                             ⚡ {c.subscriptionTier || 'BASIC'}
                                         </span>
@@ -209,6 +229,14 @@ export default function AdminCompaniesPage() {
                                     {c.oib && <div>🆔 OIB: {c.oib}</div>}
                                     {c.direktor && <div>👤 {c.direktor}</div>}
                                     {c.strucnoLice && <div>🛡️ {c.strucnoLice}</div>}
+                                </div>
+
+                                <div style={{ marginTop: 8, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                    {c.fleetEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(33,150,243,0.08)', color: 'var(--info)' }}>🚗 Vozni park</span>}
+                                    {c.riskAssessmentEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(0,191,166,0.08)', color: 'var(--primary)' }}>⚠️ Procjena rizika</span>}
+                                    {c.questionnairesEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(123,31,162,0.08)', color: '#7B1FA2' }}>❓ Upitnici</span>}
+                                    {c.testoviEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(255,152,0,0.08)', color: 'var(--warning)' }}>📝 Testovi</span>}
+                                    {c.fireProtectionEnabled !== false && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(244,67,54,0.08)', color: 'var(--danger)' }}>🧯 Požar/Evak</span>}
                                 </div>
 
                                 {/* Users in this company */}
@@ -281,6 +309,7 @@ export default function AdminCompaniesPage() {
                                     <select className="form-select" value={formData.subscriptionTier} onChange={e => setFormData(p => ({ ...p, subscriptionTier: e.target.value }))}>
                                         <option value="BASIC">Standard / Basic</option>
                                         <option value="ENTERPRISE">Enterprise (Premium Moduli)</option>
+                                        <option value="FLEET_ONLY">{lang === 'bs' ? 'Samo Vozni Park (Fleet Only)' : 'Fleet Only'}</option>
                                     </select>
                                 </div>
                             )}
@@ -411,6 +440,35 @@ export default function AdminCompaniesPage() {
                                   })}
                                 </div>
                               </div>
+                            )}
+
+                            {/* Aktivni moduli za tvrtku */}
+                            {isSuperAdmin && (
+                                <div style={{ marginTop: 16, padding: 14, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                                    <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 10 }}>🔌 {lang === 'bs' ? 'Aktivni moduli (Modularno licenciranje)' : 'Active Modules (Modular Licensing)'}</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="fleet-enabled-check" checked={formData.fleetEnabled} onChange={e => setFormData(p => ({ ...p, fleetEnabled: e.target.checked }))} />
+                                            <label htmlFor="fleet-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>🚗 {lang === 'bs' ? 'Vozni park (Fleet Management)' : 'Fleet Management'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="risk-enabled-check" checked={formData.riskAssessmentEnabled} onChange={e => setFormData(p => ({ ...p, riskAssessmentEnabled: e.target.checked }))} />
+                                            <label htmlFor="risk-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>⚠️ {lang === 'bs' ? 'Procjena rizika (Risk Assessment)' : 'Risk Assessment'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="quest-enabled-check" checked={formData.questionnairesEnabled} onChange={e => setFormData(p => ({ ...p, questionnairesEnabled: e.target.checked }))} />
+                                            <label htmlFor="quest-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>❓ {lang === 'bs' ? 'Upitnici i ankete (Questionnaires)' : 'Questionnaires'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="testovi-enabled-check" checked={formData.testoviEnabled} onChange={e => setFormData(p => ({ ...p, testoviEnabled: e.target.checked }))} />
+                                            <label htmlFor="testovi-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>📝 {lang === 'bs' ? 'Testovi ZOP/ZNR i skenirani testovi' : 'ZOP/ZNR & Scanned Tests'}</label>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <input type="checkbox" id="fire-enabled-check" checked={formData.fireProtectionEnabled} onChange={e => setFormData(p => ({ ...p, fireProtectionEnabled: e.target.checked }))} />
+                                            <label htmlFor="fire-enabled-check" style={{ fontSize: '0.82rem', cursor: 'pointer' }}>🧯 {lang === 'bs' ? 'Zaštita od požara i evakuacija' : 'Fire Protection & Evacuation'}</label>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
                             {/* Aktivna firma */}
