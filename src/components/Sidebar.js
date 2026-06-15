@@ -235,7 +235,7 @@ const SIDEBAR_TOOLTIPS = {
 export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
     const { t, lang } = useLanguage();
     const { user, logout, isAdmin, isSuperAdmin, activeCompanyId } = useAuth();
-    const { hasAccess } = useSubscription();
+    const { hasAccess, tier } = useSubscription();
     const router = useRouter();
     const pathname = usePathname();
     const [openMenus, setOpenMenus] = useState({});
@@ -262,64 +262,85 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
 
     // Build menu: base items + admin items (if admin)
     const allMenuItems = useMemo(() => {
-        const items = menuItems.map(item => {
-            // Filter adminOnly children
+        let items = menuItems.map(item => {
+            // Filter adminOnly and locked children if on FLEET_ONLY plan
             if (item.children) {
-                return { ...item, children: item.children.filter(c => !c.adminOnly || isAdmin) };
+                const filteredChildren = item.children.filter(c => {
+                    if (c.adminOnly && !isAdmin) return false;
+                    if (tier === 'FLEET_ONLY' && !hasAccess(c.key)) return false;
+                    return true;
+                });
+                return { ...item, children: filteredChildren };
             }
             return item;
-        }).filter(item => !item.adminOnly || isAdmin);
+        });
+
+        // Filter top-level items based on adminOnly and access permissions
+        items = items.filter(item => {
+            if (item.adminOnly && !isAdmin) return false;
+            if (tier === 'FLEET_ONLY' && !hasAccess(item.key)) return false;
+            // If a group has children, only show if at least one child is visible
+            if (item.children && item.children.length === 0) return false;
+            return true;
+        });
 
         if (isAdmin) {
-            items.push({
-                key: 'admin',
-                icon: '👑',
-                label_bs: 'Administracija / Napredno',
-                label_en: 'Administration / Advanced',
-                children: [
-                    { key: 'adminUsers', icon: '👥', path: '/dashboard/admin/users' },
-                    { key: 'adminCompanies', icon: '🏢', path: '/dashboard/admin/companies' },
-                    { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
-                    { key: 'ekWorkers',      icon: '📇', path: '/dashboard/ek-workers' },
-                    { key: 'ekPPE',          icon: 'OZO.png', path: '/dashboard/ek-ppe' },
-                    { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
-                    { key: 'ekEquipment',    icon: 'Oprema.png', path: '/dashboard/ek-equipment' },
-                    {
-                        key: 'grpISZNR', icon: '🏛️',
-                        label_bs: 'Interni akti ZNR', label_en: 'Internal OSH Acts',
-                        children: [
-                            { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
-                            { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
-                            { key: 'documentTypes',   icon: '📋', path: '/dashboard/isznr-doc-types' },
-                            { key: 'digitalSigning',  icon: '✍️', path: '/dashboard/isznr-signing' },
-                            { key: 'examiners',       icon: '🔍', path: '/dashboard/isznr-examiners' },
-                            { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
-                        ]
-                    },
-                    {
-                        key: 'grpCodebooks', icon: '🔗',
-                        label_bs: 'Šifarnici', label_en: 'Codebooks',
-                        children: [
-                            { key: 'countries',          icon: '🌍', path: '/dashboard/countries' },
-                            { key: 'counties',           icon: '📍', path: '/dashboard/counties' },
-                            { key: 'places',             icon: '🏘️', path: '/dashboard/places' },
-                            { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
-                            { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
-                            { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
-                            { key: 'doctors',            icon: 'Doktori.png', path: '/dashboard/doctors' },
-                            { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
-                            { key: 'certTypes',          icon: 'Uvjerenja.png', path: '/dashboard/cert-types' },
-                            { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },
-                            { key: 'ppe',               icon: 'OZO.png', path: '/dashboard/ppe' },
-                            { key: 'fileTypes',         icon: '📂', path: '/dashboard/file-types' },
-                            { key: 'extraFields',       icon: '➕', path: '/dashboard/extra-fields' },
-                        ]
-                    }
-                ],
+            const adminChildren = [
+                { key: 'adminUsers', icon: '👥', path: '/dashboard/admin/users' },
+                { key: 'adminCompanies', icon: '🏢', path: '/dashboard/admin/companies' },
+                { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
+                { key: 'ekWorkers',      icon: '📇', path: '/dashboard/ek-workers' },
+                { key: 'ekPPE',          icon: 'OZO.png', path: '/dashboard/ek-ppe' },
+                { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
+                { key: 'ekEquipment',    icon: 'Oprema.png', path: '/dashboard/ek-equipment' },
+                {
+                    key: 'grpISZNR', icon: '🏛️',
+                    label_bs: 'Interni akti ZNR', label_en: 'Internal OSH Acts',
+                    children: [
+                        { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
+                        { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
+                        { key: 'documentTypes',   icon: '📋', path: '/dashboard/isznr-doc-types' },
+                        { key: 'digitalSigning',  icon: '✍️', path: '/dashboard/isznr-signing' },
+                        { key: 'examiners',       icon: '🔍', path: '/dashboard/isznr-examiners' },
+                        { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
+                    ]
+                },
+                {
+                    key: 'grpCodebooks', icon: '🔗',
+                    label_bs: 'Šifarnici', label_en: 'Codebooks',
+                    children: [
+                        { key: 'countries',          icon: '🌍', path: '/dashboard/countries' },
+                        { key: 'counties',           icon: '📍', path: '/dashboard/counties' },
+                        { key: 'places',             icon: '🏘️', path: '/dashboard/places' },
+                        { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
+                        { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
+                        { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
+                        { key: 'doctors',            icon: 'Doktori.png', path: '/dashboard/doctors' },
+                        { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
+                        { key: 'certTypes',          icon: 'Uvjerenja.png', path: '/dashboard/cert-types' },
+                        { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },
+                        { key: 'ppe',               icon: 'OZO.png', path: '/dashboard/ppe' },
+                        { key: 'fileTypes',         icon: '📂', path: '/dashboard/file-types' },
+                        { key: 'extraFields',       icon: '➕', path: '/dashboard/extra-fields' },
+                    ]
+                }
+            ].filter(c => {
+                if (tier === 'FLEET_ONLY' && !hasAccess(c.key)) return false;
+                return true;
             });
+
+            if (adminChildren.length > 0) {
+                items.push({
+                    key: 'admin',
+                    icon: '👑',
+                    label_bs: 'Administracija / Napredno',
+                    label_en: 'Administration / Advanced',
+                    children: adminChildren
+                });
+            }
         }
         return items;
-    }, [isAdmin]);
+    }, [isAdmin, tier, hasAccess]);
 
     // Tooltip helper — returns explanatory text for non-obvious menu items
     const tip = (key) => SIDEBAR_TOOLTIPS[lang]?.[key] || SIDEBAR_TOOLTIPS.bs?.[key] || undefined;

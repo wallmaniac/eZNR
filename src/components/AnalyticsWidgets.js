@@ -374,8 +374,8 @@ export default function AnalyticsWidgets({
                                             strokeLinecap="round"
                                             style={{ transition: 'stroke-dasharray 0.8s ease-in-out', filter: `drop-shadow(0 0 6px ${getComplianceColor(complianceMetrics.overall)}80)` }} />
                                 </svg>
-                                <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                    <span style={{ fontSize: '1.9rem', fontWeight: 900, fontFamily: 'var(--font-heading)', color: 'var(--text)', lineHeight: 1 }}>
+                                <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                                    <span style={{ fontSize: '1.5rem', fontWeight: 900, fontFamily: 'var(--font-heading)', color: 'var(--text)', lineHeight: 1 }}>
                                         {complianceMetrics.overall.toFixed(1)}%
                                     </span>
                                     <span style={{ fontSize: '0.6rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 1, marginTop: 2 }}>
@@ -415,7 +415,7 @@ export default function AnalyticsWidgets({
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '18px' }}>
                                 {/* Module 1: Workers */}
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                    <div style={{ position: 'relative', width: '46px', height: '46px', flexShrink: 0 }}>
                                         <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.worker.pct)} strokeWidth="3"
@@ -423,7 +423,7 @@ export default function AnalyticsWidgets({
                                                     strokeLinecap="round"
                                                     style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
                                         </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                                             {complianceMetrics.worker.pct.toFixed(0)}%
                                         </div>
                                     </div>
@@ -439,7 +439,7 @@ export default function AnalyticsWidgets({
 
                                 {/* Module 2: Equipment */}
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                    <div style={{ position: 'relative', width: '46px', height: '46px', flexShrink: 0 }}>
                                         <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.equip.pct)} strokeWidth="3"
@@ -447,7 +447,7 @@ export default function AnalyticsWidgets({
                                                     strokeLinecap="round"
                                                     style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
                                         </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                                             {complianceMetrics.equip.pct.toFixed(0)}%
                                         </div>
                                     </div>
@@ -463,7 +463,7 @@ export default function AnalyticsWidgets({
 
                                 {/* Module 3: Fire Protection */}
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                    <div style={{ position: 'relative', width: '46px', height: '46px', flexShrink: 0 }}>
                                         <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.fire.pct)} strokeWidth="3"
@@ -471,7 +471,7 @@ export default function AnalyticsWidgets({
                                                     strokeLinecap="round"
                                                     style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
                                         </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                                             {complianceMetrics.fire.pct.toFixed(0)}%
                                         </div>
                                     </div>
@@ -487,7 +487,7 @@ export default function AnalyticsWidgets({
 
                                 {/* Module 4: Fleet */}
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                                    <div style={{ position: 'relative', width: '46px', height: '46px', flexShrink: 0 }}>
                                         <svg width="100%" height="100%" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-light)" strokeWidth="3" />
                                             <circle cx="18" cy="18" r="15.915" fill="none" stroke={getComplianceColor(complianceMetrics.fleet.pct)} strokeWidth="3"
@@ -495,7 +495,7 @@ export default function AnalyticsWidgets({
                                                     strokeLinecap="round"
                                                     style={{ transition: 'stroke-dasharray 0.8s ease-in-out' }} />
                                         </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                                             {complianceMetrics.fleet.pct.toFixed(0)}%
                                         </div>
                                     </div>

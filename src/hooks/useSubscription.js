@@ -88,6 +88,7 @@ export function useSubscription() {
             // Under FLEET_ONLY tier, the user has access ONLY to:
             // - dashboard, home (news), settings
             // - grpWorkers -> workers (ONLY basic workers list, others inside grpWorkers are blocked)
+            // - grpOrganization and its children (orgUnits, workplaces, sistematizacija, addressBook)
             // - grpFleet and its children
             // - alati and its children (excelImport, converter, digitalArchive)
             const allowedInFleetOnly = [
@@ -96,6 +97,11 @@ export function useSubscription() {
                 'settings',
                 'grpWorkers',
                 'workers',
+                'grpOrganization',
+                'orgUnits',
+                'workplaces',
+                'sistematizacija',
+                'addressBook',
                 'grpFleet',
                 'fleetVehicles',
                 'fleetAssignments',
