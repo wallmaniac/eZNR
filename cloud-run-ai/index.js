@@ -135,6 +135,52 @@ app.post('/api/risk-ai', async (req, res) => {
 });
 
 
+function mapMessagesForGemini(messages) {
+    if (!Array.isArray(messages)) return messages;
+    return messages.map(msg => {
+        if (!msg || !Array.isArray(msg.parts)) return msg;
+        const mappedParts = msg.parts.map(part => {
+            const newPart = {};
+            
+            // Map function_call / functionCall
+            const fc = part.functionCall || part.function_call;
+            if (fc) {
+                newPart.functionCall = {
+                    name: fc.name,
+                    args: fc.args
+                };
+            }
+            
+            // Map function_response / functionResponse
+            const fr = part.functionResponse || part.function_response;
+            if (fr) {
+                newPart.functionResponse = {
+                    name: fr.name,
+                    response: fr.response
+                };
+            }
+            
+            // Map text/inlineData
+            if (part.text !== undefined) newPart.text = part.text;
+            if (part.inlineData !== undefined) newPart.inlineData = part.inlineData;
+            if (part.inline_data !== undefined) newPart.inlineData = part.inline_data;
+            if (part.fileData !== undefined) newPart.fileData = part.fileData;
+
+            // Copy any other fields
+            for (const key in part) {
+                if (!['text', 'inlineData', 'inline_data', 'fileData', 'functionCall', 'function_call', 'functionResponse', 'function_response'].includes(key)) {
+                    newPart[key] = part[key];
+                }
+            }
+            return newPart;
+        });
+        return {
+            role: msg.role,
+            parts: mappedParts
+        };
+    });
+}
+
 // ── ZIA AI ASSISTANT ENDPOINT ────────────────────────────────────────────────
 
 app.post('/api/zia', async (req, res) => {
@@ -149,10 +195,11 @@ app.post('/api/zia', async (req, res) => {
     if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
     try {
-        const { messages, systemPrompt, tools } = req.body;
+        let { messages, systemPrompt, tools } = req.body;
         if (!messages || !systemPrompt) {
             return res.status(400).json({ error: 'Missing messages or systemPrompt' });
         }
+        messages = mapMessagesForGemini(messages);
 
         const geminiBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },

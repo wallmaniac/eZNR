@@ -297,6 +297,7 @@ function ScannedTestsPageContent() {
     const [savedScans, setSavedScans] = useState([]);
     const [saving, setSaving] = useState(false);
     const [viewScan, setViewScan] = useState(null);
+    const [modalWorkers, setModalWorkers] = useState([]);
 
     const loadData = useCallback(async () => {
         await ensureCollection(COLLECTIONS.SCANNED_TESTS);
@@ -531,17 +532,251 @@ function ScannedTestsPageContent() {
 
     const handleViewDetails = (scan) => {
         setViewScan(scan);
+        setModalWorkers(scan.workers || []);
     };
 
-    const handleDeleteScan = async (id) => {
-        const ok = await confirm(getExp('confirmDeleteScan'));
-        if (!ok) return;
+    const handleUpdateModalWorkerField = (idx, field, value) => {
+        setModalWorkers(prev => {
+            const copy = [...prev];
+            copy[idx] = {
+                ...copy[idx],
+                [field]: value
+            };
+            return copy;
+        });
+    };
+
+    const handleUpdateModalWorkerLink = (idx, workerId) => {
+        const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
+        const workplaces = getAll(COLLECTIONS.WORKPLACES);
+        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+        const w = allWorkers.find(x => x.id === workerId);
+        setModalWorkers(prev => {
+            const copy = [...prev];
+            const isNotInDb = workerId === '__NOT_IN_DB__';
+            
+            let ime = copy[idx].ime;
+            let prezime = copy[idx].prezime;
+            let imeOca = copy[idx].imeOca;
+            let jmbgOib = copy[idx].jmbgOib;
+            let datumRodenja = copy[idx].datumRodenja;
+            let miestoRodenja = copy[idx].miestoRodenja;
+            let radnoMjesto = copy[idx].radnoMjesto;
+            let odjel = copy[idx].odjel;
+
+            if (!isNotInDb && w) {
+                const wp = workplaces.find(x => x.id === w.radnoMjestoId) || {};
+                const ou = orgUnits.find(x => x.id === w.orgJedinicaId) || {};
+                ime = w.ime || '';
+                prezime = w.prezime || '';
+                imeOca = w.imeRoditelja || '';
+                jmbgOib = w.jmbg || w.oib || '';
+                datumRodenja = w.datumRodenja || w.datumRodjenja || '';
+                miestoRodenja = w.miestoRodenja || w.mjestoRodjenja || '';
+                radnoMjesto = wp.naziv || w.radnoMjesto || '';
+                odjel = ou.naziv || w.orgJedinica || '';
+            }
+
+            copy[idx] = {
+                ...copy[idx],
+                selectedWorkerId: workerId,
+                ime,
+                prezime,
+                imeOca,
+                jmbgOib,
+                datumRodenja,
+                miestoRodenja,
+                radnoMjesto,
+                odjel
+            };
+            return copy;
+        });
+    };
+
+    const handleDeleteModalRow = (idx) => {
+        setModalWorkers(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleAddModalRow = () => {
+        setModalWorkers(prev => [...prev, {
+            ime: '',
+            prezime: '',
+            imeOca: '',
+            jmbgOib: '',
+            datumRodenja: '',
+            miestoRodenja: '',
+            radnoMjesto: '',
+            odjel: '',
+            type: 'ZNR',
+            passed: true,
+            selectedWorkerId: '__NOT_IN_DB__'
+        }]);
+    };
+
+    const handleSaveModalChanges = async () => {
         try {
-            await remove(COLLECTIONS.SCANNED_TESTS, id);
+            const { update } = await import('@/lib/dataStore');
+            const updated = {
+                ...viewScan,
+                workers: modalWorkers,
+                workersCount: modalWorkers.length
+            };
+            await update(COLLECTIONS.SCANNED_TESTS, viewScan.id, updated);
+            await alert(lang === 'en' ? 'Changes saved successfully!' : 'Izmjene uspješno sačuvane!');
+            setViewScan(null);
             loadData();
         } catch (err) {
-            console.error('Failed to delete scanned test:', err);
-            await alert('Greška pri brisanju: ' + err.message);
+            console.error('Failed to save changes:', err);
+            await alert('Greška pri pohranjivanju: ' + err.message);
+        }
+    };
+
+    const handleModalDownloadExcel = async () => {
+        const XLSX = await import('xlsx');
+        const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
+
+        const dataRows = modalWorkers.map((row, idx) => {
+            return {
+                '#': idx + 1,
+                [getExp('ime')]: row.ime || '',
+                [getExp('prezime')]: row.prezime || '',
+                [getExp('imeOca')]: row.imeOca || '—',
+                [getExp('jmbgOib')]: row.jmbgOib || '—',
+                [getExp('datumRodenja')]: row.datumRodenja ? formatDate(row.datumRodenja) : '—',
+                [getExp('miestoRodenja')]: row.miestoRodenja || '—',
+                [getExp('radnoMjesto')]: t(row.radnoMjesto?.trim()) || row.radnoMjesto || '—',
+                [getExp('odjel')]: t(row.odjel?.trim()) || row.odjel || '—',
+                [getExp('tipTesta')]: t(row.type?.trim()) || row.type || '—',
+                [getExp('status')]: row.passed ? getExp('polozio') : getExp('pao')
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(dataRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, getExp('sheetName'));
+        XLSX.writeFile(wb, `${getExp('fileName')}_${viewScan.fileName.replace(/\.[^/.]+$/, "")}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleModalDownloadPDF = () => {
+        const companyId = getActiveCompanyId();
+        let company = { naziv: '', adresa: '', oib: '', jib: '' };
+        if (companyId && companyId !== 'all') {
+            const allComps = getAll('companies');
+            const c = allComps.find(x => x.id === companyId);
+            if (c) company = c;
+        }
+
+        const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
+
+        const rowsHtml = modalWorkers.map((row, idx) => {
+            const fullName = `${row.ime || ''} ${row.prezime || ''}`.trim() || row.extractedName || '';
+            const parentName = row.imeOca || '—';
+            const nationalId = row.jmbgOib || '—';
+            const birthD = row.datumRodenja ? formatDate(row.datumRodenja) : '—';
+            const birthP = row.miestoRodenja || '—';
+            const workplaceName = t(row.radnoMjesto?.trim()) || row.radnoMjesto || '—';
+            const deptName = t(row.odjel?.trim()) || row.odjel || '—';
+            const testType = t(row.type?.trim()) || row.type || '—';
+
+            return `
+                <tr>
+                    <td style="color:#aaa; text-align:center">${idx + 1}</td>
+                    <td style="font-weight:600">${fullName}</td>
+                    <td>${parentName}</td>
+                    <td>${nationalId}</td>
+                    <td>${birthD}</td>
+                    <td>${birthP}</td>
+                    <td>${workplaceName}</td>
+                    <td>${deptName}</td>
+                    <td>${testType}</td>
+                    <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? getExp('polozio') : getExp('paoPdf')}</span></td>
+                </tr>
+            `;
+        }).join('');
+
+        const companyName = company.naziv || company.name || 'eZNR Firma';
+        const docTitle = getExp('title');
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8"/>
+                <title>${docTitle}</title>
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt; color: #1a1a2e; padding: 20mm; }
+                    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #00BFA6; padding-bottom: 12px; margin-bottom: 20px; }
+                    .brand { font-size: 16pt; font-weight: 800; color: #00BFA6; }
+                    .company-info { text-align: right; font-size: 8pt; color: #555; }
+                    .title { font-size: 14pt; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+                    .meta { font-size: 9pt; color: #666; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                    th { background: #f5f6fa; font-size: 8pt; font-weight: 700; text-transform: uppercase; padding: 8px 10px; border-bottom: 2px solid #e0e0e0; text-align: left; }
+                    td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 9pt; }
+                    tr:nth-child(even) td { background: #fafbfd; }
+                    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; }
+                    .badge-ok { background: #e8f5e9; color: #2e7d32; }
+                    .badge-danger { background: #ffebee; color: #c62828; }
+                    .footer { margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; display: flex; justify-content: space-between; font-size: 8pt; color: #888; }
+                    .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #00BFA6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+                    @media print {
+                        .print-btn { display: none; }
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <div class="brand">eZNR</div>
+                        <div style="font-size: 9pt; font-weight: bold; margin-top: 4px;">${companyName}</div>
+                    </div>
+                    <div class="company-info">
+                        ${company.adresa ? `<div>${company.adresa}</div>` : ''}
+                        ${company.mjesto ? `<div>${company.mjesto}</div>` : ''}
+                        ${company.jib || company.oib ? `<div>JIB/OIB: ${company.jib || company.oib}</div>` : ''}
+                    </div>
+                </div>
+                <div class="title">${docTitle}</div>
+                <div class="meta">
+                    ${getExp('docScanned')}: <strong>${viewScan.fileName}</strong><br/>
+                    ${getExp('genDate')}: <strong>${new Date().toLocaleDateString('hr-HR')}</strong> · ${getExp('numWorkers')}: <strong>${modalWorkers.length}</strong>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 4%">#</th>
+                            <th>${getExp('imeIPrezime')}</th>
+                            <th>${getExp('imeOca')}</th>
+                            <th>${getExp('jmbgOib')}</th>
+                            <th>${getExp('datumRodenja')}</th>
+                            <th>${getExp('miestoRodenja')}</th>
+                            <th>${getExp('radnoMjesto')}</th>
+                            <th>${getExp('odjel')}</th>
+                            <th>${getExp('tipTesta')}</th>
+                            <th>${getExp('status')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <span>${getExp('generatedFrom')}</span>
+                    <span>${getExp('pageOf')}</span>
+                </div>
+                <button class="print-btn" onclick="window.print()">🖨️ ${getExp('printPdf')}</button>
+            </body>
+            </html>
+        `;
+
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(html);
+            win.document.close();
+        } else {
+            alert('Molimo dozvolite popup prozore za ispis.');
         }
     };
 
@@ -695,10 +930,108 @@ function ScannedTestsPageContent() {
         }
     };
 
+    // Calculate page statistics
+    const totalScans = savedScans.length;
+    const totalWorkers = savedScans.reduce((acc, scan) => acc + (scan.workersCount || scan.workers?.length || 0), 0);
+    
+    let totalCount = 0;
+    let passedCount = 0;
+    savedScans.forEach(scan => {
+        (scan.workers || []).forEach(w => {
+            totalCount++;
+            if (w.passed) passedCount++;
+        });
+    });
+    const passRate = totalCount > 0 ? Math.round((passedCount / totalCount) * 100) : 100;
+
+    let znrCount = 0;
+    let zopCount = 0;
+    savedScans.forEach(scan => {
+        (scan.workers || []).forEach(w => {
+            if (w.type === 'ZNR') znrCount++;
+            else if (w.type === 'ZOP') zopCount++;
+        });
+    });
+
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
             <PageHeader icon="📝" title={t('scannedTests') || 'Skenirani testovi'} />
+
+            {/* Visual KPI Stats Cards */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    flex: '1 1 200px',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <span style={{ fontSize: '1.5rem' }}>📄</span>
+                    <div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)', lineHeight: 1.1 }}>
+                            {totalScans}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap', marginTop: 4 }}>
+                            {lang === 'en' ? 'Total Scanned Docs' : 'Ukupno skeniranih dok.'}
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    flex: '1 1 200px',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <span style={{ fontSize: '1.5rem' }}>👷</span>
+                    <div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)', lineHeight: 1.1 }}>
+                            {totalWorkers}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap', marginTop: 4 }}>
+                            {lang === 'en' ? 'Processed Workers' : 'Obrađeni radnici'}
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    flex: '1 1 200px',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <span style={{ fontSize: '1.5rem' }}>🎯</span>
+                    <div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: passRate >= 80 ? 'var(--success)' : 'var(--danger)', lineHeight: 1.1 }}>
+                            {passRate}%
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap', marginTop: 4 }}>
+                            {lang === 'en' ? 'Pass Rate' : 'Stopa prolaznosti'}
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    flex: '1 1 200px',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <span style={{ fontSize: '1.5rem' }}>🎓</span>
+                    <div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)', lineHeight: 1.1 }}>
+                            {znrCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>ZNR</span> · {zopCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>ZOP</span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap', marginTop: 4 }}>
+                            {lang === 'en' ? 'Tests by Type' : 'Testovi po vrstama'}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div className="card" style={{ marginBottom: 20 }}>
                 <div className="card-body">
@@ -1053,16 +1386,16 @@ function ScannedTestsPageContent() {
                             background: 'var(--bg-card)', 
                             borderRadius: 'var(--radius-lg)', 
                             padding: 28, 
-                            width: '90%', 
-                            maxWidth: 1000, 
-                            maxHeight: '85vh', 
+                            width: '95%', 
+                            maxWidth: 1200, 
+                            maxHeight: '90vh', 
                             overflow: 'auto', 
                             boxShadow: '0 20px 60px rgba(0,0,0,0.4)', 
                             border: '1px solid var(--border)' 
                         }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>
+                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 📂 {getExp('detaljiSkeniranogTesta')}: {viewScan.fileName}
                             </h3>
                             <button className="btn btn-ghost btn-sm" onClick={() => setViewScan(null)}>
@@ -1070,50 +1403,169 @@ function ScannedTestsPageContent() {
                             </button>
                         </div>
                         
-                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                            {getExp('datumSkeniranja')}: <strong>{viewScan.dateScanned ? formatDate(viewScan.dateScanned) : '—'}</strong> · {getExp('numWorkers')}: <strong>{viewScan.workersCount || (viewScan.workers?.length || 0)}</strong>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+                            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                {getExp('datumSkeniranja')}: <strong>{viewScan.dateScanned ? formatDate(viewScan.dateScanned) : '—'}</strong> · {getExp('numWorkers')}: <strong>{modalWorkers.length}</strong>
+                            </div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button className="btn btn-outline btn-sm" onClick={handleModalDownloadExcel} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    📊 Izvezi u Excel
+                                </button>
+                                <button className="btn btn-outline btn-sm" onClick={handleModalDownloadPDF} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+                                    🖨️ Isprintaj / PDF
+                                </button>
+                                <button className="btn btn-outline btn-sm" onClick={handleAddModalRow} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    ➕ {lang === 'en' ? 'Add Worker' : 'Dodaj radnika'}
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="data-table-wrapper" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                        <div className="data-table-wrapper" style={{ maxHeight: '55vh', overflowY: 'auto' }}>
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: '5%' }}>#</th>
-                                        <th>{getExp('imeIPrezime')}</th>
-                                        <th>{getExp('imeOca')}</th>
-                                        <th>{getExp('jmbgOib')}</th>
-                                        <th>{getExp('datumRodenja')}</th>
-                                        <th>{getExp('miestoRodenja')}</th>
-                                        <th>{getExp('radnoMjesto')}</th>
-                                        <th>{getExp('odjel')}</th>
-                                        <th>{getExp('tipTesta')}</th>
-                                        <th>{getExp('status')}</th>
+                                        <th style={{ width: '2%' }}>#</th>
+                                        <th style={{ width: '15%' }}>{getExp('pronadeniRadnik')}</th>
+                                        <th style={{ width: '9%' }}>{getExp('ime')}</th>
+                                        <th style={{ width: '9%' }}>{getExp('prezime')}</th>
+                                        <th style={{ width: '7%' }}>{getExp('imeOca')}</th>
+                                        <th style={{ width: '9%' }}>{getExp('jmbgOib')}</th>
+                                        <th style={{ width: '9%' }}>{getExp('datumRodenja')}</th>
+                                        <th style={{ width: '9%' }}>{getExp('miestoRodenja')}</th>
+                                        <th style={{ width: '10%' }}>{getExp('radnoMjesto')}</th>
+                                        <th style={{ width: '10%' }}>{getExp('odjel')}</th>
+                                        <th style={{ width: '8%' }}>{getExp('tipTesta')}</th>
+                                        <th style={{ width: '8%' }}>{getExp('status')}</th>
+                                        <th style={{ width: '2%' }}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {(viewScan.workers || []).map((w, idx) => (
-                                        <tr key={idx}>
-                                            <td>{idx + 1}</td>
-                                            <td style={{ fontWeight: 600 }}>{`${w.ime || ''} ${w.prezime || ''}`.trim() || w.extractedName}</td>
-                                            <td>{w.imeOca || '—'}</td>
-                                            <td>{w.jmbgOib || '—'}</td>
-                                            <td>{w.datumRodenja ? formatDate(w.datumRodenja) : '—'}</td>
-                                            <td>{w.miestoRodenja || '—'}</td>
-                                            <td>{t(w.radnoMjesto?.trim()) || w.radnoMjesto || '—'}</td>
-                                            <td>{t(w.odjel?.trim()) || w.odjel || '—'}</td>
-                                            <td>{w.type || '—'}</td>
-                                            <td>
-                                                <span className={`badge ${w.passed ? 'badge-success' : 'badge-danger'}`}>
-                                                    {w.passed ? getExp('polozio') : getExp('pao')}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {modalWorkers.map((w, idx) => {
+                                        const allWorkers = getAll(COLLECTIONS.WORKERS).filter(wk => wk.aktivan !== false);
+                                        return (
+                                            <tr key={idx}>
+                                                <td>{idx + 1}</td>
+                                                <td>
+                                                    <select 
+                                                        className="form-select" 
+                                                        value={w.selectedWorkerId || '__NOT_IN_DB__'}
+                                                        onChange={e => handleUpdateModalWorkerLink(idx, e.target.value)}
+                                                        style={{ minWidth: 150, padding: '4px 8px', fontSize: '0.82rem' }}
+                                                    >
+                                                        <option value="">{getExp('odaberiRadnikaPlaceholder')}</option>
+                                                        <option value="__NOT_IN_DB__">{getExp('nijeUBazi')}</option>
+                                                        {allWorkers.map(wk => (
+                                                            <option key={wk.id} value={wk.id}>
+                                                                {wk.ime} {wk.prezime} {wk.jmbg ? `(JMBG: ${wk.jmbg})` : wk.oib ? `(OIB: ${wk.oib})` : ''}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.ime || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'ime', e.target.value)}
+                                                        style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.prezime || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'prezime', e.target.value)}
+                                                        style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.imeOca || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'imeOca', e.target.value)}
+                                                        style={{ minWidth: 70, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.jmbgOib || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'jmbgOib', e.target.value)}
+                                                        style={{ minWidth: 90, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        type="date"
+                                                        value={w.datumRodenja || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'datumRodenja', e.target.value)}
+                                                        style={{ minWidth: 110, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)', border: '1px solid var(--border)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.miestoRodenja || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'miestoRodenja', e.target.value)}
+                                                        style={{ minWidth: 95, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.radnoMjesto || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'radnoMjesto', e.target.value)}
+                                                        style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.odjel || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'odjel', e.target.value)}
+                                                        style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={w.type || ''} 
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'type', e.target.value)}
+                                                        style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <select 
+                                                        className="form-select" 
+                                                        value={w.passed ? 'true' : 'false'}
+                                                        onChange={e => handleUpdateModalWorkerField(idx, 'passed', e.target.value === 'true')}
+                                                        style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                    >
+                                                        <option value="true">{getExp('polozio')}</option>
+                                                        <option value="false">{getExp('pao')}</option>
+                                                    </select>
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <button 
+                                                        className="btn btn-ghost btn-sm btn-icon" 
+                                                        style={{ color: 'var(--danger)', padding: 0 }}
+                                                        onClick={() => handleDeleteModalRow(idx)}
+                                                        title={getExp('ukloniRed')}
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, gap: 12 }}>
+                            <button className="btn btn-primary" onClick={handleSaveModalChanges}>
+                                💾 {lang === 'en' ? 'Save Changes' : 'Sačuvaj izmjene'}
+                            </button>
                             <button className="btn btn-outline" onClick={() => setViewScan(null)}>
                                 {getExp('zatvori')}
                             </button>

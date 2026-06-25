@@ -195,17 +195,64 @@ function buildDataContext(lang, activeCompanyId, userCompanies, t) {
             );
         }
 
-        // Medical Exams
-        const overdueMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today);
+        // Medical Exams - Detailed analysis
+        const activeWorkersListForMed = workers.filter(w => w.aktivan !== false);
+        
+        // Find latest exam for each worker
+        const latestExamsMap = {};
+        medicalExams.forEach(m => {
+            if (!m.workerId) return;
+            const existing = latestExamsMap[m.workerId];
+            if (!existing || new Date(m.datumPregleda || m.datum || '1970-01-01') > new Date(existing.datumPregleda || existing.datum || '1970-01-01')) {
+                latestExamsMap[m.workerId] = m;
+            }
+        });
+
+        const workersWithoutExams = [];
+        const workersWithExpiredExams = [];
+        const workersWithValidExams = [];
+
+        activeWorkersListForMed.forEach(w => {
+            const latest = latestExamsMap[w.id];
+            if (!latest) {
+                workersWithoutExams.push(w.id);
+            } else if (latest.vrijediDo) {
+                if (new Date(latest.vrijediDo) < today) {
+                    workersWithExpiredExams.push({ id: w.id, date: latest.vrijediDo });
+                } else {
+                    workersWithValidExams.push(w.id);
+                }
+            } else {
+                // Exam exists but no expiration date, assume valid
+                workersWithValidExams.push(w.id);
+            }
+        });
+
+        if (workersWithoutExams.length > 0) {
+            lines.push(lang !== 'en'
+                ? `RADNICI BEZ LJEKARSKOG PREGLEDA (${workersWithoutExams.length}): ${workersWithoutExams.map(id => `W[${id}]`).join(', ')}`
+                : `WORKERS WITHOUT MEDICAL EXAMS (${workersWithoutExams.length}): ${workersWithoutExams.map(id => `W[${id}]`).join(', ')}`
+            );
+        }
+        if (workersWithExpiredExams.length > 0) {
+            lines.push(lang !== 'en'
+                ? `ISTEKLI LJEKARSKI PREGLEDI (${workersWithExpiredExams.length}): ${workersWithExpiredExams.map(x => `W[${x.id}] (istekao: ${x.date})`).join('; ')}`
+                : `EXPIRED MEDICAL EXAMS (${workersWithExpiredExams.length}): ${workersWithExpiredExams.map(x => `W[${x.id}] (expired: ${x.date})`).join('; ')}`
+            );
+        }
         const soonMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) >= today && new Date(m.vrijediDo) <= in60);
-        if (overdueMed.length > 0) lines.push(lang !== 'en'
-            ? `PREKORAČENI LJEKARSKI PREGLEDI (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `W[${m.workerId}] (isteklo: ${m.vrijediDo})`).join('; ')}`
-            : `OVERDUE MEDICAL EXAMS (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `W[${m.workerId}] (expired: ${m.vrijediDo})`).join('; ')}`
-        );
-        if (soonMed.length > 0) lines.push(lang !== 'en'
-            ? `LJEKARSKI PREGLEDI USKORO (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (ističe: ${m.vrijediDo})`).join('; ')}`
-            : `MEDICAL EXAMS DUE SOON (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (expires: ${m.vrijediDo})`).join('; ')}`
-        );
+        if (soonMed.length > 0) {
+            lines.push(lang !== 'en'
+                ? `LJEKARSKI PREGLEDI USKORO DOSPIJEVAJU (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (ističe: ${m.vrijediDo})`).join('; ')}`
+                : `MEDICAL EXAMS DUE SOON (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (expires: ${m.vrijediDo})`).join('; ')}`
+            );
+        }
+        if (workersWithValidExams.length > 0) {
+            lines.push(lang !== 'en'
+                ? `RADNICI SA VAŽEĆIM LJEKARSKIM PREGLEDOM (${workersWithValidExams.length}): ${workersWithValidExams.map(id => `W[${id}]`).join(', ')}`
+                : `WORKERS WITH VALID MEDICAL EXAMS (${workersWithValidExams.length}): ${workersWithValidExams.map(id => `W[${id}]`).join(', ')}`
+            );
+        }
 
         // Employer Docs
         const docsObj = employerDocs.map(d => `${d.naziv} (Vrijedi do: ${d.datumIsteka || 'Nema roka'})`);
