@@ -86,7 +86,7 @@ const BRAND_COLORS = [
 export default function EmptyDashboard({ onComplete }) {
     const router = useRouter();
     const { lang , t } = useLanguage();
-    const { activeCompanyId } = useAuth();
+    const { activeCompanyId, user, isAdmin, isSuperAdmin } = useAuth();
     const { alert, confirm, DialogRenderer } = useDialog();
 
     const [activeStep, setActiveStep] = useState(0);
@@ -138,10 +138,15 @@ export default function EmptyDashboard({ onComplete }) {
     // Get list of officers / admins to assign
     const potentialUsers = useMemo(() => {
         if (typeof window === 'undefined') return [];
-        return getRawAll(COLLECTIONS.USERS).filter(
+        const isUserAdmin = isAdmin || isSuperAdmin;
+        const allUsers = getRawAll(COLLECTIONS.USERS);
+        if (!isUserAdmin) {
+            return allUsers.filter(u => u.id === user?.id || u.id === user?.uid);
+        }
+        return allUsers.filter(
             u => (u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin') && u.aktivan !== false
         );
-    }, []);
+    }, [user, isAdmin, isSuperAdmin]);
 
     // Load initial company details and assignments
     useEffect(() => {
@@ -231,6 +236,9 @@ export default function EmptyDashboard({ onComplete }) {
 
                 // 2. User Assignments
                 potentialUsers.forEach(u => {
+                    const canWrite = isAdmin || isSuperAdmin || u.id === user?.id || u.id === user?.uid;
+                    if (!canWrite) return;
+
                     const isAssigned = assignedUserIds.includes(u.id);
                     const currentCompanyIds = u.companyIds || [];
                     const hasCompany = currentCompanyIds.includes(activeCompanyId);
@@ -881,7 +889,7 @@ export default function EmptyDashboard({ onComplete }) {
                             </div>
 
                             {/* Section D: User Assignments */}
-                            {potentialUsers.length > 0 && (
+                            {(isAdmin || isSuperAdmin) && potentialUsers.length > 0 && (
                                 <div style={{ marginBottom: 8 }}>
                                     <div style={labelStyle}>{t('assignCompanyAccessToUsers')}</div>
                                     <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
