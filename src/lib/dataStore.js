@@ -411,6 +411,9 @@ export async function loadCompanyData(companyId) {
             _isLoaded = true;
             _isLoading = false;
             _notifyListeners();
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+            }
 
             // ── Phase 2: PRIORITY collections (non-blocking, but immediate) ──
             // These power alerts, analytics, and sidebar — load ASAP after UI
