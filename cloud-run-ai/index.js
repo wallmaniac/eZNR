@@ -238,18 +238,23 @@ Your task is to analyze the uploaded scanned test document and extract the list 
 RULES:
 1. Return ONLY the JSON object, absolutely no markdown formatting (no \`\`\`json) or other text.
 2. Sadržaj mora početi sa { i završiti sa }.
-3. Extract each worker's name (extractedName), the date of the test (date, in YYYY-MM-DD format or null), the type of test (type: "ZNR", "ZOP", or null), and whether they passed (passed: boolean, default true).
+3. Extract each worker's name (extractedName), their date of birth (birthDate, in YYYY-MM-DD format or null), their place of birth (birthPlace or null), their workplace (workplace or null), their department (department or null), the type of test (type: "ZNR", "ZOP", or null), and whether they passed (passed: boolean, default true).
 4. Be very thorough. Read handwritten text carefully. A document may contain multiple test sheets for different workers. Extract EVERY unique worker.
 5. DEDUPLICATION: A single test sheet (or page) belongs to exactly one worker. Do NOT extract duplicate names or different handwritten variations of the same person's name (e.g. if the name is written at the top and signed at the bottom). Ensure each worker is only listed ONCE in the output.
 6. OCR NORMALIZATION: Hand-written or scanned names can sometimes be distorted (e.g., "Mujononc My" instead of "Mujo Mujonović" or "Halilonc Arjon" instead of "Arijana Halilović"). Use your language and contextual understanding to normalize such names to realistic Bosnian/Croatian/Serbian names. Do not output obviously garbled or duplicate variants.
-7. Return names in standard title case (e.g. "Mujo Mujonović", "Arijana Halilović", "Elma Elmanović").
+7. Return names, birth places, workplaces, and departments in standard title case (e.g. "Mujo Mujonović", "Sarajevo", "Građevinski Radnik").
+8. WORKPLACE EXTRACTION: For workplace (workplace), look for any fields labeled "Radno mjesto", "Poslovi na kojima radi", "Naziv poslova / radnog mjesta", "Zanimanje", "Poslovi", "Dužnost", "Radno mjesto / poslovi", "Poslovi s posebnim uvjetima rada", or similar. If there's a handwritten or printed job title on the test sheet, extract it. Do NOT return null if there is any indication of the job/workplace on the sheet.
+9. DEPARTMENT EXTRACTION: For department (department), look for fields labeled "Odjel", "Sektor", "Služba", "Pogon", "RJ", "Radna jedinica", "Organizacijska jedinica", or similar. If not directly labeled on the test form, check if it's indicated at the top, header, footer, or tables of the document.
 
 JSON FORMAT:
 {
   "workers": [
     {
       "extractedName": "Ime i Prezime",
-      "date": "YYYY-MM-DD",
+      "birthDate": "YYYY-MM-DD",
+      "birthPlace": "Mjesto Rođenja",
+      "workplace": "Radno Mjesto",
+      "department": "Odjel",
       "type": "ZNR",
       "passed": true
     }

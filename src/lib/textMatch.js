@@ -68,13 +68,14 @@ export function matchWorkers(queryName, queryDob, workers) {
 
             // DOB bonus
             let dobMatch = false;
-            if (dobDigits && (w.datumRodjenja || '')) {
-                const wDobDigits = (w.datumRodjenja || '').replace(/\D/g, '');
+            const wDob = w.datumRodenja || w.datumRodjenja || '';
+            if (dobDigits && wDob) {
+                const wDobDigits = wDob.replace(/\D/g, '');
                 // JMBG starts with dob digits too
                 const jmbgDob = (w.jmbg || '').substring(0, 7);
                 dobMatch = wDobDigits.includes(dobDigits) || dobDigits.includes(wDobDigits) ||
                     jmbgDob.startsWith(dobDigits.substring(0, 6)) ||
-                    (w.datumRodjenja || '').replace(/-/g, '').includes(dobDigits);
+                    wDob.replace(/-/g, '').includes(dobDigits);
             }
 
             const score = nameScore + (dobMatch ? 0.25 : 0);

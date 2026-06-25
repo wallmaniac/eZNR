@@ -1,9 +1,9 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import { getAll, COLLECTIONS, getActiveCompanyId } from '@/lib/dataStore';
+import { getAll, COLLECTIONS, getActiveCompanyId, ensureCollection, create, remove, formatDate, todayISO } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
 import PageHeader from '@/components/PageHeader';
@@ -20,6 +20,7 @@ const EXPORT_TRANSLATIONS = {
         imeOca: 'Ime roditelja',
         jmbgOib: 'JMBG / OIB',
         datumRodenja: 'Datum rođenja',
+        miestoRodenja: 'Mjesto rođenja',
         radnoMjesto: 'Radno mjesto',
         odjel: 'Odjel',
         tipTesta: 'Tip testa',
@@ -41,6 +42,17 @@ const EXPORT_TRANSLATIONS = {
         sheetName: 'Skenirani testovi radnici',
         fileName: 'Skenirani_Testovi_Izvjestaj',
         printPdf: 'Isprintaj / Snimi kao PDF',
+        pohraniUArhivu: 'Pohrani testove u arhivu',
+        historyTitle: 'Povijest skeniranih testova',
+        savedSuccess: 'Skenirani test uspješno pohranjen!',
+        datumSkeniranja: 'Datum skeniranja',
+        nazivDatoteke: 'Naziv datoteke',
+        velicina: 'Veličina',
+        detalji: 'Prikaži detalje',
+        brisi: 'Obriši',
+        detaljiSkeniranogTesta: 'Detalji skeniranog testa',
+        zatvori: 'Zatvori',
+        confirmDeleteScan: 'Jeste li sigurni da želite obrisati ovaj skenirani test iz arhive?',
     },
     hr: {
         title: 'POPIS RADNIKA SA SKENIRANOG TESTA',
@@ -53,6 +65,7 @@ const EXPORT_TRANSLATIONS = {
         imeOca: 'Ime roditelja',
         jmbgOib: 'JMBG / OIB',
         datumRodenja: 'Datum rođenja',
+        miestoRodenja: 'Mjesto rođenja',
         radnoMjesto: 'Radno mjesto',
         odjel: 'Odjel',
         tipTesta: 'Tip testa',
@@ -74,6 +87,17 @@ const EXPORT_TRANSLATIONS = {
         sheetName: 'Skenirani testovi radnici',
         fileName: 'Skenirani_Testovi_Izvjestaj',
         printPdf: 'Isprintaj / Snimi kao PDF',
+        pohraniUArhivu: 'Pohrani testove u arhivu',
+        historyTitle: 'Povijest skeniranih testova',
+        savedSuccess: 'Skenirani test uspješno pohranjen!',
+        datumSkeniranja: 'Datum skeniranja',
+        nazivDatoteke: 'Naziv datoteke',
+        velicina: 'Veličina',
+        detalji: 'Prikaži detalje',
+        brisi: 'Obriši',
+        detaljiSkeniranogTesta: 'Detalji skeniranog testa',
+        zatvori: 'Zatvori',
+        confirmDeleteScan: 'Jeste li sigurni da želite obrisati ovaj skenirani test iz arhive?',
     },
     sr: {
         title: 'LISTA RADNIKA SA SKENIRANOG TESTA',
@@ -86,6 +110,7 @@ const EXPORT_TRANSLATIONS = {
         imeOca: 'Ime roditelja',
         jmbgOib: 'JMBG / OIB',
         datumRodenja: 'Datum rođenja',
+        miestoRodenja: 'Mjesto rođenja',
         radnoMjesto: 'Radno mjesto',
         odjel: 'Odjel',
         tipTesta: 'Tip testa',
@@ -107,6 +132,17 @@ const EXPORT_TRANSLATIONS = {
         sheetName: 'Skenirani testovi radniki',
         fileName: 'Skenirani_Testovi_Izvještaj',
         printPdf: 'Isprintaj / Snimi kao PDF',
+        pohraniUArhivu: 'Sačuvaj testove u arhivu',
+        historyTitle: 'Istorija skeniranih testova',
+        savedSuccess: 'Skenirani test uspešno sačuvan!',
+        datumSkeniranja: 'Datum skeniranja',
+        nazivDatoteke: 'Naziv datoteke',
+        velicina: 'Veličina',
+        detalji: 'Prikaži detalje',
+        brisi: 'Obriši',
+        detaljiSkeniranogTesta: 'Detalji skeniranog testa',
+        zatvori: 'Zatvori',
+        confirmDeleteScan: 'Da li ste sigurni da želite da obrišete ovaj skenirani test iz arhive?',
     },
     en: {
         title: 'WORKER LIST FROM SCANNED TEST',
@@ -119,6 +155,7 @@ const EXPORT_TRANSLATIONS = {
         imeOca: 'Parent Name',
         jmbgOib: 'ID Number (JMBG/OIB)',
         datumRodenja: 'Date of Birth',
+        miestoRodenja: 'Place of Birth',
         radnoMjesto: 'Workplace',
         odjel: 'Department',
         tipTesta: 'Test Type',
@@ -140,6 +177,17 @@ const EXPORT_TRANSLATIONS = {
         sheetName: 'Scanned tests workers',
         fileName: 'Scanned_Tests_Report',
         printPdf: 'Print / Save as PDF',
+        pohraniUArhivu: 'Save tests to archive',
+        historyTitle: 'Scanned Tests History',
+        savedSuccess: 'Scanned test successfully saved!',
+        datumSkeniranja: 'Scan Date',
+        nazivDatoteke: 'File Name',
+        velicina: 'Size',
+        detalji: 'View Details',
+        brisi: 'Delete',
+        detaljiSkeniranogTesta: 'Scanned Test Details',
+        zatvori: 'Close',
+        confirmDeleteScan: 'Are you sure you want to delete this scanned test from the archive?',
     },
     de: {
         title: 'MITARBEITERLISTE VOM GESCANNTEN TEST',
@@ -152,6 +200,7 @@ const EXPORT_TRANSLATIONS = {
         imeOca: 'Elternteil Name',
         jmbgOib: 'Identifikationsnummer',
         datumRodenja: 'Geburtsdatum',
+        miestoRodenja: 'Geburtsort',
         radnoMjesto: 'Arbeitsplatz',
         odjel: 'Abteilung',
         tipTesta: 'Testtyp',
@@ -173,6 +222,17 @@ const EXPORT_TRANSLATIONS = {
         sheetName: 'Gescannte Tests Mitarbeiter',
         fileName: 'Gescannte_Tests_Bericht',
         printPdf: 'Drucken / Als PDF speichern',
+        pohraniUArhivu: 'Tests im Archiv speichern',
+        historyTitle: 'Verlauf der gescannten Tests',
+        savedSuccess: 'Gescannter Test erfolgreich gespeichert!',
+        datumSkeniranja: 'Scandatum',
+        nazivDatoteke: 'Dateiname',
+        velicina: 'Größe',
+        detalji: 'Details anzeigen',
+        brisi: 'Löschen',
+        detaljiSkeniranogTesta: 'Details des gescannten Tests',
+        zatvori: 'Schließen',
+        confirmDeleteScan: 'Sind Sie sicher, dass Sie diesen gescannten Test aus dem Archiv löschen möchten?',
     },
     sl: {
         title: 'SEZNAM DELAVCEV IZ SKENIRANEGA TESTA',
@@ -185,6 +245,7 @@ const EXPORT_TRANSLATIONS = {
         imeOca: 'Ime starša',
         jmbgOib: 'EMŠO / Davčna št.',
         datumRodenja: 'Datum rojstva',
+        miestoRodenja: 'Kraj rojstva',
         radnoMjesto: 'Delovno mesto',
         odjel: 'Oddelek',
         tipTesta: 'Tip testa',
@@ -206,6 +267,17 @@ const EXPORT_TRANSLATIONS = {
         sheetName: 'Skenirani testi delavci',
         fileName: 'Skenirani_Testi_Porocilo',
         printPdf: 'Natisni / Shrani kot PDF',
+        pohraniUArhivu: 'Shrani teste v arhiv',
+        historyTitle: 'Zgodovina skeniranih testov',
+        savedSuccess: 'Skeniran test uspešno shranjen!',
+        datumSkeniranja: 'Datum skeniranja',
+        nazivDatoteke: 'Ime datoteke',
+        velicina: 'Velikost',
+        detalji: 'Prikaži podrobnosti',
+        brisi: 'Izbriši',
+        detaljiSkeniranogTesta: 'Podrobnosti skeniranega testa',
+        zatvori: 'Zapri',
+        confirmDeleteScan: 'Ali ste prepričani, da želite izbrisati ta skeniran test iz arhiva?',
     }
 };
 
@@ -221,6 +293,21 @@ function ScannedTestsPageContent() {
     const [analyzing, setAnalyzing] = useState(false);
     const [matchedRows, setMatchedRows] = useState([]);
     const scanFileRef = useRef(null);
+    
+    const [savedScans, setSavedScans] = useState([]);
+    const [saving, setSaving] = useState(false);
+    const [viewScan, setViewScan] = useState(null);
+
+    const loadData = useCallback(async () => {
+        await ensureCollection(COLLECTIONS.SCANNED_TESTS);
+        setSavedScans(getAll(COLLECTIONS.SCANNED_TESTS) || []);
+    }, []);
+
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     const formatSize = (bytes) => {
         if (!bytes) return '-';
@@ -254,7 +341,7 @@ function ScannedTestsPageContent() {
                     const workplaces = getAll(COLLECTIONS.WORKPLACES);
                     const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
                     const rows = result.workers.map((ext, idx) => {
-                        const matches = matchWorkers(ext.extractedName, ext.date || '', allWorkers);
+                        const matches = matchWorkers(ext.extractedName, ext.birthDate || '', allWorkers);
                         const bestMatch = matches[0];
                         const hasGoodMatch = bestMatch && bestMatch.score >= 0.35;
                         const wId = hasGoodMatch ? bestMatch.worker.id : '__NOT_IN_DB__';
@@ -264,6 +351,7 @@ function ScannedTestsPageContent() {
                         let imeOca = '';
                         let jmbgOib = '';
                         let datumRodenja = '';
+                        let miestoRodenja = '';
                         let radnoMjesto = '';
                         let odjel = '';
 
@@ -275,19 +363,27 @@ function ScannedTestsPageContent() {
                             prezime = w.prezime || '';
                             imeOca = w.imeRoditelja || '';
                             jmbgOib = w.jmbg || w.oib || '';
-                            datumRodenja = w.datumRodjenja || '';
+                            datumRodenja = w.datumRodenja || w.datumRodjenja || '';
+                            miestoRodenja = w.miestoRodenja || w.mjestoRodjenja || '';
                             radnoMjesto = wp.naziv || w.radnoMjesto || '';
                             odjel = ou.naziv || w.orgJedinica || '';
                         } else {
                             const parts = ext.extractedName.trim().split(/\s+/);
                             ime = parts[0] || '';
                             prezime = parts.slice(1).join(' ') || '';
+                            datumRodenja = ext.birthDate || '';
+                            miestoRodenja = ext.birthPlace || '';
+                            radnoMjesto = ext.workplace || '';
+                            odjel = ext.department || '';
                         }
 
                         return {
                             id: `row-${idx}-${Date.now()}`,
                             extractedName: ext.extractedName,
-                            date: ext.date || '',
+                            birthDate: ext.birthDate || '',
+                            birthPlace: ext.birthPlace || '',
+                            workplace: ext.workplace || '',
+                            department: ext.department || '',
                             type: ext.type || '',
                             passed: ext.passed !== false,
                             selectedWorkerId: wId,
@@ -298,6 +394,7 @@ function ScannedTestsPageContent() {
                             imeOca,
                             jmbgOib,
                             datumRodenja,
+                            miestoRodenja,
                             radnoMjesto,
                             odjel
                         };
@@ -331,6 +428,7 @@ function ScannedTestsPageContent() {
             let imeOca = r.imeOca;
             let jmbgOib = r.jmbgOib;
             let datumRodenja = r.datumRodenja;
+            let miestoRodenja = r.miestoRodenja;
             let radnoMjesto = r.radnoMjesto;
             let odjel = r.odjel;
 
@@ -341,7 +439,8 @@ function ScannedTestsPageContent() {
                 prezime = w.prezime || '';
                 imeOca = w.imeRoditelja || '';
                 jmbgOib = w.jmbg || w.oib || '';
-                datumRodenja = w.datumRodjenja || '';
+                datumRodenja = w.datumRodenja || w.datumRodjenja || '';
+                miestoRodenja = w.miestoRodenja || w.mjestoRodjenja || '';
                 radnoMjesto = wp.naziv || w.radnoMjesto || '';
                 odjel = ou.naziv || w.orgJedinica || '';
             } else if (isNotInDb) {
@@ -350,21 +449,23 @@ function ScannedTestsPageContent() {
                 prezime = parts.slice(1).join(' ') || '';
                 imeOca = '';
                 jmbgOib = '';
-                datumRodenja = '';
-                radnoMjesto = '';
-                odjel = '';
+                datumRodenja = r.birthDate || '';
+                miestoRodenja = r.birthPlace || '';
+                radnoMjesto = r.workplace || '';
+                odjel = r.department || '';
             }
 
             return {
                 ...r,
                 selectedWorkerId: workerId,
                 score: isNotInDb ? 0 : (workerId ? 100 : 0),
-                dobMatch: !isNotInDb && w && r.date && w.datumRodjenja === r.date,
+                dobMatch: !isNotInDb && w && r.birthDate && (w.datumRodenja === r.birthDate || w.datumRodjenja === r.birthDate),
                 ime,
                 prezime,
                 imeOca,
                 jmbgOib,
                 datumRodenja,
+                miestoRodenja,
                 radnoMjesto,
                 odjel
             };
@@ -392,6 +493,58 @@ function ScannedTestsPageContent() {
         setScanSearched(false);
     };
 
+    const handleSaveScan = async () => {
+        if (matchedRows.length === 0) return;
+        setSaving(true);
+        try {
+            const docData = {
+                fileName: scanFile.name,
+                fileSize: scanFile.size,
+                dateScanned: todayISO(),
+                workersCount: matchedRows.length,
+                workers: matchedRows.map(r => ({
+                    ime: r.ime || '',
+                    prezime: r.prezime || '',
+                    imeOca: r.imeOca || '',
+                    jmbgOib: r.jmbgOib || '',
+                    datumRodenja: r.datumRodenja || '',
+                    miestoRodenja: r.miestoRodenja || '',
+                    radnoMjesto: r.radnoMjesto || '',
+                    odjel: r.odjel || '',
+                    type: r.type || '',
+                    passed: r.passed !== false,
+                    selectedWorkerId: r.selectedWorkerId || '__NOT_IN_DB__'
+                }))
+            };
+
+            await create(COLLECTIONS.SCANNED_TESTS, docData);
+            await alert(getExp('savedSuccess'));
+            handleClearScan();
+            loadData();
+        } catch (err) {
+            console.error('Failed to save scanned test:', err);
+            await alert('Greška pri pohranjivanju: ' + err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleViewDetails = (scan) => {
+        setViewScan(scan);
+    };
+
+    const handleDeleteScan = async (id) => {
+        const ok = await confirm(getExp('confirmDeleteScan'));
+        if (!ok) return;
+        try {
+            await remove(COLLECTIONS.SCANNED_TESTS, id);
+            loadData();
+        } catch (err) {
+            console.error('Failed to delete scanned test:', err);
+            await alert('Greška pri brisanju: ' + err.message);
+        }
+    };
+
     const handleDownloadExcel = async () => {
         const XLSX = await import('xlsx');
         const getExp = (k) => EXPORT_TRANSLATIONS[lang]?.[k] || EXPORT_TRANSLATIONS.bs[k];
@@ -403,11 +556,11 @@ function ScannedTestsPageContent() {
                 [getExp('prezime')]: row.prezime || '',
                 [getExp('imeOca')]: row.imeOca || '—',
                 [getExp('jmbgOib')]: row.jmbgOib || '—',
-                [getExp('datumRodenja')]: row.datumRodenja || '—',
+                [getExp('datumRodenja')]: row.datumRodenja ? formatDate(row.datumRodenja) : '—',
+                [getExp('miestoRodenja')]: row.miestoRodenja || '—',
                 [getExp('radnoMjesto')]: t(row.radnoMjesto?.trim()) || row.radnoMjesto || '—',
                 [getExp('odjel')]: t(row.odjel?.trim()) || row.odjel || '—',
                 [getExp('imeIPrezime') + ' (AI)']: row.extractedName,
-                [getExp('datumTesta')]: row.date || '—',
                 [getExp('tipTesta')]: t(row.type?.trim()) || row.type || '—',
                 [getExp('status')]: row.passed ? getExp('polozio') : getExp('pao')
             };
@@ -434,6 +587,8 @@ function ScannedTestsPageContent() {
             const fullName = `${row.ime || ''} ${row.prezime || ''}`.trim() || row.extractedName;
             const parentName = row.imeOca || '—';
             const nationalId = row.jmbgOib || '—';
+            const birthD = row.datumRodenja ? formatDate(row.datumRodenja) : '—';
+            const birthP = row.miestoRodenja || '—';
             const workplaceName = t(row.radnoMjesto?.trim()) || row.radnoMjesto || '—';
             const deptName = t(row.odjel?.trim()) || row.odjel || '—';
             const testType = t(row.type?.trim()) || row.type || '—';
@@ -444,10 +599,11 @@ function ScannedTestsPageContent() {
                     <td style="font-weight:600">${fullName}</td>
                     <td>${parentName}</td>
                     <td>${nationalId}</td>
+                    <td>${birthD}</td>
+                    <td>${birthP}</td>
                     <td>${workplaceName}</td>
                     <td>${deptName}</td>
                     <td>${testType}</td>
-                    <td>${row.date || '—'}</td>
                     <td><span class="badge ${row.passed ? 'badge-ok' : 'badge-danger'}">${row.passed ? getExp('polozio') : getExp('paoPdf')}</span></td>
                 </tr>
             `;
@@ -509,10 +665,11 @@ function ScannedTestsPageContent() {
                             <th>${getExp('imeIPrezime')}</th>
                             <th>${getExp('imeOca')}</th>
                             <th>${getExp('jmbgOib')}</th>
+                            <th>${getExp('datumRodenja')}</th>
+                            <th>${getExp('miestoRodenja')}</th>
                             <th>${getExp('radnoMjesto')}</th>
                             <th>${getExp('odjel')}</th>
                             <th>${getExp('tipTesta')}</th>
-                            <th>${getExp('datumTesta')}</th>
                             <th>${getExp('status')}</th>
                         </tr>
                     </thead>
@@ -619,8 +776,8 @@ function ScannedTestsPageContent() {
             {/* Results Table */}
             {scanSearched && (
                 <div className="card">
-                    <div className="card-body">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div className="card-body" style={{ paddingBottom: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 20px' }}>
                             <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 Rezultati prepoznavanja radnika ({matchedRows.length})
                             </div>
@@ -643,167 +800,324 @@ function ScannedTestsPageContent() {
                                 <div style={{ fontSize: '0.82rem', marginTop: 4 }}>AI nije uspio detektovati niti jedno ime iz dokumenta.</div>
                             </div>
                         ) : (
-                            <div className="data-table-wrapper" style={{ overflowX: 'auto' }}>
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th style={{ width: '2%' }}>#</th>
-                                            <th style={{ width: '12%' }}>{getExp('imeIzTesta')}</th>
-                                            <th style={{ width: '15%' }}>{getExp('pronadeniRadnik')}</th>
-                                            <th style={{ width: '9%' }}>{getExp('ime')}</th>
-                                            <th style={{ width: '9%' }}>{getExp('prezime')}</th>
-                                            <th style={{ width: '7%' }}>{getExp('imeOca')}</th>
-                                            <th style={{ width: '8%' }}>{getExp('jmbgOib')}</th>
-                                            <th style={{ width: '9%' }}>{getExp('datumRodenja')}</th>
-                                            <th style={{ width: '9%' }}>{getExp('radnoMjesto')}</th>
-                                            <th style={{ width: '9%' }}>{getExp('odjel')}</th>
-                                            <th style={{ width: '8%' }}>{getExp('tipTesta')}</th>
-                                            <th style={{ width: '9%' }}>{getExp('datumTesta')}</th>
-                                            <th style={{ width: '7%' }}>{getExp('status')}</th>
-                                            <th style={{ width: '5%' }}>{getExp('podudaranje')}</th>
-                                            <th style={{ width: '2%' }}></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {matchedRows.map((row, idx) => {
-                                            const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
-                                            const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
-                                            const isManual = row.score === 100 && !row.dobMatch;
-                                            const conf = isNotInDb
-                                                ? { emoji: '👤', label: getExp('nijeUBazi'), color: 'var(--text-muted)' }
-                                                : isManual
-                                                    ? { emoji: '✍️', label: getExp('rucno'), color: 'var(--text)' }
-                                                    : confidenceLabel(row.score);
-                                            
-                                            return (
-                                                <tr key={row.id}>
-                                                    <td>{idx + 1}</td>
-                                                    <td style={{ fontWeight: 600 }}>{row.extractedName}</td>
-                                                    <td>
-                                                        <select 
-                                                            className="form-select" 
-                                                            value={row.selectedWorkerId}
-                                                            onChange={e => handleUpdateRowWorker(row.id, e.target.value)}
-                                                            style={{ minWidth: 150, padding: '4px 8px', fontSize: '0.82rem' }}
-                                                        >
-                                                            <option value="">{getExp('odaberiRadnikaPlaceholder')}</option>
-                                                            <option value="__NOT_IN_DB__">{getExp('keepName').replace('{0}', row.extractedName)}</option>
-                                                            {allWorkers.map(w => (
-                                                                <option key={w.id} value={w.id}>
-                                                                    {w.ime} {w.prezime} {w.jmbg ? `(JMBG: ${w.jmbg})` : w.oib ? `(OIB: ${w.oib})` : ''}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.ime || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'ime', e.target.value)}
-                                                            style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.prezime || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'prezime', e.target.value)}
-                                                            style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.imeOca || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'imeOca', e.target.value)}
-                                                            style={{ minWidth: 70, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.jmbgOib || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'jmbgOib', e.target.value)}
-                                                            style={{ minWidth: 90, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            type="date"
-                                                            value={row.datumRodenja || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'datumRodenja', e.target.value)}
-                                                            style={{ minWidth: 110, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)', border: '1px solid var(--border)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.radnoMjesto || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'radnoMjesto', e.target.value)}
-                                                            style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.odjel || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'odjel', e.target.value)}
-                                                            style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            value={row.type || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'type', e.target.value)}
-                                                            style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            className="form-input" 
-                                                            type="date"
-                                                            value={row.date || ''} 
-                                                            onChange={e => handleUpdateRowField(row.id, 'date', e.target.value)}
-                                                            style={{ minWidth: 110, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)', border: '1px solid var(--border)' }}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <select 
-                                                            className="form-select" 
-                                                            value={row.passed ? 'true' : 'false'}
-                                                            onChange={e => handleUpdateRowField(row.id, 'passed', e.target.value === 'true')}
-                                                            style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
-                                                        >
-                                                            <option value="true">{getExp('polozio')}</option>
-                                                            <option value="false">{getExp('pao')}</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                            <span title={conf.label} style={{ fontSize: '1rem' }}>{conf.emoji}</span>
-                                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: conf.color }}>{conf.label}</span>
-                                                            {row.dobMatch && <span style={{ color: 'var(--success)', fontSize: '0.72rem', fontWeight: 600 }} title="Datum rođenja se podudara">🎂</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ textAlign: 'center' }}>
-                                                        <button 
-                                                            className="btn btn-ghost btn-sm btn-icon" 
-                                                            style={{ color: 'var(--danger)', padding: 0 }}
-                                                            onClick={() => handleDeleteRow(row.id)}
-                                                            title={getExp('ukloniRed')}
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <>
+                                <div className="data-table-wrapper" style={{ overflowX: 'auto' }}>
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: '2%' }}>#</th>
+                                                <th style={{ width: '12%' }}>{getExp('imeIzTesta')}</th>
+                                                <th style={{ width: '14%' }}>{getExp('pronadeniRadnik')}</th>
+                                                <th style={{ width: '8%' }}>{getExp('ime')}</th>
+                                                <th style={{ width: '8%' }}>{getExp('prezime')}</th>
+                                                <th style={{ width: '6%' }}>{getExp('imeOca')}</th>
+                                                <th style={{ width: '8%' }}>{getExp('jmbgOib')}</th>
+                                                <th style={{ width: '8%' }}>{getExp('datumRodenja')}</th>
+                                                <th style={{ width: '8%' }}>{getExp('miestoRodenja')}</th>
+                                                <th style={{ width: '9%' }}>{getExp('radnoMjesto')}</th>
+                                                <th style={{ width: '9%' }}>{getExp('odjel')}</th>
+                                                <th style={{ width: '6%' }}>{getExp('tipTesta')}</th>
+                                                <th style={{ width: '6%' }}>{getExp('status')}</th>
+                                                <th style={{ width: '4%' }}>{getExp('podudaranje')}</th>
+                                                <th style={{ width: '2%' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {matchedRows.map((row, idx) => {
+                                                const allWorkers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
+                                                const isNotInDb = row.selectedWorkerId === '__NOT_IN_DB__';
+                                                const isManual = row.score === 100 && !row.dobMatch;
+                                                const conf = isNotInDb
+                                                    ? { emoji: '👤', label: getExp('nijeUBazi'), color: 'var(--text-muted)' }
+                                                    : isManual
+                                                        ? { emoji: '✍️', label: getExp('rucno'), color: 'var(--text)' }
+                                                        : confidenceLabel(row.score);
+                                                
+                                                return (
+                                                    <tr key={row.id}>
+                                                        <td>{idx + 1}</td>
+                                                        <td style={{ fontWeight: 600 }}>{row.extractedName}</td>
+                                                        <td>
+                                                            <select 
+                                                                className="form-select" 
+                                                                value={row.selectedWorkerId}
+                                                                onChange={e => handleUpdateRowWorker(row.id, e.target.value)}
+                                                                style={{ minWidth: 150, padding: '4px 8px', fontSize: '0.82rem' }}
+                                                            >
+                                                                <option value="">{getExp('odaberiRadnikaPlaceholder')}</option>
+                                                                <option value="__NOT_IN_DB__">{getExp('keepName').replace('{0}', row.extractedName)}</option>
+                                                                {allWorkers.map(w => (
+                                                                    <option key={w.id} value={w.id}>
+                                                                        {w.ime} {w.prezime} {w.jmbg ? `(JMBG: ${w.jmbg})` : w.oib ? `(OIB: ${w.oib})` : ''}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.ime || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'ime', e.target.value)}
+                                                                style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.prezime || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'prezime', e.target.value)}
+                                                                style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.imeOca || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'imeOca', e.target.value)}
+                                                                style={{ minWidth: 70, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.jmbgOib || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'jmbgOib', e.target.value)}
+                                                                style={{ minWidth: 90, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                type="date"
+                                                                value={row.datumRodenja || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'datumRodenja', e.target.value)}
+                                                                style={{ minWidth: 110, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)', border: '1px solid var(--border)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.miestoRodenja || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'miestoRodenja', e.target.value)}
+                                                                style={{ minWidth: 95, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.radnoMjesto || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'radnoMjesto', e.target.value)}
+                                                                style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.odjel || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'odjel', e.target.value)}
+                                                                style={{ minWidth: 100, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <input 
+                                                                className="form-input" 
+                                                                value={row.type || ''} 
+                                                                onChange={e => handleUpdateRowField(row.id, 'type', e.target.value)}
+                                                                style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <select 
+                                                                className="form-select" 
+                                                                value={row.passed ? 'true' : 'false'}
+                                                                onChange={e => handleUpdateRowField(row.id, 'passed', e.target.value === 'true')}
+                                                                style={{ minWidth: 80, padding: '4px 8px', fontSize: '0.82rem', background: 'var(--bg-input)' }}
+                                                            >
+                                                                <option value="true">{getExp('polozio')}</option>
+                                                                <option value="false">{getExp('pao')}</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                                <span title={conf.label} style={{ fontSize: '1rem' }}>{conf.emoji}</span>
+                                                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: conf.color }}>{conf.label}</span>
+                                                                {row.dobMatch && <span style={{ color: 'var(--success)', fontSize: '0.72rem', fontWeight: 600 }} title="Datum rođenja se podudara">🎂</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ textAlign: 'center' }}>
+                                                            <button 
+                                                                className="btn btn-ghost btn-sm btn-icon" 
+                                                                style={{ color: 'var(--danger)', padding: 0 }}
+                                                                onClick={() => handleDeleteRow(row.id)}
+                                                                title={getExp('ukloniRed')}
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 20px', borderTop: '1px solid var(--border-light)', gap: 12, marginTop: 16 }}>
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={handleSaveScan} 
+                                        disabled={saving}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                    >
+                                        💾 {saving ? 'Pohranjivanje...' : getExp('pohraniUArhivu')}
+                                    </button>
+                                </div>
+                            </>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* History Table */}
+            <div className="card" style={{ marginTop: 24 }}>
+                <div className="card-body">
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+                        {getExp('historyTitle')}
+                    </div>
+                    
+                    {savedScans.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '24px 20px', color: 'var(--text-muted)', fontSize: '0.86rem' }}>
+                            {lang === 'en' ? 'No saved scanned tests found.' : 'Nema pohranjenih skeniranih testova.'}
+                        </div>
+                    ) : (
+                        <div className="data-table-wrapper">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: '5%' }}>#</th>
+                                        <th style={{ width: '45%' }}>{getExp('nazivDatoteke')}</th>
+                                        <th style={{ width: '20%' }}>{getExp('datumSkeniranja')}</th>
+                                        <th style={{ width: '15%' }}>{getExp('numWorkers')}</th>
+                                        <th style={{ width: '15%', textAlign: 'right' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {savedScans.map((scan, idx) => (
+                                        <tr key={scan.id}>
+                                            <td>{idx + 1}</td>
+                                            <td style={{ fontWeight: 600 }}>{scan.fileName}</td>
+                                            <td>{scan.dateScanned ? formatDate(scan.dateScanned) : '—'}</td>
+                                            <td>{scan.workersCount || (scan.workers?.length || 0)}</td>
+                                            <td style={{ textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                    <button 
+                                                        className="btn btn-outline btn-sm" 
+                                                        onClick={() => handleViewDetails(scan)}
+                                                    >
+                                                        👁️ {getExp('detalji')}
+                                                    </button>
+                                                    <button 
+                                                        className="btn btn-ghost btn-sm btn-icon" 
+                                                        style={{ color: 'var(--danger)' }}
+                                                        onClick={() => handleDeleteScan(scan.id)}
+                                                        title={getExp('brisi')}
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* View Details Modal */}
+            {viewScan && (
+                <div 
+                    style={{ 
+                        position: 'fixed', 
+                        inset: 0, 
+                        zIndex: 10000, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        background: 'rgba(0,0,0,0.55)',
+                        backdropFilter: 'blur(2px)' 
+                    }}
+                    onClick={e => { if (e.target === e.currentTarget) setViewScan(null); }}
+                >
+                    <div 
+                        style={{ 
+                            background: 'var(--bg-card)', 
+                            borderRadius: 'var(--radius-lg)', 
+                            padding: 28, 
+                            width: '90%', 
+                            maxWidth: 1000, 
+                            maxHeight: '85vh', 
+                            overflow: 'auto', 
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.4)', 
+                            border: '1px solid var(--border)' 
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>
+                                📂 {getExp('detaljiSkeniranogTesta')}: {viewScan.fileName}
+                            </h3>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setViewScan(null)}>
+                                ❌
+                            </button>
+                        </div>
+                        
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                            {getExp('datumSkeniranja')}: <strong>{viewScan.dateScanned ? formatDate(viewScan.dateScanned) : '—'}</strong> · {getExp('numWorkers')}: <strong>{viewScan.workersCount || (viewScan.workers?.length || 0)}</strong>
+                        </div>
+
+                        <div className="data-table-wrapper" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: '5%' }}>#</th>
+                                        <th>{getExp('imeIPrezime')}</th>
+                                        <th>{getExp('imeOca')}</th>
+                                        <th>{getExp('jmbgOib')}</th>
+                                        <th>{getExp('datumRodenja')}</th>
+                                        <th>{getExp('miestoRodenja')}</th>
+                                        <th>{getExp('radnoMjesto')}</th>
+                                        <th>{getExp('odjel')}</th>
+                                        <th>{getExp('tipTesta')}</th>
+                                        <th>{getExp('status')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(viewScan.workers || []).map((w, idx) => (
+                                        <tr key={idx}>
+                                            <td>{idx + 1}</td>
+                                            <td style={{ fontWeight: 600 }}>{`${w.ime || ''} ${w.prezime || ''}`.trim() || w.extractedName}</td>
+                                            <td>{w.imeOca || '—'}</td>
+                                            <td>{w.jmbgOib || '—'}</td>
+                                            <td>{w.datumRodenja ? formatDate(w.datumRodenja) : '—'}</td>
+                                            <td>{w.miestoRodenja || '—'}</td>
+                                            <td>{t(w.radnoMjesto?.trim()) || w.radnoMjesto || '—'}</td>
+                                            <td>{t(w.odjel?.trim()) || w.odjel || '—'}</td>
+                                            <td>{w.type || '—'}</td>
+                                            <td>
+                                                <span className={`badge ${w.passed ? 'badge-success' : 'badge-danger'}`}>
+                                                    {w.passed ? getExp('polozio') : getExp('pao')}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
+                            <button className="btn btn-outline" onClick={() => setViewScan(null)}>
+                                {getExp('zatvori')}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
