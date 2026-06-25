@@ -1,5 +1,6 @@
 export const translations = {
   bs: {
+    pocisti: 'Počisti',
     extPressureHint: 'Preporučeni radni pritisak je 12-15 bar (zelena zona, min. 11 bar).',
     hydPressureHint: 'Minimalni dopušteni pritisak u mreži je 2.5 bar.',
     pritisak: 'Pritisak (bar)',
@@ -2997,6 +2998,7 @@ export const translations = {
   },
 
   en: {
+    pocisti: 'Clear',
     extPressureHint: 'Recommended operating pressure is 12-15 bar (green zone, min. 11 bar).',
     hydPressureHint: 'Minimum allowed network pressure is 2.5 bar.',
     pritisak: 'Pressure (bar)',
@@ -5990,6 +5992,7 @@ export const translations = {
   },
 
   hr: {
+    pocisti: 'Počisti',
     notif_db_critical_title: 'Kritično: {0} zapisa u bazi',
     notif_db_critical_msg: 'Performanse mogu biti znatno smanjene. Potrebna je optimizacija upita (company-scoped queries). Kontaktirajte podršku.',
     notif_db_warn_title: 'Baza podataka: {0} zapisa',
@@ -8975,6 +8978,7 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Zakon o zaštiti od požara',
   },
   de: {
+    pocisti: 'Leeren',
     extPressureHint: 'Empfohlener Betriebsdruck ist 12-15 bar (grüner Bereich, min. 11 bar).',
     hydPressureHint: 'Der zulässige Mindestnetzdruck beträgt 2,5 bar.',
     pritisak: 'Druck (bar)',
@@ -11923,6 +11927,7 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Brandschutzgesetz',
   },
   sl: {
+    pocisti: 'Počisti',
     extPressureHint: 'Priporočeni delovni tlak je 12-15 bar (zeleno območje, min. 11 bar).',
     hydPressureHint: 'Najnižji dovoljeni tlak v omrežju je 2,5 bar.',
     pritisak: 'Tlak (bar)',
@@ -14871,6 +14876,7 @@ export const translations = {
     'Zakon o zaštiti od požara': 'Zakon o varstvu pred požarom',
   },
   sr: {
+    pocisti: 'Počisti',
     extPressureHint: 'Preporučeni radni pritisak je 12-15 bar (zelena zona, min. 11 bar).',
     hydPressureHint: 'Minimalni dopušteni pritisak u mreži je 2.5 bar.',
     pritisak: 'Pritisak (bar)',

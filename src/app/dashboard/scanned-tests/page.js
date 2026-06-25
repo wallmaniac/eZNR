@@ -609,7 +609,7 @@ function ScannedTestsPageContent() {
                                 🔄 {lang === 'en' ? 'Rescan Document' : 'Ponovo analiziraj'}
                             </button>
                             <button className="btn btn-ghost" onClick={handleClearScan} disabled={analyzing}>
-                                ❌ {t('ocistiSve')}
+                                ❌ {t('pocisti')}
                             </button>
                         </div>
                     )}
