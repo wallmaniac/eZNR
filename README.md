@@ -18,7 +18,7 @@ Stručnjaci za zaštitu na radu u regiji i danas vode evidencije ručno — kroz
 eZNR centralizira sve podatke o zaposlenicima, opremi, uvjerenjima, vozilima, protupožarnoj zaštiti i dokumentaciji u jedinstveni digitalni sustav. Sustav automatski prati rokove, šalje upozorenja, generira zakonski usklađene dokumente i omogućuje AI-potpomognutu analizu radnih mjesta.
 
 ### Poslovni model: B2B prodaja s onboardingom
-U prvoj godini poslovanja, eZNR se ne plasira kao SaaS samoposluživanje, već kroz **izravnu B2B prodaju** tvrtkama uz personalizirani onboarding:
+U prvoj godini poslovanja, eZNR se ne plasira kao javna samoposlužna platforma, već kroz **izravnu B2B prodaju** tvrtkama uz personalizirani onboarding i održavanje:
 
 1. **Akvizicija klijenta**: Kontaktiranje poduzeća koja imaju obvezu zaštite na radu (svako poduzeće s jednim ili više zaposlenika).
 2. **Data entry i priprema**: Klijentu se isporučuje standardizirani **Excel template** (9 sheet-ova: Organizacijske jedinice, Radna mjesta, Radnici, Uvjerenja, OZO, Oprema, Ljekarski pregledi, Vozila, PP aparati, Hidranti) koji klijent ispunjava postojećim podacima.
@@ -433,5 +433,5 @@ Zia AI asistent komunicira s **Google Cloud Run Express.js serverisom** (`eznr-a
 
 - **ISZNR modul** — 6 pod-stranica pripremljeno (dokumenti, stranke, tipovi, ispitivači, mjerna oprema, potpisivanje), čeka regulatorni zahtjev
 - **Evakuacija i ZOP napredni moduli** — stranice postoje, zaključane iza Enterprise tier-a
-- **Billing sustav** — nije potreban u B2B fazi (ručna fakturacija), planira se za SaaS fazu
+- **Billing sustav** — nije potreban (koristi se ručna fakturacija na temelju B2B ugovora)
 

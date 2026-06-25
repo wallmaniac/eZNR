@@ -559,7 +559,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <span style={{ fontSize: '0.88rem', flexShrink: 0, opacity: 0.45 }}>🔍</span>
                             <input style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.88rem', color: 'var(--text)', fontFamily: 'var(--font-body)', flex: 1, minWidth: 0 }} placeholder={t('searchPlaceholder')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onFocus={() => setSearchFocused(true)} />
                             {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}>✕</button>}
-                            {!searchFocused && !searchTerm && <span style={{ fontSize: '0.62rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)', flexShrink: 0, opacity: 0.7 }}>Ctrl K</span>}
+                            {!searchFocused && !searchTerm && <span className="header-search-badge" style={{ fontSize: '0.62rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)', flexShrink: 0, opacity: 0.7 }}>Ctrl K</span>}
                         </div>
                         {searchFocused && searchTerm.length >= 2 && (
                             <div className="search-dropdown" style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(11,42,60,0.15)', border: '1px solid var(--border)', zIndex: 200, overflow: 'hidden' }}>
@@ -590,11 +590,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     <div style={island}>
                         <div ref={langRef} style={{ position: 'relative' }}>
                             <button onClick={() => { setShowLangMenu(v => !v); setShowProfile(false); setShowNotifs(false); setShowCompanyMenu(false); }}
+                                className="header-lang-btn"
                                 style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60, justifyContent: 'flex-start' })}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
                                 <img src={currentLang.flag} width={18} height={18} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover', objectPosition: (currentLang.code === 'sl' || currentLang.code === 'sr') ? '28% 50%' : 'center' }} />
-                                <span>{currentLang.label}</span>
+                                <span className="header-lang-label">{currentLang.label}</span>
                             </button>
                             {showLangMenu && (
                                 <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, right: 'auto', minWidth: 130, padding: '6px' }}>
@@ -668,17 +669,20 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {sep}
                         <div ref={profileRef} style={{ position: 'relative' }}>
                             <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); }}
+                                className="header-profile-btn"
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 8px 3px 3px', borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'background 0.15s' }}
                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
                                     {user?.firstName?.[0] || 'K'}
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{user?.firstName} {user?.lastName}</span>
-                                    <span style={{ fontSize: '0.56rem', fontWeight: 700, padding: '1px 5px', borderRadius: 6, background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.5 }}>{roleBadge.label}</span>
+                                <div className="header-profile-text" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{user?.firstName} {user?.lastName}</span>
+                                        <span style={{ fontSize: '0.56rem', fontWeight: 700, padding: '1px 5px', borderRadius: 6, background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.5 }}>{roleBadge.label}</span>
+                                    </div>
+                                    <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>▼</span>
                                 </div>
-                                <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>▼</span>
                             </button>
                             {showProfile && (
                                 <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0 }}>

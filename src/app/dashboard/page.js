@@ -862,9 +862,8 @@ export default function DashboardPage() {
                 ] : []}
             />
 
-            {/* Stats Cards — now clickable */}
             <CollapsibleWidget id="stats" title={t('pregled1')} icon="📊" isMobile={isMobile}>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : `repeat(${stats.totalExpired > 0 ? 5 : 4}, 1fr)`, gap: 10, marginBottom: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10, marginBottom: 24 }}>
                     <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} trend={!isMobile ? stats.recentWorkers : undefined} />
                     <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} trend={!isMobile ? stats.recentCerts : undefined} />
                     <StatCard icon="⏰" label={t('isticeUskoro')} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} total={stats.activeCerts} />

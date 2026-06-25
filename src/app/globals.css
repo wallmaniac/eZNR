@@ -4345,3 +4345,28 @@ button.btn-primary-glow {
 .nav-links a.btn-login::after {
   display: none !important;
 }
+
+/* Responsive Header Adjustments to prevent overflow on smaller desktop/tablet sizes */
+@media (max-width: 1200px) {
+  .header-profile-text {
+    display: none !important;
+  }
+  .header-profile-btn {
+    padding: 3px !important;
+    gap: 0 !important;
+  }
+  .header-lang-label {
+    display: none !important;
+  }
+  .header-lang-btn {
+    min-width: 36px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .header-search-badge {
+    display: none !important;
+  }
+}
