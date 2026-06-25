@@ -10,10 +10,9 @@
 export const maxDuration = 60;
 
 const MODELS = [
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
-    'gemini-2.5-flash-lite',
     'gemini-1.5-flash',
+    'gemini-1.5-pro',
 ];
 
 async function callGemini(model, systemPrompt, userMsg, apiKey) {
@@ -55,7 +54,7 @@ export async function POST(req) {
     try {
         const { workplaceName, responseSummary, sistContext, hasSistematizacija } = await req.json();
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             return Response.json({ success: false, error: 'Gemini API kljuc nije konfigurisan.' }, { status: 500 });
         }

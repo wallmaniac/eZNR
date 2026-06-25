@@ -10,10 +10,9 @@
 export const maxDuration = 60; // 60-second timeout
 
 const MODELS = [
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
-    'gemini-2.5-flash-lite',
     'gemini-1.5-flash',
+    'gemini-1.5-pro',
 ];
 
 async function callGemini(model, systemPrompt, base64Data, mimeType, apiKey) {
@@ -72,7 +71,7 @@ export async function POST(req) {
             return Response.json({ success: false, error: 'Nedostaju podaci datoteke.' }, { status: 400 });
         }
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             return Response.json({ success: false, error: 'Gemini API ključ nije konfigurisan.' }, { status: 500 });
         }

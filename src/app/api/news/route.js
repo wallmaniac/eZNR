@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 const cacheMap = {}; // { BA: { data, ts }, HR: { data, ts } }
 const CACHE_TTL = 2 * 60 * 60 * 1000;
 
-const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
+const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
 const STATIC_FALLBACK_BA = [
     {
@@ -129,7 +129,7 @@ export async function POST(request) {
             });
         }
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY;
 
         if (apiKey) {
             try {
