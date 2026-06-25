@@ -242,7 +242,7 @@ function ScannedTestsPageContent() {
         reader.onload = async (e) => {
             try {
                 const base64Data = e.target.result.split(',')[1];
-                const res = await fetch('/api/analyze-scanned-tests', {
+                const res = await fetch('https://eznr-ai-backend-757041188739.europe-west1.run.app/api/analyze-scanned-tests', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ base64Data, mimeType: file.type })
