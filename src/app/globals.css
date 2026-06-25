@@ -812,15 +812,10 @@ a {
 
 /* ===== DATA TABLE ===== */
 .data-table-wrapper {
-  overflow: visible;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 1024px) {
-  .data-table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
 
 /* Allow absolute-positioned Akcije dropdowns to overflow the card boundary */
 .card:has(.data-table-wrapper) {
