@@ -156,6 +156,7 @@ export default function DashboardPage() {
     // ── Single atomic data state — prevents calendar flicker from 14 separate setStates ──
     const [ds, setDs] = useState({
         companyId: '',
+        dataReady: false,
         wizardCompleted: false,
         workers: [], certs: [], ppeAssignments: [], equipment: [],
         fleetVehicles: [], employerDocs: [], medicalExams: [],
@@ -208,6 +209,7 @@ export default function DashboardPage() {
         const uids = user?.companyIds || [];
         const gatherData = () => ({
             companyId: activeCompanyId,
+            dataReady: isDataReady(),
             wizardCompleted: typeof window !== 'undefined' ? localStorage.getItem(`eznr_wizard_completed_${activeCompanyId}`) === 'true' : false,
             workers: getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids),
             certs: getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids),
@@ -825,7 +827,7 @@ export default function DashboardPage() {
     };
 
     // ── Stale state check: prevent layout flash during company switching ──
-    if (ds.companyId !== activeCompanyId || !isDataReady()) {
+    if (ds.companyId !== activeCompanyId || !ds.dataReady) {
         return (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
                 {t('ucitavanje')}
