@@ -730,6 +730,19 @@ export default function SettingsContent() {
   const adminLog = useMemo(() => getAdminLog(logLimit, logFilter, activeCompanyId), [logLimit, logFilter, logRefresh, activeCompanyId]);
   const onlineUsers = useMemo(() => getOnlineUsers(), [logRefresh]);
 
+  // Refresh logs when database syncs
+  useEffect(() => {
+    const handleSync = () => {
+      setLogRefresh(r => r + 1);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('eznr:data-synced', handleSync);
+      return () => {
+        window.removeEventListener('eznr:data-synced', handleSync);
+      };
+    }
+  }, []);
+
 
 
 
