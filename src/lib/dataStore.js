@@ -1093,7 +1093,35 @@ export async function _flushOfflineQueue() {
             if (op.type === 'write') {
                 const ref = _getDocRef(op.colName, op.docId);
                 if (ref) {
-                    await setDoc(ref, op.data, { merge: true });
+                    let writeData = op.data;
+                    // Auto-compress large logos in the offline queue during flush
+                    if (op.colName === 'companies' && typeof window !== 'undefined') {
+                        let needsCompress = false;
+                        let cleanLogo = writeData.logo;
+                        let cleanBrandingLogo = writeData.branding?.logo;
+                        
+                        if (cleanLogo && cleanLogo.length > 200000 && cleanLogo.startsWith('data:image/')) {
+                            needsCompress = true;
+                            try {
+                                cleanLogo = await _compressLogoBase64(cleanLogo);
+                            } catch {}
+                        }
+                        if (cleanBrandingLogo && cleanBrandingLogo.length > 200000 && cleanBrandingLogo.startsWith('data:image/')) {
+                            needsCompress = true;
+                            try {
+                                cleanBrandingLogo = await _compressLogoBase64(cleanBrandingLogo);
+                            } catch {}
+                        }
+                        
+                        if (needsCompress) {
+                            writeData = {
+                                ...writeData,
+                                logo: cleanLogo,
+                                branding: writeData.branding ? { ...writeData.branding, logo: cleanBrandingLogo } : undefined
+                            };
+                        }
+                    }
+                    await setDoc(ref, writeData, { merge: true });
                 }
             } else if (op.type === 'delete') {
                 const ref = _getDocRef(op.colName, op.docId);
@@ -1159,6 +1187,43 @@ async function _firestoreWrite(colName, item) {
     const { id, ...dataWithoutId } = item;
     const clean = JSON.parse(JSON.stringify(dataWithoutId));
 
+    // Client-side auto-compression check for company logos to prevent Firestore 1MB limits
+    if (colName === 'companies' && typeof window !== 'undefined') {
+        const compressTasks = [];
+        
+        if (clean.logo && clean.logo.length > 200000 && clean.logo.startsWith('data:image/')) {
+            compressTasks.push(
+                _compressLogoBase64(clean.logo).then(compressed => {
+                    clean.logo = compressed;
+                    const cacheIdx = (_cache['companies'] || []).findIndex(c => c.id === item.id);
+                    if (cacheIdx !== -1) {
+                        _cache['companies'][cacheIdx].logo = compressed;
+                    }
+                })
+            );
+        }
+        
+        if (clean.branding?.logo && clean.branding.logo.length > 200000 && clean.branding.logo.startsWith('data:image/')) {
+            compressTasks.push(
+                _compressLogoBase64(clean.branding.logo).then(compressed => {
+                    clean.branding.logo = compressed;
+                    const cacheIdx = (_cache['companies'] || []).findIndex(c => c.id === item.id);
+                    if (cacheIdx !== -1 && _cache['companies'][cacheIdx].branding) {
+                        _cache['companies'][cacheIdx].branding.logo = compressed;
+                    }
+                })
+            );
+        }
+        
+        if (compressTasks.length > 0) {
+            try {
+                await Promise.all(compressTasks);
+            } catch (err) {
+                console.warn('[dataStore] Logo auto-compression failed, saving original:', err);
+            }
+        }
+    }
+
     // If offline, queue the operation
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
         _enqueueOfflineOp({ type: 'write', colName, docId: item.id, data: clean });
@@ -1205,5 +1270,49 @@ async function _firestoreDelete(colName, docId) {
     } finally {
         _decrementActiveWrites();
     }
+}
+
+function _compressLogoBase64(base64Str, maxWidth = 300, maxHeight = 300) {
+    return new Promise((resolve) => {
+        if (typeof window === 'undefined') {
+            resolve(base64Str);
+            return;
+        }
+        const img = new Image();
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            try {
+                const format = base64Str.includes('image/jpeg') ? 'image/jpeg' : 'image/png';
+                const quality = format === 'image/jpeg' ? 0.8 : undefined;
+                const compressed = canvas.toDataURL(format, quality);
+                resolve(compressed);
+            } catch (err) {
+                console.warn('[dataStore] Canvas toDataURL failed, using original:', err);
+                resolve(base64Str);
+            }
+        };
+        img.onerror = () => {
+            console.warn('[dataStore] Image load failed for compression, using original');
+            resolve(base64Str);
+        };
+        img.src = base64Str;
+    });
 }
 
