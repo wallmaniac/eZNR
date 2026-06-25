@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 const cacheMap = {}; // { BA: { data, ts }, HR: { data, ts } }
 const CACHE_TTL = 2 * 60 * 60 * 1000;
 
-const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 
 const STATIC_FALLBACK_BA = [
     {

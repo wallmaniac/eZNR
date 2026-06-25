@@ -272,7 +272,7 @@ app.post('/api/analyze-scanned-tests', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Nedostaju podaci datoteke.' });
         }
 
-        const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+        const modelsToTry = MODELS;
         let lastError = null;
 
         for (const model of modelsToTry) {
