@@ -119,13 +119,53 @@ export default function AdminCompaniesPage() {
             setLogoError(t('samoSlikeSuDozvoljene'));
             return;
         }
-        if (file.size> 500000) {
-            setLogoError(t('logoMoraBitiManjiOd'));
+        if (file.size > 5 * 1024 * 1024) {
+            setLogoError(t('logoMoraBitiManjiOd') || 'Logo mora biti manji od 5MB');
             return;
         }
         setLogoError('');
         const reader = new FileReader();
-        reader.onload = (ev) => setFormData(p => ({ ...p, logo: ev.target.result }));
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const MAX_WIDTH = 300;
+                const MAX_HEIGHT = 300;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                try {
+                    const compressed = canvas.toDataURL('image/png');
+                    setFormData(p => ({ ...p, logo: compressed }));
+                } catch (err) {
+                    setLogoError(t('greskaPriCitanjuFajla') || 'Greška pri čitanju datoteke');
+                }
+            };
+            img.onerror = () => {
+                setLogoError(t('greskaPriCitanjuFajla') || 'Greška pri čitanju datoteke');
+            };
+            img.src = event.target.result;
+        };
+        reader.onerror = () => {
+            setLogoError(t('greskaPriCitanjuFajla') || 'Greška pri čitanju datoteke');
+        };
         reader.readAsDataURL(file);
     };
 

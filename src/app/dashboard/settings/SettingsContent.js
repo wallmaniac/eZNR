@@ -1506,23 +1506,57 @@ export default function SettingsContent() {
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size> 2000000) {
-                            setLogoError(t('logoMoraBitiManjiOd1'));
+                          if (file.size > 5 * 1024 * 1024) {
+                            setLogoError(t('logoMoraBitiManjiOd1') || 'Logo mora biti manji od 5MB');
                             return;
                           }
                           setLogoError('');
                           try {
-                            // Convert to base64 data URL (bypasses Firebase Storage permissions)
                             const reader = new FileReader();
-                            reader.onload = () => {
-                              setCompanyData(p => ({ ...p, logo: reader.result }));
+                            reader.onload = (event) => {
+                              const img = new Image();
+                              img.onload = () => {
+                                const MAX_WIDTH = 300;
+                                const MAX_HEIGHT = 300;
+                                let width = img.width;
+                                let height = img.height;
+
+                                if (width > height) {
+                                  if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                  }
+                                } else {
+                                  if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                  }
+                                }
+
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+
+                                try {
+                                  const compressed = canvas.toDataURL('image/png');
+                                  setCompanyData(p => ({ ...p, logo: compressed }));
+                                } catch (err) {
+                                  setLogoError(t('greskaPriCitanjuFajla') || 'Greška pri čitanju datoteke');
+                                }
+                              };
+                              img.onerror = () => {
+                                setLogoError(t('greskaPriCitanjuFajla') || 'Greška pri čitanju datoteke');
+                              };
+                              img.src = event.target.result;
                             };
                             reader.onerror = () => {
-                              setLogoError(t('greskaPriCitanjuFajla'));
+                              setLogoError(t('greskaPriCitanjuFajla') || 'Greška pri čitanju datoteke');
                             };
                             reader.readAsDataURL(file);
                           } catch (err) {
-                            setLogoError(t('greskaPriUploaduLoga'));
+                            setLogoError(t('greskaPriUploaduLoga') || 'Greška pri učitavanju logotipa');
                           }
                         }} />
                       </label>
